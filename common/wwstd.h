@@ -130,7 +130,7 @@ template <class T> T MAX(T a, T b)
 #define PROC_PENTIUM 2
 
 // Inline Routines
-//ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //
 // These Template functions are generally used
 // by classes when they havce over loaded > and <.
@@ -258,12 +258,14 @@ inline static void _splitpath(const char* path, char* drive, char* dir, char* fn
     }
 }
 
+#ifndef VITA
 inline static char* strupr(char* str)
 {
     for (int i = 0; i < strlen(str); i++)
         str[i] = toupper(str[i]);
     return str;
 }
+#endif
 
 inline static void strrev(char* str)
 {

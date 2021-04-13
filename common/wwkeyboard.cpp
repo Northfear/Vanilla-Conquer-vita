@@ -595,6 +595,29 @@ void WWKeyboardClass::Fill_Buffer_From_System(void)
                 break;
             }
             break;
+#ifdef VITA
+        case SDL_CONTROLLERDEVICEREMOVED:
+            if (gameController != nullptr) {
+                const SDL_GameController * removedController = SDL_GameControllerFromInstanceID( event.jdevice.which );
+                if (removedController == gameController) {
+                    SDL_GameControllerClose(gameController);
+                    gameController = nullptr;
+                }
+            }
+            break;
+        case SDL_CONTROLLERDEVICEADDED:
+            if (gameController == nullptr) {
+                gameController = SDL_GameControllerOpen(event.jdevice.which);
+            }
+            break;
+        case SDL_CONTROLLERAXISMOTION:
+            HandleControllerAxisEvent(event.caxis);
+            break;
+        case SDL_CONTROLLERBUTTONDOWN:
+        case SDL_CONTROLLERBUTTONUP:
+            HandleControllerButtonEvent(event.cbutton);
+            break;
+#endif
         }
     }
 #elif defined(_WIN32)
@@ -610,6 +633,186 @@ void WWKeyboardClass::Fill_Buffer_From_System(void)
     }
 #endif
 }
+
+#ifdef VITA
+typedef enum DirType : unsigned char
+{
+    DIR_N = 0,
+    DIR_NE = 1 << 5,
+    DIR_E = 2 << 5,
+    DIR_SE = 3 << 5,
+    DIR_S = 4 << 5,
+    DIR_SW = 5 << 5,
+    DIR_W = 6 << 5,
+    DIR_NW = 7 << 5,
+    DIR_NONE = 100
+} DirType;
+
+bool scrollActive = false;
+DirType scrollDirection = DIR_NONE;
+
+void WWKeyboardClass::OpenController()
+{
+    for (int i = 0; i < SDL_NumJoysticks(); ++i) {
+        if (SDL_IsGameController(i)) {
+            gameController = SDL_GameControllerOpen(i);
+        }
+    }
+}
+
+void WWKeyboardClass::CloseController()
+{
+    if (SDL_GameControllerGetAttached(gameController)) {
+        SDL_GameControllerClose(gameController);
+        gameController = nullptr;
+    }
+}
+
+void WWKeyboardClass::HandleControllerAxisEvent(const SDL_ControllerAxisEvent & motion)
+{
+    scrollActive = false;
+    DirType directionX = DIR_NONE;
+    DirType directionY = DIR_NONE;
+
+    if (motion.axis == SDL_CONTROLLER_AXIS_LEFTX) {
+        if (std::abs(motion.value) > CONTROLLER_L_DEADZONE)
+            controllerLeftXAxis = motion.value;
+        else
+            controllerLeftXAxis = 0;
+    }
+    else if (motion.axis == SDL_CONTROLLER_AXIS_LEFTY) {
+        if (std::abs(motion.value) > CONTROLLER_L_DEADZONE)
+            controllerLeftYAxis = motion.value;
+        else
+            controllerLeftYAxis = 0;
+    }
+    else if (motion.axis == SDL_CONTROLLER_AXIS_RIGHTX) {
+        if (std::abs(motion.value) > CONTROLLER_R_DEADZONE)
+            controllerRightXAxis = motion.value;
+        else
+            controllerRightXAxis = 0;
+    }
+    else if (motion.axis == SDL_CONTROLLER_AXIS_RIGHTY) {
+        if (std::abs(motion.value) > CONTROLLER_R_DEADZONE)
+            controllerRightYAxis = motion.value;
+        else
+            controllerRightYAxis = 0;
+    }
+
+    if (controllerLeftXAxis != 0) {
+        scrollActive = true;
+        directionX = controllerLeftXAxis > 0 ? DIR_E : DIR_W;
+    } else if (controllerRightXAxis != 0) {
+        scrollActive = true;
+        directionX = controllerRightXAxis > 0 ? DIR_E : DIR_W;
+    }
+
+    if (controllerLeftYAxis != 0) {
+        scrollActive = true;
+        directionY = controllerLeftYAxis > 0 ? DIR_S : DIR_N;
+    } else if (controllerRightYAxis != 0) {
+        scrollActive = true;
+        directionY = controllerRightYAxis > 0 ? DIR_S : DIR_N;
+    }
+
+    if (directionX == DIR_E && directionY == DIR_N)
+        scrollDirection = DIR_NE;
+    else if (directionX == DIR_E && directionY == DIR_S)
+        scrollDirection = DIR_SE;
+    else if (directionX == DIR_W && directionY == DIR_N)
+        scrollDirection = DIR_NW;
+    else if (directionX == DIR_W && directionY == DIR_S)
+        scrollDirection = DIR_SW;
+    else if (directionX == DIR_E)
+        scrollDirection = DIR_E;
+    else if (directionX == DIR_W)
+        scrollDirection = DIR_W;
+    else if (directionY == DIR_S)
+        scrollDirection = DIR_S;
+    else if (directionY == DIR_N)
+        scrollDirection = DIR_N;
+}
+
+void WWKeyboardClass::HandleControllerButtonEvent(const SDL_ControllerButtonEvent & button)
+{
+    bool keyboardPress = false;
+    bool mousePress = false;
+    unsigned short key;
+    SDL_Scancode scancode;
+
+    switch (button.button)
+    {
+        case SDL_CONTROLLER_BUTTON_A:
+            keyboardPress = true;
+            scancode = SDL_SCANCODE_G;
+            break;
+        case SDL_CONTROLLER_BUTTON_B:
+            mousePress = true;
+            key = VK_RBUTTON;
+            break;
+        case SDL_CONTROLLER_BUTTON_X:
+            keyboardPress = true;
+            scancode = SDL_SCANCODE_F;
+            break;
+        case SDL_CONTROLLER_BUTTON_Y:
+            keyboardPress = true;
+            scancode = SDL_SCANCODE_X;
+            break;
+        case SDL_CONTROLLER_BUTTON_BACK:
+            keyboardPress = true;
+            scancode = SDL_SCANCODE_ESCAPE;
+            break;
+        case SDL_CONTROLLER_BUTTON_START:
+            keyboardPress = true;
+            scancode = SDL_SCANCODE_RETURN;
+            break;
+        case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+            keyboardPress = true;
+            scancode = SDL_SCANCODE_LCTRL;
+            break;
+        case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+            keyboardPress = true;
+            scancode = SDL_SCANCODE_LALT;
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_UP:
+            keyboardPress = true;
+            scancode = SDL_SCANCODE_1;
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+            keyboardPress = true;
+            scancode = SDL_SCANCODE_2;
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+            keyboardPress = true;
+            scancode = SDL_SCANCODE_3;
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+            keyboardPress = true;
+            scancode = SDL_SCANCODE_4;
+            break;
+        default:
+            break;
+    }
+
+    if (keyboardPress) {
+        Put_Key_Message(scancode, button.state == SDL_RELEASED);
+    } else if (mousePress) {
+        int x, y;
+        Get_Video_Mouse(x, y);
+        Put_Mouse_Message(key, x, y, button.state == SDL_RELEASED);
+    }
+}
+
+bool WWKeyboardClass::ScrollActive()
+{
+    return scrollActive;
+}
+
+unsigned char WWKeyboardClass::GetScrollDirection()
+{
+    return scrollDirection;
+}
+#endif
 
 /***********************************************************************************************
  * WWKeyboardClass::Clear -- Clears the keyboard buffer.                                       *

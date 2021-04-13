@@ -1,3 +1,70 @@
+# Vanilla Conquer port for PS Vita
+
+## Install
+Download vanillatd.vpk or vanillara.vpk file from https://github.com/Northfear/Vanilla-Conquer-vita/releases. Install it to your PS Vita.
+
+Copy content of installed Tiberium Dawn game folder into to ```ux0:data/VanillaTD/``` or installed Red Alert folder into ```ux0:data/VanillaRA/```.
+
+Check Vanilla Conquer Wiki for more info about required folder/file structure and game versions compatibility:
+
+[Installing VanillaTD](https://github.com/TheAssemblyArmada/Vanilla-Conquer/wiki/Installing-VanillaTD)
+
+[Installing VanillaRA](https://github.com/TheAssemblyArmada/Vanilla-Conquer/wiki/Installing-VanillaRA)
+
+```expand.mix, expand2.mix, hires1.mix``` files that are required for RA expansions can be aquired from 3.03 patch.
+
+[rePatch reDux0](https://github.com/dots-tb/rePatch-reDux0) OR [FdFix](https://github.com/TheOfficialFloW/FdFix) plugin may be required for proper suspend/resume support (only use one at a time).
+
+## Building
+
+### Prerequisites
+- VitaSDK
+- SDL2
+- OpenAL
+
+### Build
+```
+mkdir build && cd build
+cmake .. -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake -DVITA=true -DCMAKE_BUILD_TYPE=Release
+make
+```
+
+Debug output can be previewed with psp2shell
+
+https://github.com/Cpasjuste/psp2shell
+
+## Port info
+
+### Controls
+
+Game is optimized for touch controls.
+
+- Left/Right analog stick - Map scrolling
+- CIRCLE - Right mouse button (Cancel building, deselect unit..)
+- CROSS - G (Guard Area)
+- SQUARE - F (Formation. RA only I guess)
+- TRIANGLE - X (Scatter Units)
+- D-Pad Up/Right/Down/Left - 1/2/3/4 button
+- R1 - Alt (force move)
+- L1 - Ctrl (force attack)
+- SELECT - Esc (opens menu, skips videos)
+- START - Enter (to submit score after the mission)
+
+Use R1 + D-Pad to create teams (1-4) and D-Pad to select them (same as Ctrl + 1-4 on keyboard). You can use DPad numbers while entering savegame names.
+
+### Other
+
+Game supports nearest and linear filtering. Nearest is used by default and it produces sharp, but pixelated image (that's especially noticeable on text). Linear is smooth, but somewhat blurred. To select linear filtering edit
+```ux0:data/VanillaTD/vanillatd/conquer.ini``` or ```ux0:data/VanillaRA/vanillara/redalert.ini``` and change ```Scaler``` option to ```linear```
+
+```
+[Video]
+Scaler=linear
+```
+
+Change it back to ```nearest``` to select nearest filtering again.
+
+
 # Vanilla Conquer
 Vanilla Conquer is a fully portable version of the first generation C&C engine and is capable of running both Tiberian Dawn and Red Alert on multiple platforms. It can also be used for mod development for the Remastered Collection.
 

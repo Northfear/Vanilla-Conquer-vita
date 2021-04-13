@@ -57,6 +57,16 @@ void Print_Error_Exit(char* string);
 #define vc_chdir(x) _wchdir(UTF8To16(x))
 extern void Create_Main_Window(HANDLE instance, int command_show, int width, int height);
 HINSTANCE ProgramInstance;
+#elif VITA
+int _newlib_heap_size_user = 192 * 1024 * 1024;
+#include <psp2/kernel/processmgr.h>
+#include <psp2/power.h>
+
+#define vc_chdir(x) chdir_vita(x)
+
+void chdir_vita(const char *path)
+{
+}
 #else
 #include <unistd.h>
 #define vc_chdir(x) chdir(x)
@@ -170,6 +180,10 @@ int main(int argc, char* argv[])
 {
 #endif // _WIN32
 
+#ifdef VITA
+    scePowerSetArmClockFrequency(444);
+#endif
+
 // printf("in program.\n");getch();
 // printf("ram free = %ld\n",Ram_Free(MEM_NORMAL));getch();
 #ifdef _WIN32
@@ -271,7 +285,11 @@ int main(int argc, char* argv[])
     /*
     **	Remember the current working directory and drive.
     */
+#ifdef VITA
+    Paths.Init("vanillara", CONFIG_FILE_NAME, "REDALERT.MIX", "ux0:data/VanillaRA");
+#else
     Paths.Init("vanillara", CONFIG_FILE_NAME, "REDALERT.MIX", argv[0]);
+#endif
     vc_chdir(Paths.Program_Path());
     CDFileClass::Refresh_Search_Drives();
 
@@ -524,6 +542,11 @@ int main(int argc, char* argv[])
     /*
     **	Restore the current drive and directory.
     */
+
+#ifdef VITA
+    sceKernelExitProcess(0);
+#endif
+
     return (EXIT_SUCCESS);
 }
 

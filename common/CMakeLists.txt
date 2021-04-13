@@ -100,6 +100,8 @@ set(COMMON_SRC
 
 if (WIN32)
     list(APPEND COMMON_SRC file_win.cpp paths_win.cpp)
+elseif (VITA)
+    list(APPEND COMMON_SRC file_posix.cpp paths_vita.cpp)
 else()
     list(APPEND COMMON_SRC file_posix.cpp paths_posix.cpp)
 endif()

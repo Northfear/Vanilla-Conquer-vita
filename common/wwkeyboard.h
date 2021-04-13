@@ -38,6 +38,10 @@
 #endif
 #include <stdint.h>
 
+#ifdef VITA
+#include <SDL.h>
+#endif
+
 typedef enum
 {
     WWKEY_SHIFT_BIT = 0x100,
@@ -723,6 +727,13 @@ public:
     KeyASCIIType To_ASCII(unsigned short num);
     bool Down(unsigned short key);
 
+#ifdef VITA
+    void OpenController();
+    void CloseController();
+    bool ScrollActive();
+    unsigned char GetScrollDirection();
+#endif
+
 #if defined(_WIN32) && !defined(SDL2_BUILD)
     /* Define the main hook for the message processing loop.					*/
     bool Message_Handler(HWND hwnd, UINT message, UINT wParam, LONG lParam);
@@ -770,6 +781,23 @@ private:
     */
     uint8_t DownState[0x2000]; // (UINT16_MAX / 8) + 1
     int DownSkip;
+
+#ifdef VITA
+    void HandleControllerAxisEvent(const SDL_ControllerAxisEvent & motion);
+    void HandleControllerButtonEvent(const SDL_ControllerButtonEvent & button);
+
+    enum
+    {
+        CONTROLLER_L_DEADZONE = 6000,
+        CONTROLLER_R_DEADZONE = 6000
+    };
+
+    SDL_GameController * gameController = nullptr;
+    int16_t controllerLeftXAxis = 0;
+    int16_t controllerLeftYAxis = 0;
+    int16_t controllerRightXAxis = 0;
+    int16_t controllerRightYAxis = 0;
+#endif
 };
 
 #endif

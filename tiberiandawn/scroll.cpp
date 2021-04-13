@@ -102,6 +102,14 @@ void ScrollClass::AI(KeyNumType& input, int x, int y)
             noscroll = true;
         }
 
+#ifdef VITA
+        if (Keyboard->ScrollActive()) {
+            unsigned char scrollDirection = Keyboard->GetScrollDirection();
+            int scrollDistance = (7 - Options.ScrollRate) * 20;
+            Scroll_Map((DirType)scrollDirection, scrollDistance, true);
+        }
+#endif
+
         if (!noscroll) {
 
             /*

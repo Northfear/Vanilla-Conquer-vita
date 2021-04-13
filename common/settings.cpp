@@ -52,6 +52,11 @@ void SettingsClass::Load(INIClass& ini)
     Video.Driver = ini.Get_String("Video", "Driver", Video.Driver);
     Video.PixelFormat = ini.Get_String("Video", "PixelFormat", Video.PixelFormat);
 
+#ifdef VITA
+    //touch to mouse translates badly with boxing on
+    Video.Boxing = false;
+#endif
+
     /*
     ** VQA and WSA interpolation mode 0 = scanlines, 1 = vertical doubling, 2 = linear
     */

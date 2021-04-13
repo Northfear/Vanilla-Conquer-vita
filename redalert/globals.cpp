@@ -678,7 +678,10 @@ int MouseInstalled;
 //
 // Variables for helping track how much time goes bye in routines
 //
+#ifndef VITA
+//multiple definition of `LogLevel' with openal
 int LogLevel = 0;
+#endif
 unsigned long LogLevelTime[MAX_LOG_LEVEL] = {0};
 unsigned long LogLastTime = 0;
 bool LogDump_Print = false; // true = print the Log time Stuff

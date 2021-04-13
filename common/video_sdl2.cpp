@@ -259,8 +259,11 @@ bool Set_Video_Mode(int w, int h, int bits_per_pixel)
             DBG_INFO(" %s%s", info.name, (i == renderer_index ? " (selected)" : ""));
         }
     }
-
+#ifdef VITA
+    renderer = SDL_CreateRenderer(window, renderer_index, SDL_RENDERER_TARGETTEXTURE | SDL_RENDERER_PRESENTVSYNC);
+#else
     renderer = SDL_CreateRenderer(window, renderer_index, SDL_RENDERER_TARGETTEXTURE);
+#endif
     if (renderer == nullptr) {
         DBG_ERROR("SDL_CreateRenderer failed: %s", SDL_GetError());
         Reset_Video_Mode();
@@ -332,6 +335,12 @@ bool Set_Video_Mode(int w, int h, int bits_per_pixel)
     hwcursor.X = w / 2;
     hwcursor.Y = h / 2;
     Update_HWCursor_Settings();
+
+#ifdef VITA
+    SDL_Init(SDL_INIT_GAMECONTROLLER);
+    extern WWKeyboardClass* Keyboard;
+    Keyboard->OpenController();
+#endif
 
     return true;
 }
@@ -468,6 +477,11 @@ void Reset_Video_Mode(void)
 
     SDL_DestroyWindow(window);
     window = nullptr;
+
+#ifdef VITA
+    extern WWKeyboardClass* Keyboard;
+    Keyboard->CloseController();
+#endif
 }
 
 static void Update_HWCursor()

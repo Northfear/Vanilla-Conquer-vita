@@ -45,6 +45,9 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#ifdef VITA
+#include "common/paths.h"
+#endif
 
 extern bool DLLSave(FileClass& file);
 extern bool DLLLoad(FileClass& file);
@@ -108,7 +111,14 @@ bool Save_Game(int id, char* descr)
     /*
     **	Generate the filename to save
     */
+#ifdef VITA
+    std::string savePath;
+    savePath = Paths.User_Path();
+    savePath.append("/SAVEGAME.%03d");
+    sprintf(name, savePath.c_str(), id);
+#else
     sprintf(name, "SAVEGAME.%03d", id);
+#endif
 
     return Save_Game(name, descr);
 }
@@ -313,7 +323,14 @@ bool Load_Game(int id)
     /*
     **	Generate the filename to load
     */
+#ifdef VITA
+    std::string savePath;
+    savePath = Paths.User_Path();
+    savePath.append("/SAVEGAME.%03d");
+    sprintf(name, savePath.c_str(), id);
+#else
     sprintf(name, "SAVEGAME.%03d", id);
+#endif
 
     return Load_Game(name);
 }
@@ -984,7 +1001,14 @@ bool Get_Savefile_Info(int id, char* buf, unsigned* scenp, HousesType* housep)
     /*
     **	Generate the filename to load
     */
+#ifdef VITA
+    std::string savePath;
+    savePath = Paths.User_Path();
+    savePath.append("/SAVEGAME.%03d");
+    sprintf(name, savePath.c_str(), id);
+#else
     sprintf(name, "SAVEGAME.%03d", id);
+#endif
 
     /*
     **	If the file opens OK, read the file

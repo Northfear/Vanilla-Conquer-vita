@@ -358,7 +358,7 @@ void TeamTypeClass::Fill_In(const char* name, const char* entry)
         p1 = strtok(NULL, ",:");
         p2 = strtok(NULL, ",:");
         mission.Mission = Mission_From_Name(p1);
-        mission.Argument = atoi(p2);
+        mission.Argument = p2 ? atoi(p2) : 0;
         MissionList[i] = mission;
     }
 

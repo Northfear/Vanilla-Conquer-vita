@@ -113,9 +113,23 @@ if(OPENAL)
     set(DSOUND OFF)
 endif()
 
+if(VITA)
+    add_definitions(-DVITA)
+    set(VITA_FLAGS "-Ofast -mcpu=cortex-a9 -mfpu=neon -fgraphite-identity -floop-nest-optimize -fno-lto -Wl,--whole-archive -lpthread -Wl,--no-whole-archive")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${VITA_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${VITA_FLAGS}")
+    list(APPEND VANILLA_LIBS "-lSceMotion_stub -lSceTouch_stub -lSceAudio_stub -lSceAudioIn_stub  -lSceCtrl_stub -lSceGxm_stub \
+    -lSceHid_stub -lSceDisplay_stub -lSceSysmodule_stub -lSceCommonDialog_stub -lScePower_stub -lSceAppUtil_stub")
+endif()
+
 add_subdirectory(common)
 add_subdirectory(tiberiandawn)
 add_subdirectory(redalert)
+
+if(VITA)
+    include("${CMAKE_SOURCE_DIR}/vita/vctd_vita.cmake")
+    include("${CMAKE_SOURCE_DIR}/vita/vcra_vita.cmake")
+endif()
 
 feature_summary(WHAT ENABLED_FEATURES DESCRIPTION "Enabled features:")
 feature_summary(WHAT DISABLED_FEATURES DESCRIPTION "Disabled features:")

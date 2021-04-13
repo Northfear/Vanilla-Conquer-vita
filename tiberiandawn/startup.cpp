@@ -48,6 +48,16 @@ void Print_Error_Exit(char* string);
 #define vc_chdir(x) _wchdir(UTF8To16(x))
 extern void Create_Main_Window(HANDLE instance, int width, int height);
 HINSTANCE ProgramInstance;
+#elif VITA
+int _newlib_heap_size_user = 192 * 1024 * 1024;
+#include <psp2/kernel/processmgr.h>
+#include <psp2/power.h>
+
+#define vc_chdir(x) chdir_vita(x)
+
+void chdir_vita(const char *path)
+{
+}
 #else
 #include <unistd.h>
 #define vc_chdir(x) chdir(x)
@@ -130,7 +140,7 @@ int PASCAL WinMain(HINSTANCE instance, HINSTANCE, char* command_line, int comman
         printf("Zuwenig Hauptspeicher verf?gbar.\n");
 #else
 #ifdef FRENCH
-        printf("M‚moire vive (RAM) insuffisante.\n");
+        printf("Mï¿½moire vive (RAM) insuffisante.\n");
 #else
         printf("Insufficient RAM available.\n");
 #endif
@@ -201,6 +211,10 @@ int PASCAL WinMain(HINSTANCE instance, HINSTANCE, char* command_line, int comman
 
 int main(int argc, char** argv)
 {
+#ifdef VITA
+    scePowerSetArmClockFrequency(444);
+#endif
+
     CCDebugString("C&C95 - Starting up.\n");
 
 #ifdef JAPANESE
@@ -210,7 +224,11 @@ int main(int argc, char** argv)
     /*
     **	Remember the current working directory and drive.
     */
+#ifdef VITA
+    Paths.Init("vanillatd", "CONQUER.INI", "CONQUER.MIX", "ux0:data/VanillaTD");
+#else
     Paths.Init("vanillatd", "CONQUER.INI", "CONQUER.MIX", argv[0]);
+#endif
     vc_chdir(Paths.Program_Path());
     CDFileClass::Refresh_Search_Drives();
 
@@ -486,6 +504,10 @@ int main(int argc, char** argv)
     _dos_setdrive(olddrive, &drivecount);
     chdir(oldpath);
 #endif // NOT_FOR_WIN95
+
+#ifdef VITA
+    sceKernelExitProcess(0);
+#endif
 
     return (EXIT_SUCCESS);
 }

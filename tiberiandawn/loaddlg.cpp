@@ -44,6 +44,10 @@
 #include "common/file.h"
 #include "common/framelimit.h"
 
+#ifdef VITA
+#include "common/paths.h"
+#endif
+
 /***********************************************************************************************
  * LoadOptionsClass::LoadOptionsClass -- class constructor                                     *
  *                                                                                             *
@@ -591,7 +595,14 @@ void LoadOptionsClass::Fill_List(ListClass* list)
     /*
     ** Find all savegame files
     */
+#ifdef VITA
+    std::string savePath;
+    savePath = Paths.User_Path();
+    savePath.append("/SAVEGAME.*");
+    bool rc = Find_First(savePath.c_str(), 0, &ff);
+#else
     bool rc = Find_First("SAVEGAME.*", 0, &ff);
+#endif
 
     while (rc) {
         /*

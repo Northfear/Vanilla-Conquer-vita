@@ -3886,8 +3886,13 @@ static bool Change_Local_Dir(int cd)
 {
     static bool _initialised = false;
     static unsigned _detected = 0;
+#ifdef VITA
+    static const char* _vol_labels[CD_COUNT] = {"ux0:data/VanillaRA/allied", "ux0:data/VanillaRA/soviet", "ux0:data/VanillaRA/counterstrike", "ux0:data/VanillaRA/aftermath", "ux0:data/VanillaRA"};
+    char vol_buff[64];
+#else
     static const char* _vol_labels[CD_COUNT] = {"allied", "soviet", "counterstrike", "aftermath", "."};
     char vol_buff[16];
+#endif
 
     // Detect which if any of the discs have had their data copied to an appropriate local folder.
     if (!_initialised) {
@@ -4260,7 +4265,7 @@ bool Force_CD_Available(int cd)
 #endif
 
 #ifdef FRENCH
-                sprintf(buffer, "InsŠrez le %s", _cd_name[cd]);
+                sprintf(buffer, "Insï¿½rez le %s", _cd_name[cd]);
 #else
 #ifdef GERMAN
                 sprintf(buffer, "Bitte %s", _cd_name[cd]);
@@ -4271,7 +4276,7 @@ bool Force_CD_Available(int cd)
             } else {
 #ifdef DVD
 #ifdef FRENCH
-                sprintf(buffer, "InsŠrez le %s", _cd_name[4]);
+                sprintf(buffer, "Insï¿½rez le %s", _cd_name[4]);
 #else
 #ifdef GERMAN
                 sprintf(buffer, "Bitte %s", _cd_name[4]);

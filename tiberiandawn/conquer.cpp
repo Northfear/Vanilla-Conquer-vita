@@ -3383,8 +3383,13 @@ static bool Change_Local_Dir(int cd)
 {
     static bool _initialised = false;
     static unsigned _detected = 0;
+#ifdef VITA
+    static const char* _vol_labels[CD_COUNT] = {"ux0:data/VanillaTD/gdi", "ux0:data/VanillaTD/nod", "ux0:data/VanillaTD/covertops", "ux0:data/VanillaTD"};
+    char vol_buff[64];
+#else
     static const char* _vol_labels[CD_COUNT] = {"gdi", "nod", "covertops", "."};
     char vol_buff[16];
+#endif
 
     // Detect which if any of the discs have had their data copied to an appropriate local folder.
     if (!_initialised) {

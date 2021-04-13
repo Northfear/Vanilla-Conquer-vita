@@ -14,6 +14,10 @@
 #include <time.h>
 #endif
 
+#ifdef VITA
+#include "SDL2/SDL.h"
+#endif
+
 /**
  * Yield the current thread for at least ms milliseconds.
  */
@@ -21,6 +25,8 @@ static inline void ms_sleep(unsigned ms)
 {
 #ifdef _WIN32
     Sleep(ms);
+#elif VITA
+    SDL_Delay(ms);
 #else
     struct timespec ts;
     ts.tv_sec = ms / 1000;

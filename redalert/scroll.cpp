@@ -98,6 +98,14 @@ void ScrollClass::AI(KeyNumType& input, int x, int y)
 		*/
         bool noscroll = false;
 
+#ifdef VITA
+        if (Keyboard->ScrollActive()) {
+            unsigned char scrollDirection = Keyboard->GetScrollDirection();
+            int scrollDistance = (7 - Options.ScrollRate) * 20;
+            Scroll_Map((DirType)scrollDirection, scrollDistance, true);
+        }
+#endif
+
         if (!noscroll) {
             bool at_screen_edge = (y == 0 || x == 0 || x >= SeenBuff.Get_Width() - 1 || y >= SeenBuff.Get_Height() - 1);
 

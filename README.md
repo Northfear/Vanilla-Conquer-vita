@@ -25,7 +25,7 @@ Check Vanilla Conquer Wiki for more info about required folder/file structure an
 ### Build
 ```
 mkdir build && cd build
-cmake .. -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake -DVITA=true -DCMAKE_BUILD_TYPE=Release
+cmake .. -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake -DVITA=true -DCMAKE_BUILD_TYPE=None
 make
 ```
 

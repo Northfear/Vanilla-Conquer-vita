@@ -104,6 +104,8 @@ void ScrollClass::AI(KeyNumType& input, int x, int y)
             int scrollDistance = (7 - Options.ScrollRate) * 20;
             Scroll_Map((DirType)scrollDirection, scrollDistance, true);
         }
+        // scroll only with analog sticks for now
+        noscroll = true;
 #endif
 
         if (!noscroll) {

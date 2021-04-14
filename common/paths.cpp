@@ -41,14 +41,15 @@ void PathsClass::Init(const char* suffix, const char* ini_name, const char* data
     Program_Path();
     Data_Path();
     User_Path();
-
+    //crashes on Vita after DBG_INFO in DEBUG build for some reason
+#ifndef VITA
     DBG_INFO("Searching the following paths for path config data:\n  argv: '%s'\n  binary: '%s'\n  default data: "
              "'%s'\n  default user: '%s'",
              argv_path.c_str(),
              ProgramPath.c_str(),
              DataPath.c_str(),
              UserPath.c_str());
-
+#endif
     // Check for a config file to load paths from.
     RawFileClass file;
     bool use_argv_path = false;

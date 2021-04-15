@@ -731,6 +731,7 @@ public:
     void OpenController();
     void CloseController();
     bool ScrollActive();
+    bool IsAnalogOnlyScroll();
     unsigned char GetScrollDirection();
 #endif
 
@@ -783,12 +784,21 @@ private:
     int DownSkip;
 
 #ifdef VITA
-    void HandleControllerAxisEvent(const SDL_ControllerAxisEvent & motion);
-    void HandleControllerButtonEvent(const SDL_ControllerButtonEvent & button);
+    void Handle_Controller_Axis_Event(const SDL_ControllerAxisEvent & motion);
+    void Handle_Controller_Button_Event(const SDL_ControllerButtonEvent & button);
+    void Handle_Touch_Event( const SDL_TouchFingerEvent & event );
+    void Process_Controller_Axis_Motion();
+
+    // used to convert user-friendly pointer speed values into more useable ones
+    const double CONTROLLER_SPEED_MOD = 2000000.0;
+
+    // bigger value correndsponds to faster pointer movement speed with bigger stick axis values
+    const double CONTROLLER_AXIS_SPEEDUP = 1.03;
 
     enum
     {
-        CONTROLLER_L_DEADZONE = 6000,
+        CONTROLLER_L_DEADZONE_SCROLL = 6000,
+        CONTROLLER_L_DEADZONE_MOUSE = 3000,
         CONTROLLER_R_DEADZONE = 6000
     };
 
@@ -797,6 +807,11 @@ private:
     int16_t controllerLeftYAxis = 0;
     int16_t controllerRightXAxis = 0;
     int16_t controllerRightYAxis = 0;
+	uint32_t lastControllerTime = 0;
+	float emulatedPointerPosX = 0;
+	float emulatedPointerPosY = 0;
+    SDL_FingerID firstFingerId = 0;
+    int16_t numTouches = 0;
 #endif
 };
 

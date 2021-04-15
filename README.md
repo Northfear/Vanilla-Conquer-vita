@@ -37,13 +37,12 @@ https://github.com/Cpasjuste/psp2shell
 
 ### Controls
 
-Game is optimized for touch controls.
-
-- Left/Right analog stick - Map scrolling
+- Left analog stick - Cursor movement / Map scrolling (switch between both modes with a 3-fingress press on the rear touchpad)
+- Right analog stick - Map scrolling
+- CROSS - Left mouse button
 - CIRCLE - Right mouse button (Cancel building, deselect unit..)
-- CROSS - G (Guard Area)
-- SQUARE - F (Formation. RA only I guess)
-- TRIANGLE - X (Scatter Units)
+- SQUARE - G (Guard Area)
+- TRIANGLE - F (Formation. RA only)
 - D-Pad Up/Right/Down/Left - 1/2/3/4 button
 - R1 - Alt (force move)
 - L1 - Ctrl (force attack)
@@ -52,10 +51,19 @@ Game is optimized for touch controls.
 
 Use R1 + D-Pad to create teams (1-4) and D-Pad to select them (same as Ctrl + 1-4 on keyboard). You can use DPad numbers while entering savegame names.
 
+Left analog stick can be used for both cursor movement (good for builing or preciece movement) or map scrolling (useful during combat when you're giving command with a touchpad). Cursor movement mode is default. To switch between both modes use 3-finger touch on the rear touchpad.
+
+You can change cursor movement speed by editing ```ControllerPointerSpeed``` option under ```[Vita]``` section inside ```conquer.ini```/```redalert.ini``` files.
+
 ### Other
 
-Game supports nearest and linear filtering. Nearest is used by default and it produces sharp, but pixelated image (that's especially noticeable on text). Linear is smooth, but somewhat blurred. To select linear filtering edit
-```ux0:data/VanillaTD/vanillatd/conquer.ini``` or ```ux0:data/VanillaRA/vanillara/redalert.ini``` and change ```Scaler``` option to ```linear```
+Config files for VanillaTD and VanillaRA are located at ```ux0:data/VanillaTD/vanillatd/conquer.ini``` and ```ux0:data/VanillaRA/vanillara/redalert.ini```.
+
+To preserve original aspect ratio set ```Boxing=yes``` option.
+
+If you want to display the game at native resolution without any scaling set ```ScaleGameSurface=no``` (```[Vita]``` section).
+
+Game supports nearest and linear filtering. Nearest is used by default and it produces sharp, but pixelated image (that's especially noticeable on text). Linear is smooth, but somewhat blurred. To select linear filtering set ```Scaler``` option to ```linear```
 
 ```
 [Video]

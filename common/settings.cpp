@@ -27,6 +27,11 @@ SettingsClass::SettingsClass()
     Video.Scaler = "nearest";
     Video.Driver = "default";
     Video.PixelFormat = "default";
+
+#ifdef VITA
+    Vita.ScaleGameSurface = true;
+    Vita.ControllerPointerSpeed = 10;
+#endif
 }
 
 void SettingsClass::Load(INIClass& ini)
@@ -52,11 +57,6 @@ void SettingsClass::Load(INIClass& ini)
     Video.Driver = ini.Get_String("Video", "Driver", Video.Driver);
     Video.PixelFormat = ini.Get_String("Video", "PixelFormat", Video.PixelFormat);
 
-#ifdef VITA
-    //touch to mouse translates badly with boxing on
-    Video.Boxing = false;
-#endif
-
     /*
     ** VQA and WSA interpolation mode 0 = scanlines, 1 = vertical doubling, 2 = linear
     */
@@ -68,6 +68,11 @@ void SettingsClass::Load(INIClass& ini)
     if (Video.Boxing || Mouse.RawInput) {
         Video.HardwareCursor = false;
     }
+
+#ifdef VITA
+    Vita.ScaleGameSurface = ini.Get_Bool("Vita", "ScaleGameSurface", Vita.ScaleGameSurface);
+    Vita.ControllerPointerSpeed = ini.Get_Int("Vita", "ControllerPointerSpeed", Vita.ControllerPointerSpeed);
+#endif
 }
 
 void SettingsClass::Save(INIClass& ini)
@@ -97,4 +102,9 @@ void SettingsClass::Save(INIClass& ini)
     ** VQA and WSA interpolation mode 0 = scanlines, 1 = vertical doubling, 2 = linear
     */
     ini.Put_Int("Video", "InterpolationMode", Video.InterpolationMode);
+
+#ifdef VITA
+    ini.Put_Bool("Vita", "ScaleGameSurface", Vita.ScaleGameSurface);
+    ini.Put_Int("Vita", "ControllerPointerSpeed", Vita.ControllerPointerSpeed);
+#endif
 }

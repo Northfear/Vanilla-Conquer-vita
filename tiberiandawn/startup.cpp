@@ -213,6 +213,9 @@ int main(int argc, char** argv)
 {
 #ifdef VITA
     scePowerSetArmClockFrequency(444);
+    //scePowerSetGpuClockFrequency(222);
+	scePowerSetBusClockFrequency(222);
+	scePowerSetGpuXbarClockFrequency(166);
 #endif
 
     CCDebugString("C&C95 - Starting up.\n");

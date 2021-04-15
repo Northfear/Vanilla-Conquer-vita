@@ -131,6 +131,38 @@ static void Update_HWCursor_Settings()
     /*
     ** Update screen boxing settings.
     */
+#ifdef VITA
+	if (hwcursor.GameW != VITA_FULLSCREEN_WIDTH || hwcursor.GameH != VITA_FULLSCREEN_HEIGHT)	{
+		render_dst.x = 0;
+		render_dst.y = 0;
+		render_dst.w = hwcursor.GameW;
+		render_dst.h = hwcursor.GameH;
+
+		if (Settings.Vita.ScaleGameSurface) {
+			//resize to fullscreen
+			if (Settings.Video.Boxing) {
+				if ((static_cast<float>(VITA_FULLSCREEN_WIDTH) / VITA_FULLSCREEN_HEIGHT) >= (static_cast<float>(hwcursor.GameW) / hwcursor.GameH)) {
+					float scale = static_cast<float>(VITA_FULLSCREEN_HEIGHT) / hwcursor.GameH;
+					render_dst.w = hwcursor.GameW * scale;
+					render_dst.h = VITA_FULLSCREEN_HEIGHT;
+					render_dst.x = (VITA_FULLSCREEN_WIDTH - render_dst.w) / 2;
+				} else {
+					float scale = static_cast<float>(VITA_FULLSCREEN_WIDTH) / hwcursor.GameW;
+					render_dst.w = VITA_FULLSCREEN_WIDTH;
+					render_dst.h = hwcursor.GameH * scale;
+					render_dst.y = (VITA_FULLSCREEN_HEIGHT - render_dst.h) / 2;
+				}
+			} else {
+				render_dst.w = VITA_FULLSCREEN_WIDTH;
+				render_dst.h = VITA_FULLSCREEN_HEIGHT;
+			}
+		} else {
+			//center game area
+			render_dst.x = (VITA_FULLSCREEN_WIDTH - hwcursor.GameW) / 2;
+			render_dst.y = (VITA_FULLSCREEN_HEIGHT - hwcursor.GameH) / 2;
+		}
+	}
+#else
     float ar = (float)hwcursor.GameW / hwcursor.GameH;
     if (Settings.Video.Boxing) {
         render_dst.w = win_w;
@@ -147,6 +179,7 @@ static void Update_HWCursor_Settings()
         render_dst.x = 0;
         render_dst.y = 0;
     }
+#endif
 
     /*
     ** Ensure cursor clip is in the desired state.
@@ -428,6 +461,10 @@ void Move_Video_Mouse(int xrel, int yrel)
 
 void Get_Video_Mouse(int& x, int& y)
 {
+#ifdef VITA
+    x = hwcursor.X;
+    y = hwcursor.Y;
+#else
     if (Settings.Mouse.RawInput && (hwcursor.Clip || !Settings.Video.Windowed)) {
         x = hwcursor.X;
         y = hwcursor.Y;
@@ -438,7 +475,27 @@ void Get_Video_Mouse(int& x, int& y)
         x /= scale_x;
         y /= scale_y;
     }
+#endif
 }
+
+#ifdef VITA
+SDL_Rect Get_Render_Rect()
+{
+    return render_dst;
+}
+
+void Get_Game_Resolution(int& w, int& h)
+{
+    w = hwcursor.GameW;
+    h = hwcursor.GameH;
+}
+
+void Set_Video_Mouse(int x, int y)
+{
+    hwcursor.X = x;
+    hwcursor.Y = y;
+}
+#endif
 
 /***********************************************************************************************
  * Reset_Video_Mode -- Resets video mode and deletes Direct Draw Object                        *

@@ -33,6 +33,14 @@ public:
         std::string Driver;
         std::string PixelFormat;
     } Video;
+
+#ifdef VITA
+    struct
+    {
+        bool ScaleGameSurface;
+        int ControllerPointerSpeed;
+    } Vita;
+#endif
 };
 
 extern SettingsClass Settings;

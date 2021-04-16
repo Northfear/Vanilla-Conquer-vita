@@ -39,9 +39,9 @@
 #define basename basename_vita
 
 // fails to link due to undefined basename. old newlib?
-static char *basename_vita (const char *filename)
+static char* basename_vita(const char* filename)
 {
-    char *p = strrchr(filename, '/');
+    char* p = strrchr(filename, '/');
     return p ? p + 1 : (char*)filename;
 }
 #endif

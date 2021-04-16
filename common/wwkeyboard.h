@@ -784,9 +784,9 @@ private:
     int DownSkip;
 
 #ifdef VITA
-    void Handle_Controller_Axis_Event(const SDL_ControllerAxisEvent & motion);
-    void Handle_Controller_Button_Event(const SDL_ControllerButtonEvent & button);
-    void Handle_Touch_Event( const SDL_TouchFingerEvent & event );
+    void Handle_Controller_Axis_Event(const SDL_ControllerAxisEvent& motion);
+    void Handle_Controller_Button_Event(const SDL_ControllerButtonEvent& button);
+    void Handle_Touch_Event(const SDL_TouchFingerEvent& event);
     void Process_Controller_Axis_Motion();
 
     // used to convert user-friendly pointer speed values into more useable ones
@@ -802,14 +802,14 @@ private:
         CONTROLLER_R_DEADZONE = 6000
     };
 
-    SDL_GameController * gameController = nullptr;
+    SDL_GameController* gameController = nullptr;
     int16_t controllerLeftXAxis = 0;
     int16_t controllerLeftYAxis = 0;
     int16_t controllerRightXAxis = 0;
     int16_t controllerRightYAxis = 0;
-	uint32_t lastControllerTime = 0;
-	float emulatedPointerPosX = 0;
-	float emulatedPointerPosY = 0;
+    uint32_t lastControllerTime = 0;
+    float emulatedPointerPosX = 0;
+    float emulatedPointerPosY = 0;
     SDL_FingerID firstFingerId = 0;
     int16_t numTouches = 0;
 #endif

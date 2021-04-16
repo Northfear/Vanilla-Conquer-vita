@@ -598,7 +598,7 @@ void WWKeyboardClass::Fill_Buffer_From_System(void)
 #ifdef VITA
         case SDL_CONTROLLERDEVICEREMOVED:
             if (gameController != nullptr) {
-                const SDL_GameController * removedController = SDL_GameControllerFromInstanceID( event.jdevice.which );
+                const SDL_GameController* removedController = SDL_GameControllerFromInstanceID(event.jdevice.which);
                 if (removedController == gameController) {
                     SDL_GameControllerClose(gameController);
                     gameController = nullptr;
@@ -620,7 +620,7 @@ void WWKeyboardClass::Fill_Buffer_From_System(void)
         case SDL_FINGERDOWN:
         case SDL_FINGERUP:
         case SDL_FINGERMOTION:
-            Handle_Touch_Event( event.tfinger );
+            Handle_Touch_Event(event.tfinger);
             break;
 #endif
         }
@@ -674,8 +674,8 @@ void WWKeyboardClass::OpenController()
     emulatedPointerPosX = gameWidth / 2;
     emulatedPointerPosY = gameHeight / 2;
 
-#if SDL_VERSION_ATLEAST( 2, 0, 10 )
-    SDL_SetHint( SDL_HINT_TOUCH_MOUSE_EVENTS, "0" );
+#if SDL_VERSION_ATLEAST(2, 0, 10)
+    SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
 #endif
 }
 
@@ -689,39 +689,41 @@ void WWKeyboardClass::CloseController()
 
 void WWKeyboardClass::Process_Controller_Axis_Motion()
 {
-	const uint32_t currentTime = SDL_GetTicks();
-	const double deltaTime = currentTime - lastControllerTime;
-	lastControllerTime = currentTime;
+    const uint32_t currentTime = SDL_GetTicks();
+    const double deltaTime = currentTime - lastControllerTime;
+    lastControllerTime = currentTime;
 
     if (!analogStickMouse)
         return;
 
-	if ( controllerLeftXAxis != 0 || controllerLeftYAxis != 0 ) {
-		const int16_t xSign = ( controllerLeftXAxis > 0 ) - ( controllerLeftXAxis < 0 );
-		const int16_t ySign = ( controllerLeftYAxis > 0 ) - ( controllerLeftYAxis < 0 );
+    if (controllerLeftXAxis != 0 || controllerLeftYAxis != 0) {
+        const int16_t xSign = (controllerLeftXAxis > 0) - (controllerLeftXAxis < 0);
+        const int16_t ySign = (controllerLeftYAxis > 0) - (controllerLeftYAxis < 0);
 
-		emulatedPointerPosX += pow( std::abs( controllerLeftXAxis ), CONTROLLER_AXIS_SPEEDUP ) * xSign * deltaTime * Settings.Vita.ControllerPointerSpeed / CONTROLLER_SPEED_MOD;
-		emulatedPointerPosY += pow( std::abs( controllerLeftYAxis ), CONTROLLER_AXIS_SPEEDUP ) * ySign * deltaTime * Settings.Vita.ControllerPointerSpeed / CONTROLLER_SPEED_MOD;
-	
+        emulatedPointerPosX += pow(std::abs(controllerLeftXAxis), CONTROLLER_AXIS_SPEEDUP) * xSign * deltaTime
+                               * Settings.Vita.ControllerPointerSpeed / CONTROLLER_SPEED_MOD;
+        emulatedPointerPosY += pow(std::abs(controllerLeftYAxis), CONTROLLER_AXIS_SPEEDUP) * ySign * deltaTime
+                               * Settings.Vita.ControllerPointerSpeed / CONTROLLER_SPEED_MOD;
+
         int width;
         int height;
         Get_Game_Resolution(width, height);
 
-		if ( emulatedPointerPosX < 0 )
-			emulatedPointerPosX = 0;
-		else if ( emulatedPointerPosX >= width )
-			emulatedPointerPosX = width - 1;
+        if (emulatedPointerPosX < 0)
+            emulatedPointerPosX = 0;
+        else if (emulatedPointerPosX >= width)
+            emulatedPointerPosX = width - 1;
 
-		if ( emulatedPointerPosY < 0 )
-			emulatedPointerPosY = 0;
-		else if ( emulatedPointerPosY >= height )
-			emulatedPointerPosY = height - 1;
+        if (emulatedPointerPosY < 0)
+            emulatedPointerPosY = 0;
+        else if (emulatedPointerPosY >= height)
+            emulatedPointerPosY = height - 1;
 
         Set_Video_Mouse(emulatedPointerPosX, emulatedPointerPosY);
-	}
+    }
 }
 
-void WWKeyboardClass::Handle_Controller_Axis_Event(const SDL_ControllerAxisEvent & motion)
+void WWKeyboardClass::Handle_Controller_Axis_Event(const SDL_ControllerAxisEvent& motion)
 {
     scrollActive = false;
     DirType directionX = DIR_NONE;
@@ -738,28 +740,24 @@ void WWKeyboardClass::Handle_Controller_Axis_Event(const SDL_ControllerAxisEvent
             controllerLeftXAxis = motion.value;
         else
             controllerLeftXAxis = 0;
-    }
-    else if (motion.axis == SDL_CONTROLLER_AXIS_LEFTY) {
+    } else if (motion.axis == SDL_CONTROLLER_AXIS_LEFTY) {
         if (std::abs(motion.value) > CONTROLLER_L_DEADZONE)
             controllerLeftYAxis = motion.value;
         else
             controllerLeftYAxis = 0;
-    }
-    else if (motion.axis == SDL_CONTROLLER_AXIS_RIGHTX) {
+    } else if (motion.axis == SDL_CONTROLLER_AXIS_RIGHTX) {
         if (std::abs(motion.value) > CONTROLLER_R_DEADZONE)
             controllerRightXAxis = motion.value;
         else
             controllerRightXAxis = 0;
-    }
-    else if (motion.axis == SDL_CONTROLLER_AXIS_RIGHTY) {
+    } else if (motion.axis == SDL_CONTROLLER_AXIS_RIGHTY) {
         if (std::abs(motion.value) > CONTROLLER_R_DEADZONE)
             controllerRightYAxis = motion.value;
         else
             controllerRightYAxis = 0;
     }
 
-    if (!analogStickMouse)
-    {
+    if (!analogStickMouse) {
         if (controllerLeftXAxis != 0) {
             scrollActive = true;
             directionX = controllerLeftXAxis > 0 ? DIR_E : DIR_W;
@@ -797,12 +795,11 @@ void WWKeyboardClass::Handle_Controller_Axis_Event(const SDL_ControllerAxisEvent
         scrollDirection = DIR_N;
 }
 
-void WWKeyboardClass::Handle_Touch_Event( const SDL_TouchFingerEvent & event )
-{   
+void WWKeyboardClass::Handle_Touch_Event(const SDL_TouchFingerEvent& event)
+{
     // back touchpad
-    if ( event.touchId == 1 )
-    {
-        if ( event.type == SDL_FINGERDOWN ) {
+    if (event.touchId == 1) {
+        if (event.type == SDL_FINGERDOWN) {
             int backTouchNum = SDL_GetNumTouchFingers(event.touchId);
             // 3 touches on back touchpad switch between left analog scroll and mouse
             if (backTouchNum == 3) {
@@ -812,17 +809,16 @@ void WWKeyboardClass::Handle_Touch_Event( const SDL_TouchFingerEvent & event )
         return;
     }
 
-    if ( event.type == SDL_FINGERDOWN ) {
+    if (event.type == SDL_FINGERDOWN) {
         ++numTouches;
-        if ( numTouches == 1 ) {
+        if (numTouches == 1) {
             firstFingerId = event.fingerId;
         }
-    }
-    else if ( event.type == SDL_FINGERUP ) {
+    } else if (event.type == SDL_FINGERUP) {
         --numTouches;
     }
 
-    if ( firstFingerId == event.fingerId ) {
+    if (firstFingerId == event.fingerId) {
         const int screenWidth = 960;
         const int screenHeight = 544;
         int gameWidth;
@@ -830,91 +826,89 @@ void WWKeyboardClass::Handle_Touch_Event( const SDL_TouchFingerEvent & event )
         Get_Game_Resolution(gameWidth, gameHeight);
         SDL_Rect renderRect = Get_Render_Rect();
 
-        emulatedPointerPosX
-            = static_cast<float>( screenWidth * event.x - renderRect.x ) * ( static_cast<double>( gameWidth ) / renderRect.w );
-        emulatedPointerPosY
-            = static_cast<float>( screenHeight * event.y - renderRect.y ) * ( static_cast<double>( gameHeight ) / renderRect.h );
+        emulatedPointerPosX =
+            static_cast<float>(screenWidth * event.x - renderRect.x) * (static_cast<double>(gameWidth) / renderRect.w);
+        emulatedPointerPosY = static_cast<float>(screenHeight * event.y - renderRect.y)
+                              * (static_cast<double>(gameHeight) / renderRect.h);
 
-		if ( emulatedPointerPosX < 0 )
-			emulatedPointerPosX = 0;
-		else if ( emulatedPointerPosX >= gameWidth )
-			emulatedPointerPosX = gameWidth - 1;
+        if (emulatedPointerPosX < 0)
+            emulatedPointerPosX = 0;
+        else if (emulatedPointerPosX >= gameWidth)
+            emulatedPointerPosX = gameWidth - 1;
 
-		if ( emulatedPointerPosY < 0 )
-			emulatedPointerPosY = 0;
-		else if ( emulatedPointerPosY >= gameHeight )
-			emulatedPointerPosY = gameHeight - 1;
+        if (emulatedPointerPosY < 0)
+            emulatedPointerPosY = 0;
+        else if (emulatedPointerPosY >= gameHeight)
+            emulatedPointerPosY = gameHeight - 1;
 
         Set_Video_Mouse(emulatedPointerPosX, emulatedPointerPosY);
 
-        if ( event.type == SDL_FINGERDOWN ) {
+        if (event.type == SDL_FINGERDOWN) {
             Put_Mouse_Message(VK_LBUTTON, emulatedPointerPosX, emulatedPointerPosY, 0);
-        }
-        else if ( event.type == SDL_FINGERUP ) {
+        } else if (event.type == SDL_FINGERUP) {
             Put_Mouse_Message(VK_LBUTTON, emulatedPointerPosX, emulatedPointerPosY, 1);
         }
     }
 }
 
-void WWKeyboardClass::Handle_Controller_Button_Event(const SDL_ControllerButtonEvent & button)
+void WWKeyboardClass::Handle_Controller_Button_Event(const SDL_ControllerButtonEvent& button)
 {
     bool keyboardPress = false;
     bool mousePress = false;
     unsigned short key;
     SDL_Scancode scancode;
 
-    switch (button.button)
-    {
-        case SDL_CONTROLLER_BUTTON_A:
-            mousePress = true;
-            key = VK_LBUTTON;
-            break;
-        case SDL_CONTROLLER_BUTTON_B:
-            mousePress = true;
-            key = VK_RBUTTON;
-            break;
-        case SDL_CONTROLLER_BUTTON_X:
-            keyboardPress = true;
-            scancode = SDL_SCANCODE_G;
-            break;
-        case SDL_CONTROLLER_BUTTON_Y:
-            keyboardPress = true;
-            scancode = SDL_SCANCODE_F;
-            break;
-        case SDL_CONTROLLER_BUTTON_BACK:
-            keyboardPress = true;
-            scancode = SDL_SCANCODE_ESCAPE;
-            break;
-        case SDL_CONTROLLER_BUTTON_START:
-            keyboardPress = true;
-            scancode = SDL_SCANCODE_RETURN;
-            break;
-        case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
-            keyboardPress = true;
-            scancode = SDL_SCANCODE_LCTRL;
-            break;
-        case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
-            keyboardPress = true;
-            scancode = SDL_SCANCODE_LALT;
-            break;
-        case SDL_CONTROLLER_BUTTON_DPAD_UP:
-            keyboardPress = true;
-            scancode = SDL_SCANCODE_1;
-            break;
-        case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-            keyboardPress = true;
-            scancode = SDL_SCANCODE_2;
-            break;
-        case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-            keyboardPress = true;
-            scancode = SDL_SCANCODE_3;
-            break;
-        case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-            keyboardPress = true;
-            scancode = SDL_SCANCODE_4;
-            break;
-        default:
-            break;
+    switch (button.button) {
+    case SDL_CONTROLLER_BUTTON_A:
+        mousePress = true;
+        key = VK_LBUTTON;
+        break;
+    case SDL_CONTROLLER_BUTTON_B:
+        mousePress = true;
+        key = VK_RBUTTON;
+        break;
+    case SDL_CONTROLLER_BUTTON_X:
+        keyboardPress = true;
+        scancode = SDL_SCANCODE_G;
+        break;
+    case SDL_CONTROLLER_BUTTON_Y:
+        keyboardPress = true;
+        scancode = SDL_SCANCODE_F;
+        break;
+    case SDL_CONTROLLER_BUTTON_BACK:
+        keyboardPress = true;
+        scancode = SDL_SCANCODE_ESCAPE;
+        break;
+    case SDL_CONTROLLER_BUTTON_START:
+        keyboardPress = true;
+        scancode = SDL_SCANCODE_RETURN;
+        break;
+    case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+        keyboardPress = true;
+        scancode = SDL_SCANCODE_LCTRL;
+        break;
+    case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+        keyboardPress = true;
+        scancode = SDL_SCANCODE_LALT;
+        break;
+    case SDL_CONTROLLER_BUTTON_DPAD_UP:
+        keyboardPress = true;
+        scancode = SDL_SCANCODE_1;
+        break;
+    case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+        keyboardPress = true;
+        scancode = SDL_SCANCODE_2;
+        break;
+    case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+        keyboardPress = true;
+        scancode = SDL_SCANCODE_3;
+        break;
+    case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+        keyboardPress = true;
+        scancode = SDL_SCANCODE_4;
+        break;
+    default:
+        break;
     }
 
     if (keyboardPress) {

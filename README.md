@@ -51,7 +51,7 @@ https://github.com/Cpasjuste/psp2shell
 
 Use R1 + D-Pad to create teams (1-4) and D-Pad to select them (same as Ctrl + 1-4 on keyboard). You can use DPad numbers while entering savegame names.
 
-Left analog stick can be used for both cursor movement (good for builing or preciece movement) or map scrolling (useful during combat when you're giving command with a touchpad). Cursor movement mode is default. To switch between both modes use 3-finger touch on the rear touchpad.
+Left analog stick can be used for both cursor movement (good for building or precise movement) or map scrolling (useful during combat when you're giving command with a touchpad). Cursor movement mode is default. To switch between both modes use 3-finger touch on the rear touchpad.
 
 You can change cursor movement speed by editing ```ControllerPointerSpeed``` option under ```[Vita]``` section inside ```conquer.ini```/```redalert.ini``` files.
 

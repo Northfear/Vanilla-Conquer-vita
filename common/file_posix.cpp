@@ -21,7 +21,7 @@ std::string StringLower(std::string str)
     return str;
 }
 
-int fnmatch(const char *pattern, const char *string, int flags)
+int fnmatch(const char* pattern, const char* string, int flags)
 {
     //massive hackjob..
     std::string filename = string;

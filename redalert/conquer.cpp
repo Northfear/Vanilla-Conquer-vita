@@ -3887,7 +3887,11 @@ static bool Change_Local_Dir(int cd)
     static bool _initialised = false;
     static unsigned _detected = 0;
 #ifdef VITA
-    static const char* _vol_labels[CD_COUNT] = {"ux0:data/VanillaRA/allied", "ux0:data/VanillaRA/soviet", "ux0:data/VanillaRA/counterstrike", "ux0:data/VanillaRA/aftermath", "ux0:data/VanillaRA"};
+    static const char* _vol_labels[CD_COUNT] = {"ux0:data/VanillaRA/allied",
+                                                "ux0:data/VanillaRA/soviet",
+                                                "ux0:data/VanillaRA/counterstrike",
+                                                "ux0:data/VanillaRA/aftermath",
+                                                "ux0:data/VanillaRA"};
     char vol_buff[64];
 #else
     static const char* _vol_labels[CD_COUNT] = {"allied", "soviet", "counterstrike", "aftermath", "."};

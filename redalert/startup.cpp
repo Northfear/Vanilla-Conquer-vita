@@ -64,7 +64,7 @@ int _newlib_heap_size_user = 192 * 1024 * 1024;
 
 #define vc_chdir(x) chdir_vita(x)
 
-void chdir_vita(const char *path)
+void chdir_vita(const char* path)
 {
 }
 #else
@@ -183,8 +183,8 @@ int main(int argc, char* argv[])
 #ifdef VITA
     scePowerSetArmClockFrequency(444);
     //scePowerSetGpuClockFrequency(222);
-	scePowerSetBusClockFrequency(222);
-	scePowerSetGpuXbarClockFrequency(166);
+    scePowerSetBusClockFrequency(222);
+    scePowerSetGpuXbarClockFrequency(166);
 #endif
 
 // printf("in program.\n");getch();

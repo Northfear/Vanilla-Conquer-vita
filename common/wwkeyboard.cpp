@@ -835,6 +835,16 @@ void WWKeyboardClass::Handle_Touch_Event( const SDL_TouchFingerEvent & event )
         emulatedPointerPosY
             = static_cast<float>( screenHeight * event.y - renderRect.y ) * ( static_cast<double>( gameHeight ) / renderRect.h );
 
+		if ( emulatedPointerPosX < 0 )
+			emulatedPointerPosX = 0;
+		else if ( emulatedPointerPosX >= gameWidth )
+			emulatedPointerPosX = gameWidth - 1;
+
+		if ( emulatedPointerPosY < 0 )
+			emulatedPointerPosY = 0;
+		else if ( emulatedPointerPosY >= gameHeight )
+			emulatedPointerPosY = gameHeight - 1;
+
         Set_Video_Mouse(emulatedPointerPosX, emulatedPointerPosY);
 
         if ( event.type == SDL_FINGERDOWN ) {

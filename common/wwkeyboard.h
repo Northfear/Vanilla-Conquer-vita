@@ -713,6 +713,21 @@ typedef enum KeyNumType : unsigned short
     KN_BUTTON = WWKEY_BTN_BIT,
 } KeyNumType;
 
+#ifdef VITA
+typedef enum ScrollDirType : unsigned char
+{
+    SDIR_N = 0,
+    SDIR_NE = 1 << 5,
+    SDIR_E = 2 << 5,
+    SDIR_SE = 3 << 5,
+    SDIR_S = 4 << 5,
+    SDIR_SW = 5 << 5,
+    SDIR_W = 6 << 5,
+    SDIR_NW = 7 << 5,
+    SDIR_NONE = 100
+} ScrollDirType;
+#endif
+
 class WWKeyboardClass
 {
 public:
@@ -728,11 +743,11 @@ public:
     bool Down(unsigned short key);
 
 #ifdef VITA
-    void OpenController();
-    void CloseController();
-    bool ScrollActive();
-    bool IsAnalogOnlyScroll();
-    unsigned char GetScrollDirection();
+    void Open_Controller();
+    void Close_Controller();
+    bool Is_Analog_Scroll_Active();
+    bool Is_Analog_Only_Scroll();
+    unsigned char Get_Scroll_Direction();
 #endif
 
 #if defined(_WIN32) && !defined(SDL2_BUILD)
@@ -802,16 +817,21 @@ private:
         CONTROLLER_R_DEADZONE = 6000
     };
 
-    SDL_GameController* gameController = nullptr;
-    int16_t controllerLeftXAxis = 0;
-    int16_t controllerLeftYAxis = 0;
-    int16_t controllerRightXAxis = 0;
-    int16_t controllerRightYAxis = 0;
-    uint32_t lastControllerTime = 0;
-    float emulatedPointerPosX = 0;
-    float emulatedPointerPosY = 0;
-    SDL_FingerID firstFingerId = 0;
-    int16_t numTouches = 0;
+    SDL_GameController* GameController = nullptr;
+    int16_t ControllerLeftXAxis = 0;
+    int16_t ControllerLeftYAxis = 0;
+    int16_t ControllerRightXAxis = 0;
+    int16_t ControllerRightYAxis = 0;
+    uint32_t LastControllerTime = 0;
+    float EmulatedPointerPosX = 0;
+    float EmulatedPointerPosY = 0;
+
+    bool AnalogScrollActive = false;
+    ScrollDirType ScrollDirection = SDIR_NONE;
+
+    bool AnalogStickMouse = true;
+    SDL_FingerID FirstFingerId = 0;
+    int16_t NumTouches = 0;
 #endif
 };
 

@@ -49,7 +49,8 @@ void Print_Error_Exit(char* string);
 extern void Create_Main_Window(HANDLE instance, int width, int height);
 HINSTANCE ProgramInstance;
 #elif VITA
-int _newlib_heap_size_user = 192 * 1024 * 1024;
+//int _newlib_heap_size_user = 230 * 1024 * 1024;
+int _newlib_heap_size_user = 340 * 1024 * 1024;
 #include <psp2/kernel/processmgr.h>
 #include <psp2/power.h>
 

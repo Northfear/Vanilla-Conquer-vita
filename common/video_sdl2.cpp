@@ -373,7 +373,7 @@ bool Set_Video_Mode(int w, int h, int bits_per_pixel)
 #ifdef VITA
     SDL_Init(SDL_INIT_GAMECONTROLLER);
     extern WWKeyboardClass* Keyboard;
-    Keyboard->OpenController();
+    Keyboard->Open_Controller();
 #endif
 
     return true;
@@ -538,7 +538,7 @@ void Reset_Video_Mode(void)
 
 #ifdef VITA
     extern WWKeyboardClass* Keyboard;
-    Keyboard->CloseController();
+    Keyboard->Close_Controller();
 #endif
 }
 

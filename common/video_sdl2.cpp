@@ -47,6 +47,7 @@
 
 #include <SDL.h>
 
+extern WWKeyboardClass* Keyboard;
 static SDL_Window* window;
 static SDL_Renderer* renderer;
 static SDL_Palette* palette;
@@ -370,11 +371,11 @@ bool Set_Video_Mode(int w, int h, int bits_per_pixel)
     hwcursor.Y = h / 2;
     Update_HWCursor_Settings();
 
-#ifdef VITA
+    /*
+    ** Init gamepad.
+    */
     SDL_Init(SDL_INIT_GAMECONTROLLER);
-    extern WWKeyboardClass* Keyboard;
     Keyboard->Open_Controller();
-#endif
 
     return true;
 }
@@ -462,11 +463,7 @@ void Move_Video_Mouse(int xrel, int yrel)
 
 void Get_Video_Mouse(int& x, int& y)
 {
-#ifdef VITA
-    x = hwcursor.X;
-    y = hwcursor.Y;
-#else
-    if (Settings.Mouse.RawInput && (hwcursor.Clip || !Settings.Video.Windowed)) {
+    if (Keyboard->Is_Gamepad_Active() || (Settings.Mouse.RawInput && (hwcursor.Clip || !Settings.Video.Windowed))) {
         x = hwcursor.X;
         y = hwcursor.Y;
     } else {
@@ -476,7 +473,6 @@ void Get_Video_Mouse(int& x, int& y)
         x /= scale_x;
         y /= scale_y;
     }
-#endif
 }
 
 #ifdef VITA
@@ -484,6 +480,7 @@ SDL_Rect Get_Render_Rect()
 {
     return render_dst;
 }
+#endif
 
 void Get_Game_Resolution(int& w, int& h)
 {
@@ -496,7 +493,6 @@ void Set_Video_Mouse(int x, int y)
     hwcursor.X = x;
     hwcursor.Y = y;
 }
-#endif
 
 /***********************************************************************************************
  * Reset_Video_Mode -- Resets video mode and deletes Direct Draw Object                        *
@@ -536,10 +532,7 @@ void Reset_Video_Mode(void)
     SDL_DestroyWindow(window);
     window = nullptr;
 
-#ifdef VITA
-    extern WWKeyboardClass* Keyboard;
     Keyboard->Close_Controller();
-#endif
 }
 
 static void Update_HWCursor()

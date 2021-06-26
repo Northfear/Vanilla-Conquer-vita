@@ -38,7 +38,7 @@
 #endif
 #include <stdint.h>
 
-#ifdef VITA
+#ifdef SDL2_BUILD
 #include <SDL.h>
 #endif
 
@@ -713,7 +713,6 @@ typedef enum KeyNumType : unsigned short
     KN_BUTTON = WWKEY_BTN_BIT,
 } KeyNumType;
 
-#ifdef VITA
 typedef enum ScrollDirType : unsigned char
 {
     SDIR_N = 0,
@@ -726,7 +725,6 @@ typedef enum ScrollDirType : unsigned char
     SDIR_NW = 7 << 5,
     SDIR_NONE = 100
 } ScrollDirType;
-#endif
 
 class WWKeyboardClass
 {
@@ -742,7 +740,8 @@ public:
     KeyASCIIType To_ASCII(unsigned short num);
     bool Down(unsigned short key);
 
-#ifdef VITA
+#ifdef SDL2_BUILD
+    bool Is_Gamepad_Active();
     void Open_Controller();
     void Close_Controller();
     bool Is_Analog_Scroll_Active();
@@ -798,7 +797,7 @@ private:
     uint8_t DownState[0x2000]; // (UINT16_MAX / 8) + 1
     int DownSkip;
 
-#ifdef VITA
+#ifdef SDL2_BUILD
     void Handle_Controller_Axis_Event(const SDL_ControllerAxisEvent& motion);
     void Handle_Controller_Button_Event(const SDL_ControllerButtonEvent& button);
     void Handle_Touch_Event(const SDL_TouchFingerEvent& event);
@@ -806,15 +805,17 @@ private:
 
     // used to convert user-friendly pointer speed values into more useable ones
     const double CONTROLLER_SPEED_MOD = 2000000.0;
-
     // bigger value correndsponds to faster pointer movement speed with bigger stick axis values
     const double CONTROLLER_AXIS_SPEEDUP = 1.03;
+    // speedup value while the trigger is pressed
+    const int CONTROLLER_TRIGGER_SPEEDUP = 2;
 
     enum
     {
         CONTROLLER_L_DEADZONE_SCROLL = 6000,
         CONTROLLER_L_DEADZONE_MOUSE = 3000,
-        CONTROLLER_R_DEADZONE = 6000
+        CONTROLLER_R_DEADZONE = 6000,
+        CONTROLLER_TRIGGER_R_DEADZONE = 3000
     };
 
     SDL_GameController* GameController = nullptr;
@@ -825,7 +826,7 @@ private:
     uint32_t LastControllerTime = 0;
     float EmulatedPointerPosX = 0;
     float EmulatedPointerPosY = 0;
-
+    float ControllerSpeedBoost = 1;
     bool AnalogScrollActive = false;
     ScrollDirType ScrollDirection = SDIR_NONE;
 

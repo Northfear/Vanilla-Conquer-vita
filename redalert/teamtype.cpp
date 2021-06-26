@@ -63,6 +63,7 @@
 #include "checkbox.h"
 #include "drop.h"
 #include "textbtn.h"
+#include "framelimit.h"
 #endif
 
 TeamMissionClass TeamMissions[TMISSION_COUNT] = {
@@ -184,9 +185,9 @@ TeamTypeClass::TeamTypeClass(void)
     , MissionCount(0)
     , ClassCount(0)
 {
-    for (TeamMemberClass& Member : Members) {
-        Member.Class = NULL;
-        Member.Quantity = 0;
+    for (int i = 0; i < MAX_TEAM_CLASSCOUNT; i++) {
+        Members[i].Class = NULL;
+        Members[i].Quantity = 0;
     }
 }
 
@@ -1495,6 +1496,8 @@ bool TeamTypeClass::Edit(void)
         if (input & KN_BUTTON) {
             lastbutton = (input & ~KN_BUTTON);
         }
+
+        Frame_Limiter();
     }
 
     return (!cancel);

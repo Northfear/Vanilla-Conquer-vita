@@ -1973,10 +1973,10 @@ int Load_Interpolated_Palettes(char const* filename, bool add)
 
 void Free_Interpolated_Palettes(void)
 {
-    for (auto& InterpolatedPalette : InterpolatedPalettes) {
-        if (InterpolatedPalette) {
-            free(InterpolatedPalette);
-            InterpolatedPalette = NULL;
+    for (int i = 0; i < ARRAY_SIZE(InterpolatedPalettes); i++) {
+        if (InterpolatedPalettes[i]) {
+            free(InterpolatedPalettes[i]);
+            InterpolatedPalettes[i] = NULL;
         }
     }
 }
@@ -2360,7 +2360,7 @@ void CC_Texture_Fill(void const* shapefile, int shapenum, int xpos, int ypos, in
 {
     unsigned char* shape_pointer;
     // unsigned char	*shape_save;
-    unsigned long shape_size;
+    uintptr_t shape_size;
     // int x,y;
 
     if (shapefile && shapenum != -1) {

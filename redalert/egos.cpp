@@ -605,8 +605,8 @@ void Show_Who_Was_Responsible(void)
             ** Fix up our outer loop parsing variables.
             */
             cptr = strparse;
-            column += strparse - strstart;
-            length -= strparse - strstart - 1;
+            column += int(strparse - strstart);
+            length -= int(strparse - strstart - 1);
 
             if (ch == 13) {
                 line++;
@@ -915,8 +915,8 @@ void Show_Who_Was_Responsible(void)
     Theme.Stop();
     Options.Set_Score_Volume(oldvolume, false);
 
-    for (GraphicBufferClass* SlideBuffer : SlideBuffers) {
-        delete SlideBuffer;
+    for (int index = 0; index < NUM_SLIDES; index++) {
+        delete SlideBuffers[index];
     }
 
     delete BackgroundPage;

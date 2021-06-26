@@ -11,6 +11,11 @@ SettingsClass::SettingsClass()
     */
     Mouse.RawInput = true;
     Mouse.Sensitivity = 100;
+#ifdef VITA
+    Mouse.ControllerEnabled = true;
+#else
+    Mouse.ControllerEnabled = false;
+#endif
     Mouse.ControllerPointerSpeed = 10;
 
     /*
@@ -31,7 +36,6 @@ SettingsClass::SettingsClass()
 
 #ifdef VITA
     Vita.ScaleGameSurface = true;
-    Vita.ControllerPointerSpeed = 10;
 #endif
 }
 
@@ -42,6 +46,7 @@ void SettingsClass::Load(INIClass& ini)
     */
     Mouse.RawInput = ini.Get_Bool("Mouse", "RawInput", Mouse.RawInput);
     Mouse.Sensitivity = ini.Get_Int("Mouse", "Sensitivity", Mouse.Sensitivity);
+    Mouse.ControllerEnabled = ini.Get_Int("Mouse", "ControllerEnabled", Mouse.ControllerEnabled);
     Mouse.ControllerPointerSpeed = ini.Get_Int("Mouse", "ControllerPointerSpeed", Mouse.ControllerPointerSpeed);
 
     /*
@@ -73,7 +78,6 @@ void SettingsClass::Load(INIClass& ini)
 
 #ifdef VITA
     Vita.ScaleGameSurface = ini.Get_Bool("Vita", "ScaleGameSurface", Vita.ScaleGameSurface);
-    Vita.ControllerPointerSpeed = ini.Get_Int("Vita", "ControllerPointerSpeed", Vita.ControllerPointerSpeed);
 #endif
 }
 
@@ -84,6 +88,7 @@ void SettingsClass::Save(INIClass& ini)
     */
     ini.Put_Bool("Mouse", "RawInput", Mouse.RawInput);
     ini.Put_Int("Mouse", "Sensitivity", Mouse.Sensitivity);
+    ini.Put_Bool("Mouse", "ControllerEnabled", Mouse.ControllerEnabled);
     ini.Put_Int("Mouse", "ControllerPointerSpeed", Mouse.ControllerPointerSpeed);
 
     /*
@@ -108,6 +113,5 @@ void SettingsClass::Save(INIClass& ini)
 
 #ifdef VITA
     ini.Put_Bool("Vita", "ScaleGameSurface", Vita.ScaleGameSurface);
-    ini.Put_Int("Vita", "ControllerPointerSpeed", Vita.ControllerPointerSpeed);
 #endif
 }

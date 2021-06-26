@@ -800,7 +800,6 @@ private:
 #ifdef SDL2_BUILD
     void Handle_Controller_Axis_Event(const SDL_ControllerAxisEvent& motion);
     void Handle_Controller_Button_Event(const SDL_ControllerButtonEvent& button);
-    void Handle_Touch_Event(const SDL_TouchFingerEvent& event);
     void Process_Controller_Axis_Motion();
 
     // used to convert user-friendly pointer speed values into more useable ones
@@ -829,10 +828,13 @@ private:
     float ControllerSpeedBoost = 1;
     bool AnalogScrollActive = false;
     ScrollDirType ScrollDirection = SDIR_NONE;
-
     bool AnalogStickMouse = true;
+
+#ifdef VITA
+    void Handle_Touch_Event(const SDL_TouchFingerEvent& event);
     SDL_FingerID FirstFingerId = 0;
     int16_t NumTouches = 0;
+#endif
 #endif
 };
 

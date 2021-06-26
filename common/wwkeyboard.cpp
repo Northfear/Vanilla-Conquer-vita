@@ -623,11 +623,13 @@ void WWKeyboardClass::Fill_Buffer_From_System(void)
         case SDL_CONTROLLERBUTTONUP:
             Handle_Controller_Button_Event(event.cbutton);
             break;
+#ifdef VITA
         case SDL_FINGERDOWN:
         case SDL_FINGERUP:
         case SDL_FINGERMOTION:
             Handle_Touch_Event(event.tfinger);
             break;
+#endif
         }
     }
     if (Is_Gamepad_Active()) {
@@ -666,7 +668,7 @@ void WWKeyboardClass::Open_Controller()
     Get_Video_Mouse(mousePosX, mousePosY);
     EmulatedPointerPosX = mousePosX;
     EmulatedPointerPosY = mousePosY;
-#if SDL_VERSION_ATLEAST(2, 0, 10)
+#if SDL_VERSION_ATLEAST(2, 0, 10) && defined(VITA)
     SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
 #endif
 }
@@ -792,54 +794,6 @@ void WWKeyboardClass::Handle_Controller_Axis_Event(const SDL_ControllerAxisEvent
         ScrollDirection = SDIR_N;
 }
 
-void WWKeyboardClass::Handle_Touch_Event(const SDL_TouchFingerEvent& event)
-{
-    // ignore back touchpad
-    if (event.touchId != 0)
-        return;
-
-    if (event.type == SDL_FINGERDOWN) {
-        ++NumTouches;
-        if (NumTouches == 1) {
-            FirstFingerId = event.fingerId;
-        }
-    } else if (event.type == SDL_FINGERUP) {
-        --NumTouches;
-    }
-
-    if (FirstFingerId == event.fingerId) {
-        const int screenWidth = 960;
-        const int screenHeight = 544;
-        int gameWidth;
-        int gameHeight;
-        Get_Game_Resolution(gameWidth, gameHeight);
-        SDL_Rect renderRect = Get_Render_Rect();
-
-        EmulatedPointerPosX =
-            static_cast<float>(screenWidth * event.x - renderRect.x) * (static_cast<double>(gameWidth) / renderRect.w);
-        EmulatedPointerPosY = static_cast<float>(screenHeight * event.y - renderRect.y)
-                              * (static_cast<double>(gameHeight) / renderRect.h);
-
-        if (EmulatedPointerPosX < 0)
-            EmulatedPointerPosX = 0;
-        else if (EmulatedPointerPosX >= gameWidth)
-            EmulatedPointerPosX = gameWidth - 1;
-
-        if (EmulatedPointerPosY < 0)
-            EmulatedPointerPosY = 0;
-        else if (EmulatedPointerPosY >= gameHeight)
-            EmulatedPointerPosY = gameHeight - 1;
-
-        Set_Video_Mouse(EmulatedPointerPosX, EmulatedPointerPosY);
-
-        if (event.type == SDL_FINGERDOWN) {
-            Put_Mouse_Message(VK_LBUTTON, EmulatedPointerPosX, EmulatedPointerPosY, 0);
-        } else if (event.type == SDL_FINGERUP) {
-            Put_Mouse_Message(VK_LBUTTON, EmulatedPointerPosX, EmulatedPointerPosY, 1);
-        }
-    }
-}
-
 void WWKeyboardClass::Handle_Controller_Button_Event(const SDL_ControllerButtonEvent& button)
 {
     bool keyboardPress = false;
@@ -932,6 +886,56 @@ unsigned char WWKeyboardClass::Get_Scroll_Direction()
 {
     return ScrollDirection;
 }
+
+#ifdef VITA
+void WWKeyboardClass::Handle_Touch_Event(const SDL_TouchFingerEvent& event)
+{
+    // ignore back touchpad
+    if (event.touchId != 0)
+        return;
+
+    if (event.type == SDL_FINGERDOWN) {
+        ++NumTouches;
+        if (NumTouches == 1) {
+            FirstFingerId = event.fingerId;
+        }
+    } else if (event.type == SDL_FINGERUP) {
+        --NumTouches;
+    }
+
+    if (FirstFingerId == event.fingerId) {
+        const int screenWidth = 960;
+        const int screenHeight = 544;
+        int gameWidth;
+        int gameHeight;
+        Get_Game_Resolution(gameWidth, gameHeight);
+        SDL_Rect renderRect = Get_Render_Rect();
+
+        EmulatedPointerPosX =
+            static_cast<float>(screenWidth * event.x - renderRect.x) * (static_cast<double>(gameWidth) / renderRect.w);
+        EmulatedPointerPosY = static_cast<float>(screenHeight * event.y - renderRect.y)
+                              * (static_cast<double>(gameHeight) / renderRect.h);
+
+        if (EmulatedPointerPosX < 0)
+            EmulatedPointerPosX = 0;
+        else if (EmulatedPointerPosX >= gameWidth)
+            EmulatedPointerPosX = gameWidth - 1;
+
+        if (EmulatedPointerPosY < 0)
+            EmulatedPointerPosY = 0;
+        else if (EmulatedPointerPosY >= gameHeight)
+            EmulatedPointerPosY = gameHeight - 1;
+
+        Set_Video_Mouse(EmulatedPointerPosX, EmulatedPointerPosY);
+
+        if (event.type == SDL_FINGERDOWN) {
+            Put_Mouse_Message(VK_LBUTTON, EmulatedPointerPosX, EmulatedPointerPosY, 0);
+        } else if (event.type == SDL_FINGERUP) {
+            Put_Mouse_Message(VK_LBUTTON, EmulatedPointerPosX, EmulatedPointerPosY, 1);
+        }
+    }
+}
+#endif
 #endif
 
 /***********************************************************************************************

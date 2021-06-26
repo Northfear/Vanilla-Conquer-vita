@@ -374,8 +374,10 @@ bool Set_Video_Mode(int w, int h, int bits_per_pixel)
     /*
     ** Init gamepad.
     */
-    SDL_Init(SDL_INIT_GAMECONTROLLER);
-    Keyboard->Open_Controller();
+    if(Settings.Mouse.ControllerEnabled) {
+        SDL_Init(SDL_INIT_GAMECONTROLLER);
+        Keyboard->Open_Controller();
+    }
 
     return true;
 }
@@ -475,13 +477,6 @@ void Get_Video_Mouse(int& x, int& y)
     }
 }
 
-#ifdef VITA
-SDL_Rect Get_Render_Rect()
-{
-    return render_dst;
-}
-#endif
-
 void Get_Game_Resolution(int& w, int& h)
 {
     w = hwcursor.GameW;
@@ -493,6 +488,13 @@ void Set_Video_Mouse(int x, int y)
     hwcursor.X = x;
     hwcursor.Y = y;
 }
+
+#ifdef VITA
+SDL_Rect Get_Render_Rect()
+{
+    return render_dst;
+}
+#endif
 
 /***********************************************************************************************
  * Reset_Video_Mode -- Resets video mode and deletes Direct Draw Object                        *

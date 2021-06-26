@@ -79,8 +79,6 @@ const int32_t VITA_FULLSCREEN_WIDTH = 960;
 const int32_t VITA_FULLSCREEN_HEIGHT = 544;
 
 SDL_Rect Get_Render_Rect();
-void Get_Game_Resolution(int& w, int& h);
-void Set_Video_Mouse(int x, int y);
 #endif
 
 /*

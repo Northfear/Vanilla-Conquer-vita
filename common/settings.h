@@ -16,6 +16,7 @@ public:
     {
         bool RawInput;
         int Sensitivity;
+        bool ControllerEnabled;
         int ControllerPointerSpeed;
     } Mouse;
 
@@ -39,7 +40,6 @@ public:
     struct
     {
         bool ScaleGameSurface;
-        int ControllerPointerSpeed;
     } Vita;
 #endif
 };

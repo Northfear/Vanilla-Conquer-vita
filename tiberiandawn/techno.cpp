@@ -2479,8 +2479,6 @@ BulletClass* TechnoClass::Fire_At(TARGET target, int which)
         COORDINATE source, dest;
         source = Fire_Coord(which);
         dest = As_Coord(target);
-        //obelisk laser is not cleared and is causing slowdowns after shooting
-#ifndef VITA
         if (SpecialDialog == SDLG_NONE) {
             Map.Coord_To_Pixel(source, x, y);
             Map.Coord_To_Pixel(dest, x1, y1);
@@ -2508,7 +2506,6 @@ BulletClass* TechnoClass::Fire_At(TARGET target, int which)
             LineMaxFrames = 5;
             Map.Flag_To_Redraw(true);
         }
-#endif
         new SmudgeClass(Random_Pick(SMUDGE_SCORCH1, SMUDGE_SCORCH6), As_Coord(target));
     }
 

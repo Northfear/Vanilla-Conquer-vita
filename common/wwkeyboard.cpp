@@ -677,10 +677,10 @@ void WWKeyboardClass::Process_Controller_Axis_Motion()
     const uint32_t currentTime = SDL_GetTicks();
     const float deltaTime = currentTime - LastControllerTime;
     LastControllerTime = currentTime;
-
+#ifdef VITA
     if (!AnalogStickMouse)
         return;
-
+#endif
     if (ControllerLeftXAxis != 0 || ControllerLeftYAxis != 0) {
         const int16_t xSign = (ControllerLeftXAxis > 0) - (ControllerLeftXAxis < 0);
         const int16_t ySign = (ControllerLeftYAxis > 0) - (ControllerLeftYAxis < 0);

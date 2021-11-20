@@ -69,8 +69,6 @@ void Toggle_Video_Fullscreen();
 void Reset_Video_Mode();
 unsigned Get_Free_Video_Memory();
 void Wait_Blit();
-void Get_Game_Resolution(int& w, int& h);
-void Set_Video_Mouse(int x, int y);
 
 #ifdef VITA
 #include <SDL.h>
@@ -78,6 +76,8 @@ void Set_Video_Mouse(int x, int y);
 const int32_t VITA_FULLSCREEN_WIDTH = 960;
 const int32_t VITA_FULLSCREEN_HEIGHT = 544;
 
+void Get_Game_Resolution(int& w, int& h);
+void Set_Video_Mouse(int x, int y);
 SDL_Rect Get_Render_Rect();
 #endif
 

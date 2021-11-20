@@ -478,6 +478,7 @@ void Get_Video_Mouse(int& x, int& y)
     }
 }
 
+#ifdef VITA
 void Get_Game_Resolution(int& w, int& h)
 {
     w = hwcursor.GameW;
@@ -490,7 +491,6 @@ void Set_Video_Mouse(int x, int y)
     hwcursor.Y = y;
 }
 
-#ifdef VITA
 SDL_Rect Get_Render_Rect()
 {
     return render_dst;

@@ -46,6 +46,7 @@ set(COMMON_SRC
     iff.cpp
     ini.cpp
     int.cpp
+    internet.cpp
     irandom.cpp
     keybuff.cpp
     keyframe.cpp
@@ -68,6 +69,7 @@ set(COMMON_SRC
     pk.cpp
     pkpipe.cpp
     pkstraw.cpp
+    ramfile.cpp
     random.cpp
     rand.cpp
     rawfile.cpp
@@ -92,6 +94,7 @@ set(COMMON_SRC
     winasm.cpp
     windows.cpp
     winhide.cpp
+    winstub.cpp
     wsa.cpp
     xordelta.cpp
     xpipe.cpp

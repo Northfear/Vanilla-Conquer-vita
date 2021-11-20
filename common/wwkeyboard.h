@@ -39,6 +39,7 @@
 #include <stdint.h>
 
 #ifdef SDL2_BUILD
+#define SDL_MAIN_HANDLED
 #include <SDL.h>
 #endif
 
@@ -745,7 +746,9 @@ public:
     void Open_Controller();
     void Close_Controller();
     bool Is_Analog_Scroll_Active();
+#ifdef VITA
     bool Is_Analog_Only_Scroll();
+#endif
     unsigned char Get_Scroll_Direction();
 #endif
 
@@ -803,16 +806,20 @@ private:
     void Process_Controller_Axis_Motion();
 
     // used to convert user-friendly pointer speed values into more useable ones
-    const double CONTROLLER_SPEED_MOD = 2000000.0;
+    static constexpr float CONTROLLER_SPEED_MOD = 2000000.0f;
     // bigger value correndsponds to faster pointer movement speed with bigger stick axis values
-    const double CONTROLLER_AXIS_SPEEDUP = 1.03;
+    static constexpr float CONTROLLER_AXIS_SPEEDUP = 1.03f;
     // speedup value while the trigger is pressed
-    const int CONTROLLER_TRIGGER_SPEEDUP = 2;
+    static constexpr int CONTROLLER_TRIGGER_SPEEDUP = 2;
 
     enum
     {
+#ifdef VITA
+        CONTROLLER_L_DEADZONE_MOUSE = 4000,
         CONTROLLER_L_DEADZONE_SCROLL = 6000,
-        CONTROLLER_L_DEADZONE_MOUSE = 3000,
+#else
+        CONTROLLER_L_DEADZONE = 4000,
+#endif
         CONTROLLER_R_DEADZONE = 6000,
         CONTROLLER_TRIGGER_R_DEADZONE = 3000
     };
@@ -823,14 +830,12 @@ private:
     int16_t ControllerRightXAxis = 0;
     int16_t ControllerRightYAxis = 0;
     uint32_t LastControllerTime = 0;
-    float EmulatedPointerPosX = 0;
-    float EmulatedPointerPosY = 0;
     float ControllerSpeedBoost = 1;
     bool AnalogScrollActive = false;
     ScrollDirType ScrollDirection = SDIR_NONE;
-    bool AnalogStickMouse = true;
 
 #ifdef VITA
+    bool AnalogStickMouse = true;
     void Handle_Touch_Event(const SDL_TouchFingerEvent& event);
     SDL_FingerID FirstFingerId = 0;
     int16_t NumTouches = 0;

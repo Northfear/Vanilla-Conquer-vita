@@ -421,6 +421,7 @@ void Map_Selection(void)
     int scenario, lastscenario;
     int house = PlayerPtr->Class->House;
     int attackxcoord = 0;
+    int factor = Get_Resolution_Factor() + 1;
 
     static int const _countryx[] = {195,
                                     217,
@@ -1017,7 +1018,7 @@ void Map_Selection(void)
         if (Keyboard->Check()) {
             if ((Keyboard->Get() & 0x10FF) == KN_LMOUSE) {
                 for (selection = 0; selection < CountryArray[scenario].Choices[ScenDir]; selection++) {
-                    color = click_map.Get_Pixel(Get_Mouse_X() / 2, Get_Mouse_Y() / 2);
+                    color = click_map.Get_Pixel(Get_Mouse_X() / factor, Get_Mouse_Y() / factor);
 
                     /*
                     ** Special hack for Egypt the second time through
@@ -1129,8 +1130,8 @@ void Map_Selection(void)
     Theme.Queue_Song(THEME_NONE);
     Fade_Palette_To(BlackPalette, FADE_PALETTE_MEDIUM, NULL);
     delete europe;
-    delete progresspalette;
-    delete grey2palette;
+    delete[] progresspalette;
+    delete[] grey2palette;
     delete TextPrintBuffer;
     TextPrintBuffer = NULL;
     BlitList.Clear();

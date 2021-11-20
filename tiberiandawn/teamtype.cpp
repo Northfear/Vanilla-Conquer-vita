@@ -354,6 +354,8 @@ void TeamTypeClass::Fill_In(const char* name, const char* entry)
     */
     MissionCount = atoi(strtok(NULL, ","));
 
+    // Some missions may have an incorrect MissionCount e.g. GDI SCG03EA.INI
+    // So this needs to be handled
     for (i = 0; i < MissionCount; i++) {
         p1 = strtok(NULL, ",:");
         p2 = strtok(NULL, ",:");

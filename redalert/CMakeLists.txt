@@ -1,5 +1,4 @@
 set(REDALERT_SRC
-    _wsproto.cpp
     aadata.cpp
     abstract.cpp
     adata.cpp
@@ -107,7 +106,6 @@ set(REDALERT_SRC
     queue.cpp
     radar.cpp
     radio.cpp
-    ramfile.cpp
     rawolapi.cpp
     reinf.cpp
     rules.cpp

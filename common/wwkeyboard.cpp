@@ -895,27 +895,27 @@ void WWKeyboardClass::Handle_Touch_Event(const SDL_TouchFingerEvent& event)
         Get_Game_Resolution(gameWidth, gameHeight);
         SDL_Rect renderRect = Get_Render_Rect();
 
-        EmulatedPointerPosX =
+        float emulatedPointerPosX =
             static_cast<float>(screenWidth * event.x - renderRect.x) * (static_cast<double>(gameWidth) / renderRect.w);
-        EmulatedPointerPosY = static_cast<float>(screenHeight * event.y - renderRect.y)
+        float emulatedPointerPosY = static_cast<float>(screenHeight * event.y - renderRect.y)
                               * (static_cast<double>(gameHeight) / renderRect.h);
 
-        if (EmulatedPointerPosX < 0)
-            EmulatedPointerPosX = 0;
-        else if (EmulatedPointerPosX >= gameWidth)
-            EmulatedPointerPosX = gameWidth - 1;
+        if (emulatedPointerPosX < 0)
+            emulatedPointerPosX = 0;
+        else if (emulatedPointerPosX >= gameWidth)
+            emulatedPointerPosX = gameWidth - 1;
 
-        if (EmulatedPointerPosY < 0)
-            EmulatedPointerPosY = 0;
-        else if (EmulatedPointerPosY >= gameHeight)
-            EmulatedPointerPosY = gameHeight - 1;
+        if (emulatedPointerPosY < 0)
+            emulatedPointerPosY = 0;
+        else if (emulatedPointerPosY >= gameHeight)
+            emulatedPointerPosY = gameHeight - 1;
 
-        Set_Video_Mouse(EmulatedPointerPosX, EmulatedPointerPosY);
+        Set_Video_Mouse(emulatedPointerPosX, emulatedPointerPosY);
 
         if (event.type == SDL_FINGERDOWN) {
-            Put_Mouse_Message(VK_LBUTTON, EmulatedPointerPosX, EmulatedPointerPosY, 0);
+            Put_Mouse_Message(VK_LBUTTON, emulatedPointerPosX, emulatedPointerPosY, 0);
         } else if (event.type == SDL_FINGERUP) {
-            Put_Mouse_Message(VK_LBUTTON, EmulatedPointerPosX, EmulatedPointerPosY, 1);
+            Put_Mouse_Message(VK_LBUTTON, emulatedPointerPosX, emulatedPointerPosY, 1);
         }
     }
 }

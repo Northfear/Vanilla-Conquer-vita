@@ -14,6 +14,7 @@
 #include <vector>
 
 #define PATH_MAX 256
+#define FNM_CASEFOLD (1 << 4)
 
 std::string StringLower(std::string str)
 {

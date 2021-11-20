@@ -35,7 +35,9 @@ static inline int socket_cleanup(void)
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netdb.h> // for getaddrinfo() and freeaddrinfo()
+#ifndef VITA
 #include <sys/ioctl.h>
+#endif
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h> // for close()

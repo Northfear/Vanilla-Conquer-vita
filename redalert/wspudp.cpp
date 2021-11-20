@@ -49,7 +49,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(VITA)
 #include <ifaddrs.h>
 #endif
 

@@ -45,6 +45,11 @@ public:
         int RearTouchSpeed;
     } Vita;
 #endif
+
+    struct
+    {
+        bool MouseWheelScrolling;
+    } Options;
 };
 
 extern SettingsClass Settings;

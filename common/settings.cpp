@@ -17,6 +17,7 @@ SettingsClass::SettingsClass()
     Mouse.ControllerEnabled = false;
 #endif
     Mouse.ControllerPointerSpeed = 10;
+    Options.MouseWheelScrolling = true;
 
     /*
     ** Video settings
@@ -51,6 +52,11 @@ void SettingsClass::Load(INIClass& ini)
     Mouse.Sensitivity = ini.Get_Int("Mouse", "Sensitivity", Mouse.Sensitivity);
     Mouse.ControllerEnabled = ini.Get_Bool("Mouse", "ControllerEnabled", Mouse.ControllerEnabled);
     Mouse.ControllerPointerSpeed = ini.Get_Int("Mouse", "ControllerPointerSpeed", Mouse.ControllerPointerSpeed);
+    /*
+    ** Compatibility with CNCNet configuration for this feature
+    */
+    Options.MouseWheelScrolling = ini.Get_Bool("Options", "MouseWheelScrolling", Options.MouseWheelScrolling);
+    Options.MouseWheelScrolling = ini.Get_Bool("Mouse", "MouseWheelScrolling", Options.MouseWheelScrolling);
 
     /*
     ** Video settings
@@ -96,6 +102,7 @@ void SettingsClass::Save(INIClass& ini)
     ini.Put_Int("Mouse", "Sensitivity", Mouse.Sensitivity);
     ini.Put_Bool("Mouse", "ControllerEnabled", Mouse.ControllerEnabled);
     ini.Put_Int("Mouse", "ControllerPointerSpeed", Mouse.ControllerPointerSpeed);
+    ini.Put_Bool("Mouse", "MouseWheelScrolling", Options.MouseWheelScrolling);
 
     /*
     ** Video settings

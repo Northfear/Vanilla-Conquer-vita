@@ -75,6 +75,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "settings.h"
 
 /*
 **	Define "_RETRIEVE" if the palette morphing tables are part of the loaded data. If this
@@ -362,22 +363,20 @@ void SidebarClass::Init_IO(void)
             TBCZoom->Set_Text("Map");
             TBCZoom->Set_Style(TPF_6POINT | TPF_NOSHADOW | TPF_CENTER);
 
-            /* Hardcode button positions for now. */
+            Repair->X = 242;
+            Repair->Y = 80;
+            Repair->Width = 32;
+            Repair->Height = 9;
 
-            Repair->X = 482 / 2;
-            Repair->Y = 160 / 2;
-            Repair->Width = String_Pixel_Width("Repair") + 2;
-            Repair->Height = String_Pixel_Width("R") + 3;
+            Upgrade->X = Repair->X + Repair->Width + 2;
+            Upgrade->Y = Repair->Y;
+            Upgrade->Width = 20;
+            Upgrade->Height = Repair->Height;
 
-            Upgrade->X = (484 + 65) / 2 + 2;
-            Upgrade->Y = 160 / 2;
-            Upgrade->Width = String_Pixel_Width("Sell") + 3;
-            Upgrade->Height = String_Pixel_Width("S") + 3;
-
-            Zoom->X = (480 + 110) / 2 + 5;
-            Zoom->Y = 160 / 2;
-            Zoom->Width = String_Pixel_Width("Map") + 1;
-            Zoom->Height = String_Pixel_Width("S") + 3;
+            Zoom->X = Upgrade->X + Upgrade->Width + 2;
+            Zoom->Y = Upgrade->Y;
+            Zoom->Width = 20;
+            Zoom->Height = Upgrade->Height;
         }
 
         Repair->IsSticky = true;
@@ -716,8 +715,24 @@ bool SidebarClass::Add(RTTIType type, int id, bool via_capture)
  *=============================================================================================*/
 bool SidebarClass::Scroll(bool up, int column)
 {
+    if (column == -1) {
+        bool scr = false;
+        scr |= Column[0].Scroll(up);
+        scr |= Column[1].Scroll(up);
+        if (!scr) {
+            Sound_Effect(VOC_SCOLD);
+        }
+        if (scr) {
+            IsToRedraw = true;
+            Flag_To_Redraw(false);
+            return (true);
+        }
+        return (false);
+    }
+
     if (Column[column].Scroll(up)) {
-        IsToRedraw = true;
+        // No need to redraw the whole sidebar juts because we scrolled a strip is there? ST - 10/15/96 7:29PM
+        // IsToRedraw = true;
         Flag_To_Redraw(false);
         return (true);
     }
@@ -757,9 +772,10 @@ void SidebarClass::Draw_It(bool complete)
                 if (complete) {
                     LogicPage->Fill_Rect(
                         SideX + Map.PowWidth, SideY, SideX + SideWidth - 1, SideY + SideHeight - 1, LTGREY);
+
+                    // Draw rectangle covering "Repair", "Sell", and "Map Buttons"
+                    LogicPage->Fill_Rect(SideX, SideY - 1, SideX + SideWidth, SideY + TopHeight - 1, LTGREY);
                 }
-                // Draw rectangle covering "Repair", "Sell", and "Map Buttons"
-                LogicPage->Fill_Rect(SideX, SideY - 1, SideX + SideWidth, SideY + TopHeight, LTGREY);
 
                 Draw_Box(SideX + Map.PowWidth,
                          SideY + TopHeight,
@@ -843,20 +859,6 @@ void SidebarClass::AI(KeyNumType& input, int x, int y)
     if (!Debug_Map) {
         Column[0].AI(input, x, y);
         Column[1].AI(input, x, y);
-    }
-
-    if (IsSidebarActive && !Debug_Map) {
-
-        if (input == KN_DOWN) {
-            redraw |= Column[0].Scroll(false);
-            redraw |= Column[1].Scroll(false);
-            input = KN_NONE;
-        }
-        if (input == KN_UP) {
-            redraw |= Column[0].Scroll(true);
-            redraw |= Column[1].Scroll(true);
-            input = KN_NONE;
-        }
     }
 
     if (IsSidebarActive) {
@@ -1742,6 +1744,7 @@ void SidebarClass::StripClass::Draw_It(bool complete)
 {
     if (IsToRedraw || complete) {
         IsToRedraw = false;
+        int factor = Get_Resolution_Factor();
 
         if (RunningAsDLL) {
             return;
@@ -1753,7 +1756,7 @@ void SidebarClass::StripClass::Draw_It(bool complete)
         /*
         ** New sidebar needs to be drawn not filled
         */
-        if (BuildableCount < MAX_VISIBLE) {
+        if (factor > 0 && BuildableCount < MAX_VISIBLE) {
             CC_Draw_Shape(LogoShapes, ID, X + 3, Y - 1, WINDOW_MAIN, SHAPE_WIN_REL | SHAPE_NORMAL, 0);
         }
 
@@ -1910,8 +1913,8 @@ void SidebarClass::StripClass::Draw_It(bool complete)
             **
             ** Don't draw blank shapes over the new 640x400 sidebar art - ST 5/1/96 6:01PM
             */
-            if (shapenum != SB_BLANK || shapefile != LogoShapes) {
-                IsTheaterShape = true; // This shape is theater specific
+            if (factor == 0 || shapenum != SB_BLANK || shapefile != LogoShapes) {
+                IsTheaterShape = (bool)factor; // This shape is theater specific
                 CC_Draw_Shape(shapefile,
                               shapenum,
                               x - WindowList[WINDOW_SIDEBAR][WINDOWX] + LeftEdgeOffset,

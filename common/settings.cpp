@@ -37,6 +37,8 @@ SettingsClass::SettingsClass()
 
 #ifdef VITA
     Vita.ScaleGameSurface = true;
+    Vita.RearTouchEnabled = true;
+    Vita.RearTouchSpeed = 5;
 #endif
 }
 
@@ -80,6 +82,8 @@ void SettingsClass::Load(INIClass& ini)
 
 #ifdef VITA
     Vita.ScaleGameSurface = ini.Get_Bool("Vita", "ScaleGameSurface", Vita.ScaleGameSurface);
+    Vita.RearTouchEnabled = ini.Get_Bool("Vita", "RearTouchEnabled", Vita.RearTouchEnabled);
+    Vita.RearTouchSpeed = ini.Get_Int("Vita", "RearTouchSpeed", Vita.RearTouchSpeed);
 #endif
 }
 
@@ -116,5 +120,7 @@ void SettingsClass::Save(INIClass& ini)
 
 #ifdef VITA
     ini.Put_Bool("Vita", "ScaleGameSurface", Vita.ScaleGameSurface);
+    ini.Put_Bool("Vita", "RearTouchEnabled", Vita.RearTouchEnabled);
+    ini.Put_Int("Vita", "RearTouchSpeed", Vita.RearTouchSpeed);
 #endif
 }

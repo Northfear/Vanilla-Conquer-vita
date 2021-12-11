@@ -839,6 +839,12 @@ private:
     void Handle_Touch_Event(const SDL_TouchFingerEvent& event);
     SDL_FingerID FirstFingerId = 0;
     int16_t NumTouches = 0;
+
+    static constexpr int REAR_TOUCH_SPEED_MOD = 100;
+    static constexpr int REAR_LMB_DELAY = 250;
+    uint32_t LastRearTouchTime = 0;
+    SDL_FingerID RearFirstFingerId = 0;
+    int16_t RearNumTouches = 0;
 #endif
 #endif
 };

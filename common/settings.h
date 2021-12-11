@@ -41,6 +41,8 @@ public:
     struct
     {
         bool ScaleGameSurface;
+        bool RearTouchEnabled;
+        int RearTouchSpeed;
     } Vita;
 #endif
 };

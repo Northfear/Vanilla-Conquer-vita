@@ -874,9 +874,37 @@ bool WWKeyboardClass::Is_Analog_Only_Scroll()
 
 void WWKeyboardClass::Handle_Touch_Event(const SDL_TouchFingerEvent& event)
 {
-    // ignore back touchpad
+    // rear touchpad
     if (event.touchId != 0)
+    {
+        if (Settings.Vita.RearTouchEnabled)
+        {
+            if (event.type == SDL_FINGERDOWN) {
+                ++RearNumTouches;
+                if (RearNumTouches == 1) {
+                    RearFirstFingerId = event.fingerId;
+                }
+                LastRearTouchTime = SDL_GetTicks();
+            } else if (event.type == SDL_FINGERUP) {
+                --RearNumTouches;
+                if ((RearNumTouches == 0) && (SDL_GetTicks() - LastRearTouchTime < REAR_LMB_DELAY))
+                {
+                    int emulatedPointerPosX;
+                    int emulatedPointerPosY;
+                    Get_Video_Mouse(emulatedPointerPosX, emulatedPointerPosY);
+                    Put_Mouse_Message(VK_LBUTTON, emulatedPointerPosX, emulatedPointerPosY, 0);
+                    Put_Mouse_Message(VK_LBUTTON, emulatedPointerPosX, emulatedPointerPosY, 1);
+                }
+            } else if (event.type == SDL_FINGERMOTION) {
+                if (RearFirstFingerId == event.fingerId) {
+                    float movX = event.dx * REAR_TOUCH_SPEED_MOD * Settings.Vita.RearTouchSpeed;
+                    float movY = event.dy * REAR_TOUCH_SPEED_MOD * Settings.Vita.RearTouchSpeed;
+                    Move_Video_Mouse(movX, movY);
+                }
+            }
+        }
         return;
+    }
 
     if (event.type == SDL_FINGERDOWN) {
         ++NumTouches;

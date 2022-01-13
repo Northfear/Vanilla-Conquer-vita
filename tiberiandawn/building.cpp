@@ -4601,6 +4601,7 @@ int BuildingClass::Mission_Repair(void)
 
             if (Transmit_Message(RADIO_NEED_TO_MOVE) == RADIO_ROGER) {
                 if (Contact_With_Whom()->Health_Ratio() < 0x0100 && Transmit_Message(RADIO_REPAIR) == RADIO_ROGER) {
+// still crashing on VITA with missing data
 #ifdef REMASTER_BUILD
                     // MBL 07.06.2020 - Patch 3: Change to TD Legacy: Adding "Repairing" VO for units on repair bay
                     // Per https://jaas.ea.com/browse/TDRA-7271

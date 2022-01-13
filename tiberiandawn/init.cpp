@@ -344,7 +344,6 @@ bool Init_Game(int, char*[])
             char sep[] = {PathsClass::SEP, '\0'};
             strcat(search_path, sep);
         }
-#endif
 
         strcpy(scan_path, search_path);
         strcat(scan_path, "SC*.MIX");

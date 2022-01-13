@@ -25,7 +25,7 @@ Check Vanilla Conquer Wiki for more info about required folder/file structure an
 ### Build
 ```
 mkdir build && cd build
-cmake .. -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake -DVITA=true -DCMAKE_BUILD_TYPE=None
+cmake .. -DCMAKE_TOOLCHAIN_FILE=$VITASDK/share/vita.toolchain.cmake -DVITA=true -DNETWORKING=OFF -DCMAKE_BUILD_TYPE=None
 make
 ```
 
@@ -54,6 +54,8 @@ Use R1 + D-Pad to create teams (1-4) and D-Pad to select them (same as Ctrl + 1-
 Left analog stick can be used for both cursor movement (good for building or precise movement) or map scrolling (useful during combat when you're giving command with a touchpad). Cursor movement mode is default. To switch between both modes use R1 + L1 + START key combination.
 
 You can change cursor movement speed by editing ```ControllerPointerSpeed``` option under ```[Vita]``` section inside ```conquer.ini```/```redalert.ini``` files.
+
+You can also control cursor movement with rear touchpad. To do so set ```RearTouchEnabled``` option to ```yes```. You can change its speed with ```RearTouchSpeed``` option.
 
 ### Other
 

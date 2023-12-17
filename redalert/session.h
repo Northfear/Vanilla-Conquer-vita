@@ -35,6 +35,7 @@
 #define SESSION_H
 
 #include "common/ipxaddr.h"
+#include "common/bitfields.h"
 #include "msglist.h"
 #include "connect.h"
 #include "version.h"
@@ -174,7 +175,7 @@ typedef enum ModemGameType
 //...........................................................................
 // Commands sent over the serial Global Channel
 //...........................................................................
-typedef enum SerialCommandType
+typedef enum SerialCommandType : int32_t
 {
     SERIAL_CONNECT = 100,       // Are you there?  Hello?  McFly?
     SERIAL_GAME_OPTIONS = 101,  // Hey, dudes, here's some new game options
@@ -195,7 +196,7 @@ typedef enum SerialCommandType
 //...........................................................................
 // Commands sent over the network Global Channel
 //...........................................................................
-typedef enum NetCommandType
+typedef enum NetCommandType : int32_t
 {
     NET_QUERY_GAME,          // Hey, what games are out there?
     NET_ANSWER_GAME,         // Yo, Here's my game's name!
@@ -258,13 +259,15 @@ typedef struct
 typedef struct NodeNameTag
 {
     char Name[MPLAYER_NAME_MAX]; // player or game name
+#ifdef NETWORKING
     IPXAddressClass Address;
+#endif
     union
     {
         struct
         {
-            unsigned char IsOpen;   // is the game open?
-            unsigned long LastTime; // last time we heard from this guy
+            unsigned char IsOpen;  // is the game open?
+            unsigned int LastTime; // last time we heard from this guy
         } Game;
         struct
         {
@@ -275,7 +278,7 @@ typedef struct NodeNameTag
         } Player;
         struct
         {
-            unsigned long LastTime;   // last time we heard from this guy
+            unsigned int LastTime;    // last time we heard from this guy
             unsigned char LastChance; // we're about to remove him from the list
             PlayerColorType Color;    // chat player's color
         } Chat;
@@ -285,6 +288,7 @@ typedef struct NodeNameTag
 //...........................................................................
 // Packet sent over the serial Global Channel
 //...........................................................................
+#pragma pack(push, 1)
 typedef struct
 {
     SerialCommandType Command;   // One of the enum's defined above
@@ -292,12 +296,12 @@ typedef struct
     unsigned char ID;            // unique ID of sender of message
     union
     {
-        struct
+        struct BITFIELD_STRUCT
         {
             HousesType House;                  // player's House
             PlayerColorType Color;             // player's color or SIGNOFF ID
-            unsigned long MinVersion;          // min version this game supports
-            unsigned long MaxVersion;          // max version this game supports
+            unsigned int MinVersion;           // min version this game supports
+            unsigned int MaxVersion;           // max version this game supports
             char Scenario[DESCRIP_MAX];        // Scenario name
             unsigned int Credits;              // player's credits
             unsigned int IsBases : 1;          // 1 = bases are allowed
@@ -312,7 +316,7 @@ typedef struct
             int Seed;                          // random number seed
             SpecialClass Special;              // command-line options
             unsigned int GameSpeed;            // Game Speed
-            unsigned long ResponseTime;        // packet response time
+            unsigned int ResponseTime;         // packet response time
             unsigned int FileLength;           // Length of scenario file to expect from host.
 #ifdef WOLAPI_INTEGRATION
             char ShortFileName[13]; // Name of scenario file to expect from host
@@ -355,20 +359,20 @@ typedef struct GlobalPacketType
     char Name[MPLAYER_NAME_MAX]; // Player or Game Name
     union
     {
-        struct
+        struct BITFIELD_STRUCT
         {
             unsigned int IsOpen : 1; // 1 = game is open for joining
         } GameInfo;
         struct
         {
-            HousesType House;         // player's House
-            PlayerColorType Color;    // player's color
-            unsigned long NameCRC;    // CRC of player's game's name
-            unsigned long MinVersion; // game's min supported version
-            unsigned long MaxVersion; // game's max supported version
-            int CheatCheck;           // Unique ID of "rules.ini" file.
+            HousesType House;        // player's House
+            PlayerColorType Color;   // player's color
+            unsigned int NameCRC;    // CRC of player's game's name
+            unsigned int MinVersion; // game's min supported version
+            unsigned int MaxVersion; // game's max supported version
+            int CheatCheck;          // Unique ID of "rules.ini" file.
         } PlayerInfo;
-        struct
+        struct BITFIELD_STRUCT
         {
             char Scenario[DESCRIP_MAX];        // Scenario Name
             unsigned int Credits;              // player's credits
@@ -383,7 +387,7 @@ typedef struct GlobalPacketType
             int Seed;                          // random number seed
             SpecialClass Special;              // command-line options
             unsigned int GameSpeed;            // Game Speed
-            unsigned long Version;             // version # common to all players
+            unsigned int Version;              // version # common to all players
             unsigned int FileLength;           // Length of scenario file to expect from host.
 #ifdef WOLAPI_INTEGRATION
             char ShortFileName[13]; // Name of scenario file to expect from host
@@ -397,7 +401,7 @@ typedef struct GlobalPacketType
         {
             char Buf[MAX_MESSAGE_LENGTH]; // inter-user message
             PlayerColorType Color;        // color of sender of message
-            unsigned long NameCRC;        // CRC of sender's Game Name
+            unsigned int NameCRC;         // CRC of sender's Game Name
         } Message;
         struct
         {
@@ -409,12 +413,12 @@ typedef struct GlobalPacketType
         } Reject;
         struct
         {
-            unsigned long ID;      // unique ID for this chat node
+            unsigned int ID;       // unique ID for this chat node
             PlayerColorType Color; // my color
         } Chat;
     };
 } GlobalPacketType;
-
+#pragma pack(pop)
 //...........................................................................
 // For finding sync bugs; filled in by the engine when certain conditions
 // are met; the pointers allow examination of objects in the debugger.
@@ -485,7 +489,7 @@ private:
 typedef struct
 {
     int ScenarioIndex; // Used on host machine only as index into scenario list
-    int Bases;
+    bool Bases;
     int Credits;
     int Tiberium;
     int Goodies;
@@ -565,7 +569,7 @@ public:
     //.....................................................................
     // Unique workstation ID, for detecting my own packets
     //.....................................................................
-    unsigned long UniqueID;
+    unsigned int UniqueID;
 
     //.....................................................................
     // Player's local options
@@ -589,8 +593,8 @@ public:
     // a given packet.  It's set by the RESPONSE_TIME event.
     // 'FrameSendRate' is the # frames between data packets
     //.....................................................................
-    unsigned long MaxAhead;
-    unsigned long FrameSendRate;
+    unsigned int MaxAhead;
+    unsigned int FrameSendRate;
 
     int DesiredFrameRate;
 
@@ -624,13 +628,16 @@ public:
 
     char ScenarioRequests[20]; // Which players requested scenario files
     int RequestCount;
+#ifdef NETWORKING
     IPXAddressClass HostAddress;
-
+#endif
     //.....................................................................
     // This is the multiplayer messaging system
     //.....................................................................
     MessageListClass Messages;
+#ifdef NETWORKING
     IPXAddressClass MessageAddress;
+#endif
     char LastMessage[MAX_MESSAGE_LENGTH];
     unsigned WWChat : 1; // 1 = go into special WW Chat mode
 
@@ -663,15 +670,15 @@ public:
     //.....................................................................
     // IPX-specific variables
     //.....................................................................
-    int IsBridge;                              // 1 = we're crossing a bridge
-    IPXAddressClass BridgeNet;                 // address of bridge
-    bool NetStealth;                           // makes us invisible
-    bool NetProtect;                           // keeps others from messaging us
-    bool NetOpen;                              // 1 = game is open for joining
-    char GameName[MPLAYER_NAME_MAX];           // game's name
-    GlobalPacketType GPacket;                  // global packet
-    int GPacketlen;                            // global packet length
-    IPXAddressClass GAddress;                  // address of sender
+    bool NetStealth;                 // makes us invisible
+    bool NetProtect;                 // keeps others from messaging us
+    bool NetOpen;                    // 1 = game is open for joining
+    char GameName[MPLAYER_NAME_MAX]; // game's name
+    GlobalPacketType GPacket;        // global packet
+    int GPacketlen;                  // global packet length
+#ifdef NETWORKING
+    IPXAddressClass GAddress; // address of sender
+#endif
     unsigned short GProductID;                 // product ID of sender
     char MetaPacket[MAX_IPX_PACKET_SIZE];      // packet building buffer
     int MetaSize;                              // size of MetaPacket
@@ -695,14 +702,14 @@ public:
     //.....................................................................
     // For finding Sync Bugs
     //.....................................................................
-    long TrapFrame;            // frame # to start trapping 'TrapObject'
+    int TrapFrame;             // frame # to start trapping 'TrapObject'
     RTTIType TrapObjType;      // type of object to trap
     TrapObjectType TrapObject; // ptr to object to trap (watch)
     COORDINATE TrapCoord;      // coord of object, 0 = ignore
     TARGET TrapTarget;         // Target # of object, 0 = ignore
     CellClass* TrapCell;       // Ptr to cell to trap (watch)
     int TrapCheckHeap;         // true = check the heap as of TrapFrame
-    long TrapPrintCRC;         // Frame # to print CRC state file
+    int TrapPrintCRC;          // Frame # to print CRC state file
 };
 
 #endif // SESSION_H

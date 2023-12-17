@@ -63,8 +63,9 @@
 #define _unlink         unlink
 #define raw_fopen(x, y) fopen(x, y)
 #else
+#include <tchar.h>
 #include "utf.h"
-#define raw_fopen(x, y) _wfopen(UTF8To16(x), UTF8To16(y))
+#define raw_fopen(x, y) _tfopen(UTF8ToTCHAR(x), UTF8ToTCHAR(y))
 #endif
 
 #include <sys/stat.h>
@@ -288,6 +289,7 @@ int RawFileClass::Open(int rights)
         */
         if (Handle == nullptr) {
             Error(errno, false, Filename);
+            return (false);
         }
         break;
     }
@@ -437,9 +439,9 @@ void RawFileClass::Close(void)
  * HISTORY:                                                                                    *
  *   10/18/1994 JLB : Created.                                                                 *
  *=============================================================================================*/
-long RawFileClass::Read(void* buffer, long size)
+int RawFileClass::Read(void* buffer, int size)
 {
-    long bytesread = 0; // Running count of the number of bytes read into the buffer.
+    int bytesread = 0;  // Running count of the number of bytes read into the buffer.
     int opened = false; // Was the file opened by this routine?
 
     /*
@@ -466,7 +468,7 @@ long RawFileClass::Read(void* buffer, long size)
         size = size < remainder ? size : remainder;
     }
 
-    long total = 0;
+    int total = 0;
     while (size > 0) {
         clearerr(Handle);
         bytesread = fread(buffer, 1, size, Handle);
@@ -510,9 +512,9 @@ long RawFileClass::Read(void* buffer, long size)
  * HISTORY:                                                                                    *
  *   10/18/1994 JLB : Created.                                                                 *
  *=============================================================================================*/
-long RawFileClass::Write(void const* buffer, long size)
+int RawFileClass::Write(void const* buffer, int size)
 {
-    long byteswritten = 0;
+    int byteswritten = 0;
     int opened = false; // Was the file manually opened?
 
     /*
@@ -577,7 +579,7 @@ long RawFileClass::Write(void const* buffer, long size)
  * HISTORY:                                                                                    *
  *   10/18/1994 JLB : Created.                                                                 *
  *=============================================================================================*/
-long RawFileClass::Seek(long pos, int dir)
+int RawFileClass::Seek(int pos, int dir)
 {
 
     /*
@@ -608,7 +610,7 @@ long RawFileClass::Seek(long pos, int dir)
         /*
         **	Perform the modified raw seek into the file.
         */
-        long newpos = Raw_Seek(pos, dir) - BiasStart;
+        int newpos = Raw_Seek(pos, dir) - BiasStart;
 
         /*
         **	Perform a final double check to make sure the file position fits with the bias range.
@@ -645,9 +647,9 @@ long RawFileClass::Seek(long pos, int dir)
  * HISTORY:                                                                                    *
  *   10/18/1994 JLB : Created.                                                                 *
  *=============================================================================================*/
-long RawFileClass::Size(void)
+int RawFileClass::Size(void)
 {
-    long size = 0;
+    int size = 0;
 
     /*
     **	A biased file already has its length determined.
@@ -666,7 +668,7 @@ long RawFileClass::Size(void)
         */
         clearerr(Handle);
 
-        long position = ftell(Handle);
+        int position = ftell(Handle);
         if (position < 0) {
             Error(errno, false, Filename);
             return 0;
@@ -727,7 +729,7 @@ int RawFileClass::Create(void)
     if (Open(WRITE)) {
 
         /*
-        **	A biased file must be at least as long as the bias offset. Seeking to the
+        **	A biased file must be at least as int as the bias offset. Seeking to the
         **	appropriate start offset has the effect of lengthening the file to the
         **	correct length.
         */
@@ -865,7 +867,7 @@ void RawFileClass::Bias(int start, int length)
  * HISTORY:                                                                                    *
  *   08/04/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-long RawFileClass::Raw_Seek(long pos, int dir)
+int RawFileClass::Raw_Seek(int pos, int dir)
 {
     /*
     **	If the file isn't opened, then this is a fatal error condition.
@@ -875,8 +877,18 @@ long RawFileClass::Raw_Seek(long pos, int dir)
     } else {
 
         clearerr(Handle);
-        if (fseek(Handle, pos, dir) < 0) {
-            Error(errno, false, Filename);
+
+        /*
+        ** If pos == 0 and dir == SEEK_CUR, fseek should basically do nothing.
+        ** However, some very bad implementations (like the Nintendo DS's libfat)
+        ** just goes back to the beginning of the file and iterate it until it
+        ** finds the current position, which is awful.  So instead of doing that,
+        ** guard this case so that sequential ::Read's do not take too much time.
+        */
+        if (!(pos == 0 && dir == SEEK_CUR)) {
+            if (fseek(Handle, pos, dir) < 0) {
+                Error(errno, false, Filename);
+            }
         }
 
         pos = ftell(Handle);

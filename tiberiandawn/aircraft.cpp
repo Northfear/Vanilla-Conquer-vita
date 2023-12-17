@@ -158,7 +158,7 @@ TARGET AircraftClass::As_Target(void) const
  * HISTORY:                                                                                    *
  *   07/26/1994 JLB : Created.                                                                 *
  *=============================================================================================*/
-void* AircraftClass::operator new(size_t)
+void* AircraftClass::operator new(size_t) noexcept
 {
     void* ptr = Aircraft.Allocate();
     if (ptr) {
@@ -1199,7 +1199,7 @@ int AircraftClass::Mission_Unload(void)
                 Status = UNLOAD_PASSENGERS;
             } else {
                 if (!Is_LZ_Clear(NavCom)) {
-                    Assign_Destination(New_LZ(::As_Target(Waypoint[WAYPT_REINF])));
+                    Assign_Destination(New_LZ(::As_Target(Scen.Waypoint[WAYPT_REINF])));
                 } else {
                     if (Altitude == FLIGHT_LEVEL) {
                         Status = FLY_TO_LZ;
@@ -2556,7 +2556,7 @@ COORDINATE AircraftClass::Target_Coord(void) const
  * HISTORY:                                                                                    *
  *   06/19/1995 JLB : Created.                                                                 *
  *=============================================================================================*/
-RadioMessageType AircraftClass::Receive_Message(RadioClass* from, RadioMessageType message, long& param)
+RadioMessageType AircraftClass::Receive_Message(RadioClass* from, RadioMessageType message, int& param)
 {
     Validate();
     switch (message) {
@@ -3378,7 +3378,7 @@ int AircraftClass::Mission_Guard(void)
     **	Special case to force the GDI helicopter to be brain dead in the Nod
     **	mission where it is supposed to be captured.
     */
-    if (GameToPlay == GAME_NORMAL && Scenario == 7 && House->Class->House == HOUSE_GOOD) {
+    if (GameToPlay == GAME_NORMAL && Scen.Scenario == 7 && House->Class->House == HOUSE_GOOD) {
         return (TICKS_PER_SECOND * 20);
     }
 

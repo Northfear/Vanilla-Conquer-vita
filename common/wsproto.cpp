@@ -54,6 +54,7 @@
 
 #include "wsproto.h"
 #include "debugstring.h"
+#include "misc.h"
 #include "wwkeyboard.h"
 extern WWKeyboardClass* Keyboard;
 
@@ -64,7 +65,7 @@ WinsockInterfaceClass* PacketTransport = nullptr; // The object for interfacing 
 
 void Process_Network()
 {
-#if !defined _WIN32 || defined SDL2_BUILD
+#if !defined _WIN32 || defined SDL_BUILD
     if (PacketTransport != nullptr) {
         PacketTransport->Message_Handler();
     }
@@ -90,7 +91,7 @@ void Process_Network()
 WinsockInterfaceClass::WinsockInterfaceClass(void)
 {
     WinsockInitialised = false;
-#if defined _WIN32 && !defined SDL2_BUILD
+#if defined _WIN32 && !defined SDL_BUILD
     ASync = INVALID_HANDLE_VALUE;
 #else
     FD_ZERO(&ReadSockets);
@@ -196,12 +197,12 @@ void WinsockInterfaceClass::Close_Socket(void)
  *=============================================================================================*/
 bool WinsockInterfaceClass::Start_Listening(void)
 {
-#if defined _WIN32 && !defined SDL2_BUILD
+#if defined _WIN32 && !defined SDL_BUILD
     /*
     ** Enable asynchronous events on the socket
     */
     if (WSAAsyncSelect(Socket, MainWindow, Protocol_Event_Message(), FD_READ | FD_WRITE) == SOCKET_ERROR) {
-        WWDebugString("TS: Async select failed.\n");
+        DBG_LOG("TS: Async select failed.\n");
         assert(false);
         WSACancelAsyncRequest(ASync);
         ASync = INVALID_HANDLE_VALUE;
@@ -237,7 +238,7 @@ bool WinsockInterfaceClass::Start_Listening(void)
  *=============================================================================================*/
 void WinsockInterfaceClass::Stop_Listening(void)
 {
-#if defined _WIN32 && !defined SDL2_BUILD
+#if defined _WIN32 && !defined SDL_BUILD
     if (ASync != INVALID_HANDLE_VALUE) {
         WSACancelAsyncRequest(ASync);
         ASync = INVALID_HANDLE_VALUE;
@@ -328,7 +329,7 @@ bool WinsockInterfaceClass::Init(void)
     ** Initialise socket and event handle to null
     */
     Socket = INVALID_SOCKET;
-#if defined _WIN32 && !defined SDL2_BUILD
+#if defined _WIN32 && !defined SDL_BUILD
     ASync = INVALID_HANDLE_VALUE;
 #else
     FD_ZERO(&ReadSockets);
@@ -345,7 +346,7 @@ bool WinsockInterfaceClass::Init(void)
     if (rc != 0) {
         char out[128];
         sprintf(out, "TS: Winsock failed to initialise - error code %d.\n", GetLastError());
-        OutputDebugString(out);
+        OutputDebugStringA(out);
         return (false);
     }
 #endif
@@ -456,7 +457,7 @@ void WinsockInterfaceClass::WriteTo(void* buffer, int buffer_len, void* address)
     */
     OutBuffers.Add(packet);
 
-#if defined _WIN32 && !defined SDL2_BUILD
+#if defined _WIN32 && !defined SDL_BUILD
     /*
     ** Send a message to ourselves so that we can initiate a write if Winsock is idle.
     */
@@ -508,7 +509,7 @@ void WinsockInterfaceClass::Broadcast(void* buffer, int buffer_len)
     */
     OutBuffers.Add(packet);
 
-#if defined _WIN32 && !defined SDL2_BUILD
+#if defined _WIN32 && !defined SDL_BUILD
     /*
     ** Send a message to ourselves so that we can initiate a write if Winsock is idle.
     */
@@ -537,7 +538,7 @@ void WinsockInterfaceClass::Broadcast(void* buffer, int buffer_len)
  *=============================================================================================*/
 void WinsockInterfaceClass::Clear_Socket_Error(SOCKET socket)
 {
-    unsigned long error_code;
+    unsigned int error_code;
     socklen_t length = 4;
 
     getsockopt(socket, SOL_SOCKET, SO_ERROR, (char*)&error_code, &length);

@@ -248,7 +248,6 @@ public:
     ** Some additional padding in case we need to add data to the class and maintain backwards compatibility for
     *save/load
     */
-    unsigned char SaveLoadPadding[16];
 
     /*---------------------------------------------------------------------
     **	Constructors, Destructors, and overloaded operators.
@@ -399,7 +398,7 @@ public:
     virtual void Renovate(void);
     virtual void AI(void);
     virtual bool Revealed(HouseClass* house);
-    virtual RadioMessageType Receive_Message(RadioClass* from, RadioMessageType message, long& param);
+    virtual RadioMessageType Receive_Message(RadioClass* from, RadioMessageType message, int& param);
     void Cloaking_AI(void);
 
 /*

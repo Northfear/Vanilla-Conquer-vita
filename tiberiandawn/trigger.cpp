@@ -465,7 +465,7 @@ bool TriggerClass::Spring(EventType event, ObjectClass* obj)
         break;
 
     case ACTION_DZ:
-        new AnimClass(ANIM_LZ_SMOKE, Cell_Coord(Waypoint[25]));
+        new AnimClass(ANIM_LZ_SMOKE, Cell_Coord(Scen.Waypoint[25]));
         break;
 
     case ACTION_NONE:
@@ -655,7 +655,7 @@ bool TriggerClass::Spring(EventType event, CELL cell)
         break;
 
     case ACTION_DZ:
-        new AnimClass(ANIM_LZ_SMOKE, Cell_Coord(Waypoint[25]));
+        new AnimClass(ANIM_LZ_SMOKE, Cell_Coord(Scen.Waypoint[25]));
         break;
 
     case ACTION_NONE:
@@ -741,7 +741,7 @@ bool TriggerClass::Spring(EventType event, CELL cell)
  *   12/06/1994 BR : Created.                                                                  *
  *   06/25/1995 JLB : Added more trigger events.                                               *
  *=============================================================================================*/
-bool TriggerClass::Spring(EventType event, HousesType house, long data)
+bool TriggerClass::Spring(EventType event, HousesType house, int data)
 {
     Validate();
     /*
@@ -853,7 +853,7 @@ bool TriggerClass::Spring(EventType event, HousesType house, long data)
         break;
 
     case ACTION_DZ:
-        new AnimClass(ANIM_LZ_SMOKE, Cell_Coord(Waypoint[25]));
+        new AnimClass(ANIM_LZ_SMOKE, Cell_Coord(Scen.Waypoint[25]));
         break;
 
     case ACTION_WIN:
@@ -1254,7 +1254,7 @@ TriggerClass* TriggerClass::As_Pointer(char const* name)
  * HISTORY:                                                                                    *
  *   11/28/1994 BR : Created.                                                                  *
  *=============================================================================================*/
-void* TriggerClass::operator new(size_t)
+void* TriggerClass::operator new(size_t) noexcept
 {
     void* ptr = Triggers.Allocate();
     if (ptr) {

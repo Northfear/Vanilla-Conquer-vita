@@ -175,7 +175,7 @@ public:
 
     unsigned char const* Remap_Table(void) const;
 
-    static void* operator new(size_t);
+    static void* operator new(size_t) noexcept;
     static void* operator new(size_t, void* ptr)
     {
         return (ptr);
@@ -490,7 +490,7 @@ public:
     **	This specifies the building prerequisites required before an object
     **	of this type can be produced.
     */
-    long Prerequisite;
+    int Prerequisite;
 
     /*
     **	The risk and reward values are used to determine targets and paths
@@ -525,7 +525,7 @@ public:
     **	to take possession of an object type otherwise not normally allowed.
     **	This event usually occurs as a result of capture.
     */
-    long Ownable;
+    int Ownable;
 
     /*
     **	This is the small icon image that is used to display the object in
@@ -817,7 +817,7 @@ public:
         return (Type);
     };
 
-    static void* operator new(size_t);
+    static void* operator new(size_t) noexcept;
     static void* operator new(size_t, void* ptr)
     {
         return (ptr);
@@ -1032,7 +1032,7 @@ public:
                   int toffset,
                   MissionType order);
 
-    static void* operator new(size_t);
+    static void* operator new(size_t) noexcept;
     static void* operator new(size_t, void* ptr)
     {
         return (ptr);
@@ -1142,7 +1142,7 @@ public:
                     int rotation,
                     int toffset);
 
-    static void* operator new(size_t);
+    static void* operator new(size_t) noexcept;
     static void* operator new(size_t, void* ptr)
     {
         return (ptr);
@@ -1301,7 +1301,7 @@ public:
                       unsigned char const* override_remap,
                       int horizontaloffset = 0);
 
-    static void* operator new(size_t);
+    static void* operator new(size_t) noexcept;
     static void* operator new(size_t, void* ptr)
     {
         return (ptr);
@@ -1407,7 +1407,7 @@ public:
                       int rotation,
                       MissionType deforder);
 
-    static void* operator new(size_t);
+    static void* operator new(size_t) noexcept;
     static void* operator new(size_t, void* ptr)
     {
         return (ptr);
@@ -1594,7 +1594,7 @@ public:
     }
     BulletTypeClass(char const* name);
 
-    static void* operator new(size_t);
+    static void* operator new(size_t) noexcept;
     static void* operator new(size_t, void* ptr)
     {
         return (ptr);
@@ -1666,7 +1666,7 @@ public:
                      short const* occupy,
                      short const* overlap);
 
-    static void* operator new(size_t);
+    static void* operator new(size_t) noexcept;
     static void* operator new(size_t, void* ptr)
     {
         return (ptr);
@@ -1729,7 +1729,7 @@ public:
         : ObjectTypeClass(x){};
     TemplateTypeClass(TemplateType iconset, int theater, char const* ininame, int fullname);
 
-    static void* operator new(size_t);
+    static void* operator new(size_t) noexcept;
     static void* operator new(size_t, void* ptr)
     {
         return (ptr);
@@ -1958,7 +1958,7 @@ public:
                   AnimType virtualanim = ANIM_NONE);
 
     static void Init_Heap(void);
-    static void* operator new(size_t);
+    static void* operator new(size_t) noexcept;
     static void* operator new(size_t, void* ptr)
     {
         return (ptr);
@@ -2078,7 +2078,7 @@ public:
                      bool iswall,
                      bool iscrate);
 
-    static void* operator new(size_t);
+    static void* operator new(size_t) noexcept;
     static void* operator new(size_t, void* ptr)
     {
         return (ptr);
@@ -2154,7 +2154,7 @@ public:
                     bool isbib,
                     bool iscrater);
 
-    static void* operator new(size_t);
+    static void* operator new(size_t) noexcept;
     static void* operator new(size_t, void* ptr)
     {
         return (ptr);

@@ -527,7 +527,7 @@ FireErrorType UnitClass::Can_Fire(TARGET target, int which) const
  * HISTORY:                                                                                    *
  *   05/22/1994 JLB : Created.                                                                 *
  *=============================================================================================*/
-RadioMessageType UnitClass::Receive_Message(RadioClass* from, RadioMessageType message, long& param)
+RadioMessageType UnitClass::Receive_Message(RadioClass* from, RadioMessageType message, int& param)
 {
     Validate();
     switch (message) {
@@ -648,7 +648,7 @@ RadioMessageType UnitClass::Receive_Message(RadioClass* from, RadioMessageType m
                     if (cell == 0) {
                         Transmit_Message(RADIO_OVER_OUT, from);
                     } else {
-                        param = (long)::As_Target(cell);
+                        param = (int)::As_Target(cell);
 
                         if (!is_busy && !IsDriving) {
                             Do_Turn(dir);
@@ -676,7 +676,7 @@ RadioMessageType UnitClass::Receive_Message(RadioClass* from, RadioMessageType m
                         */
                         if (Transmit_Message(RADIO_MOVE_HERE, param, from) == RADIO_YEA_NOW_WHAT) {
                             if (Is_Door_Open() || Target_Legal(TarCom)) {
-                                param = (long)As_Target();
+                                param = (int)As_Target();
                                 Transmit_Message(RADIO_TETHER);
                                 if (Transmit_Message(RADIO_MOVE_HERE, param, from) != RADIO_ROGER) {
                                     Transmit_Message(RADIO_OVER_OUT, from);
@@ -1063,7 +1063,7 @@ ResultType UnitClass::Take_Damage(int& damage, int distance, WarheadType warhead
  *   04/11/1994 JLB : Created.                                                                 *
  *   04/21/1994 JLB : Converted to operator new.                                               *
  *=============================================================================================*/
-void* UnitClass::operator new(size_t)
+void* UnitClass::operator new(size_t) noexcept
 {
     void* ptr = (UnitClass*)Units.Allocate();
     if (ptr) {
@@ -1331,9 +1331,14 @@ void UnitClass::Enter_Idle_Mode(bool initial)
                     }
 
 #endif
-                    //} else {
-                    //	order = MISSION_HUNT;
-                    //}
+
+                    // GB 2022 improvement by TobiasKarnat
+                    // This shuffles build units around the base which gives AI
+                    // more space for buildings and reduces risk that unit blocks
+                    // refinery, by screaming_chicken (more simplified).
+                    if (initial && Frame > 1000) {
+                        this->ArchiveTarget = ::As_Target(House->Where_To_Go((FootClass*)this));
+                    }
                 }
             }
         }
@@ -1439,7 +1444,7 @@ bool UnitClass::Unload_Hovercraft_Process(void)
                         **	Place the unit on the map and start it heading in the right direction.
                         */
                         ScenarioInit++;
-                        if (u->Unlimbo(Coord_Add(Coord & 0xFF00FF00L, StoppingCoordAbs[count]), DIR_N)) {
+                        if (u->Unlimbo(Coord_Add(Coord_Whole(Coord), StoppingCoordAbs[count]), DIR_N)) {
                             u->Assign_Mission(MISSION_MOVE);
                             u->NavCom = ::As_Target(cell);
                             u->Path[0] = Dir_Facing(u->PrimaryFacing.Current());

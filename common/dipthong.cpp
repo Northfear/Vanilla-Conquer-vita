@@ -41,6 +41,8 @@
 
 #include "wwkeyboard.h"
 #include "dipthong.h"
+#include <string.h>
+#include "endianness.h"
 
 /***************************************************************************
  * Fixup_Text -- Converts dipthonged foreign text into normal text.        *
@@ -114,7 +116,7 @@ int Dip_Text(char const* source, char* dest)
     int common,          // Common character index.
         dipthong;        // Dipthong character index.
 
-    unsigned long length = 0; // Length of output string
+    unsigned int length = 0; // Length of output string
 
     first = *source++;
     next = *source;
@@ -306,6 +308,8 @@ static char InternetTxt[22][40] = {"Internet H2H",
 
 char* Extract_String(void const* data, int string)
 {
+    unsigned short ptr_0, ptr_string;
+
     if (!data || string < 0)
         return nullptr;
 
@@ -313,8 +317,13 @@ char* Extract_String(void const* data, int string)
         return (InternetTxt[string - 4567]);
 
     unsigned short int const* ptr = (unsigned short int const*)data;
-    if (string >= (ptr[0] / 2)) {
+    memcpy(&ptr_0, ptr, sizeof(short));
+    ptr_0 = le16toh(ptr_0);
+    if (string >= (ptr_0 / 2)) {
         return nullptr;
     }
-    return (((char*)data) + ptr[string]);
+
+    memcpy(&ptr_string, ptr + string, sizeof(short));
+    ptr_string = le16toh(ptr_string);
+    return (((char*)data) + ptr_string);
 }

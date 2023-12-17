@@ -322,7 +322,7 @@ InfantryClass::~InfantryClass(void)
  * HISTORY:                                                                                    *
  *   09/01/1994 JLB : Created.                                                                 *
  *=============================================================================================*/
-void* InfantryClass::operator new(size_t)
+void* InfantryClass::operator new(size_t) noexcept
 {
     void* ptr = Infantry.Allocate();
     if (ptr) {
@@ -509,7 +509,7 @@ ResultType InfantryClass::Take_Damage(int& damage, int distance, WarheadType war
     **	When infantry gets hit, it gets scared.
     */
     if (res != RESULT_DESTROYED) {
-        COORDINATE c4 = (source) ? source->Coord : NULL;
+        COORDINATE c4 = (source) ? source->Coord : 0;
         if (source) {
             Scatter(c4);
         }
@@ -1132,7 +1132,7 @@ void InfantryClass::AI(void)
     */
     if (!Target_Legal(NavCom) && !IsProne && IsStoked && Comment.Expired()) {
         IsStoked = false;
-        Do_Action((Random_Pick(0, 1) == 0) ? DO_GESTURE1 : DO_GESTURE2);
+        Do_Action(Percent_Chance(50) ? DO_GESTURE1 : DO_GESTURE2);
         if (*this == INFANTRY_RAMBO) {
             VocType _response[] = {VOC_RAMBO_LEFTY, VOC_RAMBO_LAUGH, VOC_RAMBO_COMIN, VOC_RAMBO_TUFF};
             Sound_Effect(_response[Sim_Random_Pick(0, (int)(sizeof(_response) / sizeof(_response[0])) - 1)], Coord);
@@ -1972,7 +1972,7 @@ void InfantryClass::Random_Animate(void)
         **		"When in darkness or in doubt, run in circles, scream, and shout!"
         */
         if (Class->IsFraidyCat && !House->IsHuman && Fear > FEAR_ANXIOUS) {
-            Scatter(NULL, true);
+            Scatter(0, true);
             return;
         }
 
@@ -1990,7 +1990,7 @@ void InfantryClass::Random_Animate(void)
             }
         }
 
-        switch (Random_Picky((int)0, (int)55, (char*)NULL, (int)0)) {
+        switch (Random_Pick(0, 55)) {
         case 10:
             Do_Action(DO_SALUTE1);
             break;
@@ -2049,7 +2049,7 @@ void InfantryClass::Random_Animate(void)
         case 8:
         case 9:
             if (!House->IsHuman && Class->IsFraidyCat) {
-                Scatter(NULL, true);
+                Scatter(0, true);
             }
             break;
         }
@@ -2114,7 +2114,7 @@ void InfantryClass::Scatter(COORDINATE threat, bool forced, bool nokidding)
             toface = Dir_Facing(Direction8(threat, Coord));
             toface = toface + (Random_Pick(0, 4) - 2);
         } else {
-            COORDINATE coord = Coord & 0x00FF00FFL;
+            COORDINATE coord = Coord_Fraction(Center_Coord());
 
             if (coord != 0x00800080L) {
                 toface = Dir_Facing((DirType)Desired_Facing8(0x0080, 0x0080, Coord_X(coord), Coord_Y(coord)));
@@ -2466,7 +2466,7 @@ bool InfantryClass::Unlimbo(COORDINATE coord, DirType facing)
     **	Make sure that the infantry start in a legal position on the map.
     */
     coord = Map[Coord_Cell(coord)].Closest_Free_Spot(coord, ScenarioInit);
-    if (coord == NULL) {
+    if (coord == 0) {
         return (false);
     }
 
@@ -2754,7 +2754,7 @@ COORDINATE InfantryClass::Fire_Coord(int) const
  *   01/19/1995 BWG : Created.                                             *
  *   05/14/1995 JLB : Handles loading maneuver messages.                   *
  *=========================================================================*/
-RadioMessageType InfantryClass::Receive_Message(RadioClass* from, RadioMessageType message, long& param)
+RadioMessageType InfantryClass::Receive_Message(RadioClass* from, RadioMessageType message, int& param)
 {
     Validate();
     int damage;
@@ -2972,8 +2972,8 @@ void InfantryClass::Read_INI(CCINIClass& ini)
             /*
             **	Special case: replace C7 with C5 on scg08eb
             */
-            if (GameToPlay == GAME_NORMAL && PlayerPtr->ActLike == HOUSE_GOOD && Scenario == 8 && ScenVar == SCEN_VAR_B
-                && classid == INFANTRY_C7) {
+            if (GameToPlay == GAME_NORMAL && PlayerPtr->ActLike == HOUSE_GOOD && Scen.Scenario == 8
+                && ScenVar == SCEN_VAR_B && classid == INFANTRY_C7) {
                 classid = INFANTRY_C5;
             }
 
@@ -3007,7 +3007,7 @@ void InfantryClass::Read_INI(CCINIClass& ini)
                         /*
                         **	5th token: cell sub-location.
                         */
-                        coord = Coord_Add(coord & 0xFF00FF00L, StoppingCoordAbs[atoi(strtok(NULL, ","))]);
+                        coord = Coord_Add(Coord_Whole(coord), StoppingCoordAbs[atoi(strtok(NULL, ","))]);
 
                         /*
                         **	Fetch the mission and facing.
@@ -3023,7 +3023,8 @@ void InfantryClass::Read_INI(CCINIClass& ini)
                         **	Special case: delete pre-placed Chan on scb10ea; he will spawn from the Tech Center.
                         */
                         bool is_scb10ea_chan = GameToPlay == GAME_NORMAL && PlayerPtr->ActLike == HOUSE_BAD
-                                               && Scenario == 10 && ScenVar == SCEN_VAR_A && *infantry == INFANTRY_CHAN;
+                                               && Scen.Scenario == 10 && ScenVar == SCEN_VAR_A
+                                               && *infantry == INFANTRY_CHAN;
 
                         if (!is_scb10ea_chan && infantry->Unlimbo(coord, dir)) {
                             infantry->Strength = Fixed_To_Cardinal(infantry->Class_Of().MaxStrength, strength);

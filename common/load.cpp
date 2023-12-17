@@ -68,7 +68,7 @@
  * HISTORY:                                                                *
  *   06/24/1991 JLB : Created.                                             *
  *=========================================================================*/
-unsigned long Load_Data(char const* name, void* ptr, unsigned long size)
+unsigned int Load_Data(char const* name, void* ptr, unsigned int size)
 {
     int fd;
 
@@ -97,7 +97,7 @@ unsigned long Load_Data(char const* name, void* ptr, unsigned long size)
  * HISTORY:                                                                *
  *   07/05/1992 JLB : Created.                                             *
  *=========================================================================*/
-unsigned long Write_Data(char const* name, void* ptr, unsigned long size)
+unsigned int Write_Data(char const* name, void* ptr, unsigned int size)
 {
     int fd;
 
@@ -130,9 +130,9 @@ unsigned long Write_Data(char const* name, void* ptr, unsigned long size)
  *=========================================================================*/
 void* Load_Alloc_Data(char const* name, MemoryFlagType flags)
 {
-    int fd;             // Working file handle.
-    unsigned long size; // Size of the file to load.
-    void* buffer;       // Buffer to hold the file.
+    int fd;            // Working file handle.
+    unsigned int size; // Size of the file to load.
+    void* buffer;      // Buffer to hold the file.
 
     fd = Open_File(name, READ);
     size = File_Size(fd);
@@ -164,7 +164,7 @@ void* Load_Alloc_Data(char const* name, MemoryFlagType flags)
 void* Load_Alloc_Data(const FileClass& file)
 {
     void* ptr = 0;
-    long size = const_cast<FileClass&>(file).Size();
+    int size = const_cast<FileClass&>(file).Size();
 
     ptr = malloc(size);
     if (ptr) {
@@ -203,7 +203,7 @@ void* Load_Alloc_Data(const FileClass* file)
  *					GraphicBufferClass&	- for the picture								*
  *             void *					- ptr for header uncompressed data     *
  *                                                                         *
- * OUTPUT:     unsigned long size of uncompressed data                             *
+ * OUTPUT:     unsigned int size of uncompressed data                             *
  *                                                                         *
  * WARNINGS:   none                                                        *
  *                                                                         *
@@ -211,13 +211,14 @@ void* Load_Alloc_Data(const FileClass* file)
  *   05/28/1991  CY : Created.                                             *
  *   06/26/1991 JLB : Handles load & uncompress to same buffer.            *
  *=========================================================================*/
-unsigned long Load_Uncompress(char const* file, BufferClass& uncomp_buff, BufferClass& dest_buff, void* reserved_data)
+unsigned int Load_Uncompress(char const* file, BufferClass& uncomp_buff, BufferClass& dest_buff, void* reserved_data)
 {
     int fd;                 // Source file handle.
     unsigned int isize = 0; // Size of the file.
-    unsigned int skipsize;  // Size of the skip data bytes.
-    void* uncomp_ptr;       //	Source buffer pointer.
-    char* newuncomp_ptr;    // Adjusted source pointer.
+    unsigned short tmp16;
+    unsigned int skipsize; // Size of the skip data bytes.
+    void* uncomp_ptr;      // Source buffer pointer.
+    char* newuncomp_ptr;   // Adjusted source pointer.
 
     uncomp_ptr = uncomp_buff.Get_Buffer(); // get a pointer to buffer
 
@@ -226,18 +227,22 @@ unsigned long Load_Uncompress(char const* file, BufferClass& uncomp_buff, Buffer
     /*======================================================================*/
 
     fd = Open_File(file, READ);       // Open up the file to read from
-    Read_File(fd, (char*)&isize, 2L); // Read the file size
+    Read_File(fd, (char*)&tmp16, 2L); // Read the file size
     Read_File(fd, uncomp_ptr, 8L);    // Read the header bytes in.
-    isize -= 8;                       // Remaining data in file.
+
+    isize = le16toh(tmp16);
+
+    isize -= 8; // Remaining data in file.
 
     /*======================================================================*/
     /* Check for and read in the skip data block.									*/
     /*======================================================================*/
 
-    skipsize = *(((short*)uncomp_ptr) + 3);
+    memcpy(&tmp16, ((short*)uncomp_ptr) + 3, sizeof(tmp16));
+    skipsize = le16toh(tmp16);
 
     if (reserved_data && skipsize) {
-        Read_File(fd, reserved_data, (unsigned long)skipsize);
+        Read_File(fd, reserved_data, (unsigned int)skipsize);
     } else {
         Seek_File(fd, skipsize, SEEK_CUR);
     }
@@ -260,7 +265,7 @@ unsigned long Load_Uncompress(char const* file, BufferClass& uncomp_buff, Buffer
     /*======================================================================*/
     /*	Read in the main compressed part of the file.								*/
     /*======================================================================*/
-    Read_File(fd, newuncomp_ptr + 8, (unsigned long)isize);
+    Read_File(fd, newuncomp_ptr + 8, (unsigned int)isize);
     Close_File(fd);
 
     /*======================================================================*/
@@ -289,11 +294,11 @@ unsigned long Load_Uncompress(char const* file, BufferClass& uncomp_buff, Buffer
  * HISTORY:                                                                *
  *   09/17/1993 JLB : Created.                                             *
  *=========================================================================*/
-unsigned long Uncompress_Data(void const* src, void* dst)
+unsigned int Uncompress_Data(void const* src, void* dst)
 {
-    unsigned int skip;      // Number of leading data to skip.
+    unsigned short skip;    // Number of leading data to skip.
     CompressionType method; // Compression method used.
-    unsigned long uncomp_size = 0;
+    unsigned int uncomp_size = 0;
 
     if (!src || !dst)
         return 0;
@@ -303,15 +308,11 @@ unsigned long Uncompress_Data(void const* src, void* dst)
     **	compression method, size, and skip data amount.
     */
     uncomp_size = ((CompHeaderType*)src)->Size;
-#if (AMIGA)
-    uncomp_size = Reverse_Long(uncomp_size);
-#endif
+    uncomp_size = le32toh(uncomp_size);
     skip = ((CompHeaderType*)src)->Skip;
-#if (AMIGA)
-    skip = Reverse_Word(skip);
-#endif
+    skip = le16toh(skip);
     method = (CompressionType)((CompHeaderType*)src)->Method;
-    src = Add_Long_To_Pointer((void*)src, (long)sizeof(CompHeaderType) + (long)skip);
+    src = Add_Long_To_Pointer((void*)src, (int)sizeof(CompHeaderType) + (int)skip);
 
     switch (method) {
 
@@ -327,7 +328,7 @@ unsigned long Uncompress_Data(void const* src, void* dst)
         break;
 
     case LCW:
-        LCW_Uncompress((void*)src, (void*)dst, (unsigned long)uncomp_size);
+        LCW_Uncompress((void*)src, (void*)dst, (unsigned int)uncomp_size);
         break;
     }
 

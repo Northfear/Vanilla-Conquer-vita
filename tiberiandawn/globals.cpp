@@ -118,14 +118,12 @@ char WinMovie4[_MAX_FNAME + _MAX_EXT];
 char LoseMovie[_MAX_FNAME + _MAX_EXT];
 char ActionMovie[_MAX_FNAME + _MAX_EXT];
 char MovieThemeName[_MAX_FNAME + _MAX_EXT];
-char BriefingText[512];
-ThemeType TransitTheme = THEME_NONE;
 
 /***************************************************************************
-**	This records the view hotspots for the player. These are the cell numbers
-**	of the upper left corner for the view position.
+**	These are the movie names to use for mission briefing, winning, and losing
+**	sequences. They are read from the INI file.
 */
-CELL Views[4];
+ScenarioClass Scen;
 
 /***************************************************************************
 **	This is the pending speech sample to play. This sample will be played
@@ -159,7 +157,7 @@ bool CrateMaker = false;
 **	upward at the rate of one per game logic process. The target rate is 15
 **	per second. This value is saved and restored with the saved game.
 */
-long Frame = 0;
+int Frame = 0;
 
 /***************************************************************************
 **	These globals are constantly monitored to determine if the player
@@ -189,7 +187,7 @@ void* SpeechBuffer;
 ** This accumulates into a useful value that contributes to a
 **	histogram of game performance.
 */
-long SpareTicks;
+int SpareTicks;
 
 /***************************************************************************
 **	This is a special scenario count down value. End of game condition will
@@ -274,7 +272,7 @@ CreditClass CreditDisplay;
 **	has been displayed. Once the message has been displayed, it will not be
 **	displayed again.
 */
-long TutorFlags[2];
+int TutorFlags[2];
 
 /**************************************************************************
 ** This class records the special command override options that C&C
@@ -303,19 +301,13 @@ WWKeyboardClass* Keyboard;
 **	This is the scenario data for the currently loaded scenario.
 ** These variables should all be set together.
 */
-HousesType Whom;                          // Initial command line house choice.
-DiffType ScenDifficulty = DIFF_NORMAL;    // For human player.
-DiffType ScenCDifficulty = DIFF_NORMAL;   // For computer players.
-unsigned Scenario;                        // Scenario #
-ScenarioPlayerType ScenPlayer;            // GDI, NOD, 2-Player, Multi-Player
-ScenarioDirType ScenDir;                  // East/West
-ScenarioVarType ScenVar;                  // variation A/B/C
-char ScenarioName[_MAX_FNAME + _MAX_EXT]; // name of scenario
-int CarryOverMoney;                       // Carry over money from last scenario.
-int CarryOverPercent;                     // Carry over money percentage control.
-int CarryOverCap;                         // Maxmimum carry over money allowed.
+HousesType Whom;               // Initial command line house choice.
+ScenarioPlayerType ScenPlayer; // GDI, NOD, 2-Player, Multi-Player
+ScenarioDirType ScenDir;       // East/West
+ScenarioVarType ScenVar;       // variation A/B/C
 int ScenarioInit;
 bool SpecialFlag = false;
+RandomClass NonCriticalRandomNumber;
 
 /***************************************************************************
 ** This value tells the sidebar what items it's allowed to add.  The
@@ -345,7 +337,7 @@ bool GameActive;
 **	a long, but the value wasn't supplied to a function. This is used
 **	specifically for the default reference value. As such, it is not stable.
 */
-long LParam;
+int LParam;
 
 #ifdef SCENARIO_EDITOR
 /***************************************************************************
@@ -399,15 +391,6 @@ QueueClass<EventClass, (MAX_EVENTS * 8)> DoList;
 */
 DynamicVectorClass<TriggerClass*> CellTriggers;
 DynamicVectorClass<TriggerClass*> HouseTriggers[HOUSE_COUNT];
-
-/***************************************************************************
-**	This is an array of waypoints; each waypoint corresponds to a letter of
-** the alphabet, and points to a cell number.  -1 means unassigned.
-** The CellClass has a bit that tells if that cell has a waypoint attached to
-** it; the only way to find which waypoint it is, is to scan this array.  This
-** shouldn't be needed often; usually, you know the waypoint & you want the CELL.
-*/
-CELL Waypoint[WAYPT_COUNT];
 
 /***************************************************************************
 **	This is the list of BuildingTypes that define the AI's base.
@@ -523,7 +506,7 @@ int MPlayerColorIdx;          // actual color index of this player
 HousesType MPlayerHouse;      // House of this player (GDI/NOD)
 unsigned char MPlayerLocalID; // ID of this player
 int MPlayerCount;             // # of human players in this game
-int MPlayerBases;             // 1 = bases are on for this scenario
+bool MPlayerBases;            // 1 = bases are on for this scenario
 int MPlayerCredits;           // # credits everyone gets
 int MPlayerTiberium;          // 1 = tiberium enabled for this scenario
 int MPlayerGoodies;           // 1 = goodies enabled for this scenario
@@ -541,13 +524,13 @@ int MPlayerCountMax[2] = {50, 12};
 MPlayerMaxAhead is the number of frames ahead of this one to execute a given
 packet.  It's set by the RESPONSE_TIME event.
 ---------------------------------------------------------------------------*/
-unsigned long MPlayerMaxAhead = 3;
+unsigned int MPlayerMaxAhead = 3;
 
 /*---------------------------------------------------------------------------
 'FrameSendRate' is the # frames between data packets
 'FrameRateDelay' is the time ticks to wait between frames, for smoothing.
 ---------------------------------------------------------------------------*/
-unsigned long FrameSendRate;
+unsigned int FrameSendRate;
 
 /***************************************************************************
 **	Multiplayer ID's, stored in order of event execution.
@@ -574,7 +557,9 @@ char MPlayerNames[MAX_PLAYERS][MPLAYER_NAME_MAX];
 ** sent (for the computer's messages).
 */
 MessageListClass Messages;
+#ifdef NETWORKING
 IPXAddressClass MessageAddress;
+#endif
 char LastMessage[MAX_MESSAGE_LENGTH];
 
 /***************************************************************************
@@ -737,7 +722,7 @@ const char* SerialPacketNames[] = {
 /***************************************************************************
 **	These variables are just to help find sync bugs.
 */
-long TrapFrame = 0x7fffffff;        // frame to start trapping object values at
+int TrapFrame = 0x7fffffff;         // frame to start trapping object values at
 RTTIType TrapObjType = RTTI_NONE;   // type of object to trap
 TrapObjectType TrapObject = {NULL}; // ptr to object being trapped
 COORDINATE TrapCoord = 0;           // COORD of object to trap
@@ -745,6 +730,7 @@ void* TrapThis = NULL;              // 'this' ptr of object to trap
 CellClass* TrapCell = NULL;         // for trapping a cell
 int TrapCheckHeap = 0;              // start checking the Heap
 
+#ifdef NETWORKING
 /***************************************************************************
 **	This is the network IPX manager class.  It handles multiple remote
 ** connections.  Declaring this class doesn't perform any allocations;
@@ -756,7 +742,7 @@ IPXManagerClass Ipx(sizeof(GlobalPacketType), // size of Global Channel packets
                     8,                                        // # entries in Private Queues
                     VIRGIN_SOCKET,                            // Socket ID #
                     IPXGlobalConnClass::COMMAND_AND_CONQUER); // Product ID #
-
+#endif
 //#if(TIMING_FIX)
 //
 // These values store the min & max frame #'s for when MaxAhead >>increases<<.
@@ -772,15 +758,6 @@ IPXManagerClass Ipx(sizeof(GlobalPacketType), // size of Global Channel packets
 int NewMaxAheadFrame1;
 int NewMaxAheadFrame2;
 //#endif
-
-/***************************************************************************
-**	This is the user-specified IPX address of a desired game owner machine.
-** Use this to cross a bridge.  Only the 1st 4 numbers in the address are
-** used; the rest are set to ff's, for broadcasting.  'IsBridge' is set
-** if this address should be used.
-*/
-int IsBridge = 0;
-IPXAddressClass BridgeNet;
 
 /***************************************************************************
 **	This flag is true if the user has requested that this game be "secret"
@@ -809,9 +786,11 @@ char MPlayerGameName[MPLAYER_NAME_MAX];
 /***************************************************************************
 **	These variables are for servicing the Global Channel.
 */
-GlobalPacketType GPacket;  // Global Channel packet
-int GPacketlen;            // length of incoming packet
-IPXAddressClass GAddress;  // address of sender
+GlobalPacketType GPacket; // Global Channel packet
+int GPacketlen;           // length of incoming packet
+#ifdef NETWORKING
+IPXAddressClass GAddress; // address of sender
+#endif
 unsigned short GProductID; // sender's Product ID
 
 /***************************************************************************
@@ -827,7 +806,7 @@ int MetaSize = ((546 - sizeof(CommHeaderType)) / sizeof(EventClass)) * sizeof(Ev
 ** multiplayer games.
 */
 int Seed = 0;
-long* RandSeedPtr;
+int* RandSeedPtr;
 
 /***************************************************************************
 ** If this value is non-zero, use it as the random # seed instead; this should
@@ -877,9 +856,9 @@ GraphicBufferClass ModeXBuff;
 GraphicViewPortClass HidPage(&HiddenPage, 0, 0, GBUFF_INIT_WIDTH, GBUFF_INIT_HEIGHT);
 GraphicBufferClass SysMemPage(320, 200, (void*)NULL);
 int SoundOn;
-CountDownTimerClass FrameTimer(BT_SYSTEM, 0L);
-CountDownTimerClass DebugTimer(BT_SYSTEM, 0L);
-CountDownTimerClass CountDownTimer(BT_SYSTEM, 0L);
+CountDownTimerClass FrameTimer(BT_SYSTEM, 0);
+CountDownTimerClass DebugTimer(BT_SYSTEM, 0);
+CountDownTimerClass CountDownTimer(BT_SYSTEM, 0);
 
 NewConfigType NewConfig;
 
@@ -959,3 +938,6 @@ bool RunningAsDLL = false;
 
 /* Holds the title filename. On 320x200, set to TITLE.CPS, else HTITLE.PCX. */
 char* TitlePicture = NULL;
+
+// OmniBlade - Moves from tcpip.cpp as part of networking cleanup.
+bool Server; // Is this player acting as client or server

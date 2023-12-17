@@ -1332,17 +1332,17 @@ void DisplayClass::Read_INI(CCINIClass& ini)
     for (int i = 0; i < WAYPT_COUNT; i++) {
         char buf[20];
         sprintf(buf, "%d", i);
-        Waypoint[i] = ini.Get_Int("Waypoints", buf, -1);
-        if (Waypoint[i] != -1) {
+        Scen.Waypoint[i] = ini.Get_Int("Waypoints", buf, -1);
+        if (Scen.Waypoint[i] != -1) {
 #ifdef MEGAMAPS
             /*
             ** Convert the waypoints normal cell position to a new big map position.
             */
             if (Map.MapBinaryVersion == MAP_VERSION_NORMAL) {
-                Waypoint[i] = Confine_Old_Cell(Waypoint[i]);
+                Scen.Waypoint[i] = Confine_Old_Cell(Scen.Waypoint[i]);
             }
 #endif
-            (*this)[Waypoint[i]].IsWaypoint = 1;
+            (*this)[Scen.Waypoint[i]].IsWaypoint = 1;
         }
     }
 
@@ -1350,11 +1350,11 @@ void DisplayClass::Read_INI(CCINIClass& ini)
     **	Set the starting position (do this after Init(), which clears the cells'
     **	IsWaypoint flags).
     */
-    if (Waypoint[WAYPT_HOME] == -1) {
-        Waypoint[WAYPT_HOME] = XY_Cell(MapCellX, MapCellY);
+    if (Scen.Waypoint[WAYPT_HOME] == -1) {
+        Scen.Waypoint[WAYPT_HOME] = XY_Cell(MapCellX, MapCellY);
     }
-    Set_Tactical_Position(Cell_Coord(Waypoint[WAYPT_HOME]) & 0xFF00FF00L);
-    Views[0] = Views[1] = Views[2] = Views[3] = Waypoint[WAYPT_HOME];
+    Set_Tactical_Position(Coord_Whole(Cell_Coord(Scen.Waypoint[WAYPT_HOME])));
+    Scen.Views[0] = Scen.Views[1] = Scen.Views[2] = Scen.Views[3] = Scen.Waypoint[WAYPT_HOME];
 
     /*
     **	Loop through all CellTrigger entries.
@@ -1440,9 +1440,9 @@ void DisplayClass::Write_INI(CCINIClass& ini)
     static char const* const WAYNAME = "Waypoints";
     ini.Clear(WAYNAME);
     for (int i = 0; i < WAYPT_COUNT; i++) {
-        if (Waypoint[i] != -1) {
+        if (Scen.Waypoint[i] != -1) {
             sprintf(entry, "%d", i);
-            ini.Put_Int(WAYNAME, entry, Waypoint[i]);
+            ini.Put_Int(WAYNAME, entry, Scen.Waypoint[i]);
         }
     }
 
@@ -2449,7 +2449,7 @@ void DisplayClass::Redraw_Icons(int draw_flags)
         for (int x = -Coord_XLepton(TacticalCoord); x <= TacLeptonWidth; x += CELL_LEPTON_W) {
             COORDINATE coord = Coord_Add(TacticalCoord, XY_Coord(x, y));
             CELL cell = Coord_Cell(coord);
-            coord = Cell_Coord(cell) & 0xFF00FF00L;
+            coord = Coord_Whole(Cell_Coord(cell));
 
             /*
             **	Only cells flagged to be redraw are examined.
@@ -2835,7 +2835,7 @@ CELL DisplayClass::Calculated_Cell(SourceType dir, HousesType house)
         **	Drop in at a random location.
         */
         case SOURCE_AIR:
-            cell = Waypoint[WAYPT_REINF];
+            cell = Scen.Waypoint[WAYPT_REINF];
             if (cell < 1) {
                 cell = Coord_Cell(TacticalCoord);
                 return (cell);
@@ -2993,7 +2993,7 @@ static bool should_exclude_from_selection(ObjectClass* obj)
 
 void DisplayClass::Select_These(COORDINATE coord1, COORDINATE coord2, bool additive)
 {
-    COORDINATE tcoord = TacticalCoord; // Cell_Coord(TacticalCell) & 0xFF00FF00L;
+    COORDINATE tcoord = TacticalCoord; // Coord_Whole(Cell_Coord(TacticalCell));
 
     coord1 = Coord_Add(tcoord, coord1);
     coord2 = Coord_Add(tcoord, coord2);
@@ -3757,7 +3757,7 @@ void DisplayClass::Mouse_Left_Up(bool shadow, ObjectClass* object, ActionType ac
 	**	Give a generic help message when over shadow terrain.
 	*/
     if (shadow) {
-        if (Scenario < 4) {
+        if (Scen.Scenario < 4) {
             Help_Text(TXT_SHADOW);
         } else {
             Help_Text(TXT_NONE);
@@ -3812,7 +3812,7 @@ void DisplayClass::Mouse_Left_Up(bool shadow, ObjectClass* object, ActionType ac
                 }
             }
 
-            if (Scenario > 3 || object->What_Am_I() != RTTI_TERRAIN) {
+            if (Scen.Scenario > 3 || object->What_Am_I() != RTTI_TERRAIN) {
                 Help_Text(text, -1, -1, color);
             } else {
                 Help_Text(TXT_NONE);
@@ -3856,7 +3856,7 @@ void DisplayClass::Mouse_Left_Release(CELL cell, int x, int y, ObjectClass* obje
         **	Try to place the pending object onto the map.
         */
         if (ProximityCheck) {
-            OutList.Add(EventClass(EventClass::PLACE, PendingObjectPtr->What_Am_I(), cell + ZoneOffset));
+            OutList.Add(EventClass(EventClass::PLACE, PendingObjectPtr->What_Am_I(), (CELL)(cell + ZoneOffset)));
         } else {
             Speak(VOX_DEPLOY);
         }
@@ -4137,7 +4137,7 @@ void DisplayClass::Set_Tactical_Position(COORDINATE coord)
  *   02/28/1995 JLB : Commented.                                                               *
  *   06/26/1995 JLB : Fixed building loop.                                                     *
  *=============================================================================================*/
-void DisplayClass::Compute_Start_Pos(long& x, long& y)
+void DisplayClass::Compute_Start_Pos(int& x, int& y)
 {
     /*
     **	Find the summation cell-x & cell-y for all the player's units, infantry,
@@ -4146,13 +4146,13 @@ void DisplayClass::Compute_Start_Pos(long& x, long& y)
     */
     x = 0;
     y = 0;
-    long num = 0;
+    int num = 0;
     int i;
     for (i = 0; i < Infantry.Count(); i++) {
         InfantryClass* infp = Infantry.Ptr(i);
         if (!infp->IsInLimbo && infp->House == PlayerPtr) {
-            x += (long)Coord_XCell(infp->Coord);
-            y += (long)Coord_YCell(infp->Coord);
+            x += (int)Coord_XCell(infp->Coord);
+            y += (int)Coord_YCell(infp->Coord);
             num++;
         }
     }
@@ -4160,8 +4160,8 @@ void DisplayClass::Compute_Start_Pos(long& x, long& y)
     for (i = 0; i < Units.Count(); i++) {
         UnitClass* unitp = Units.Ptr(i);
         if (!unitp->IsInLimbo && unitp->House == PlayerPtr) {
-            x += (long)Coord_XCell(unitp->Coord);
-            y += (long)Coord_YCell(unitp->Coord);
+            x += (int)Coord_XCell(unitp->Coord);
+            y += (int)Coord_YCell(unitp->Coord);
             num++;
         }
     }
@@ -4169,8 +4169,8 @@ void DisplayClass::Compute_Start_Pos(long& x, long& y)
     for (i = 0; i < Buildings.Count(); i++) {
         BuildingClass* bldgp = Buildings.Ptr(i);
         if (!bldgp->IsInLimbo && bldgp->House == PlayerPtr) {
-            x += (((long)Coord_XCell(bldgp->Coord)) << 4);
-            y += (((long)Coord_YCell(bldgp->Coord)) << 4);
+            x += (((int)Coord_XCell(bldgp->Coord)) << 4);
+            y += (((int)Coord_YCell(bldgp->Coord)) << 4);
             num += 16;
         }
     }
@@ -4302,8 +4302,8 @@ void DisplayClass::Repair_Mode_Control(int control)
  *=============================================================================================*/
 bool DisplayClass::In_View(register CELL cell)
 {
-    COORDINATE coord = Cell_Coord(cell) & 0xFF00FF00L;
-    COORDINATE tcoord = TacticalCoord & 0xFF00FF00L;
+    COORDINATE coord = Coord_Whole(Cell_Coord(cell));
+    COORDINATE tcoord = Coord_Whole(TacticalCoord);
 
     if ((Coord_X(coord) - Coord_X(tcoord)) > TacLeptonWidth + 255)
         return (false);

@@ -176,7 +176,7 @@ static bool _Counts_As_Civ_Evac(ObjectClass const* candidate)
  * HISTORY:                                                                                    *
  *   07/26/1994 JLB : Created.                                                                 *
  *=============================================================================================*/
-void* AircraftClass::operator new(size_t)
+void* AircraftClass::operator new(size_t) noexcept
 {
     void* ptr = Aircraft.Allocate();
     if (ptr) {
@@ -2806,7 +2806,7 @@ TARGET AircraftClass::New_LZ(TARGET oldlz) const
  * HISTORY:                                                                                    *
  *   06/19/1995 JLB : Created.                                                                 *
  *=============================================================================================*/
-RadioMessageType AircraftClass::Receive_Message(RadioClass* from, RadioMessageType message, long& param)
+RadioMessageType AircraftClass::Receive_Message(RadioClass* from, RadioMessageType message, int& param)
 {
     assert(Aircraft.ID(this) == ID);
     assert(IsActive);

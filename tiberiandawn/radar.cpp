@@ -496,7 +496,7 @@ void RadarClass::Draw_It(bool forced)
  *=========================================================================*/
 void RadarClass::Render_Terrain(CELL cell, int x, int y, int size)
 {
-    TerrainClass* list[4];
+    TerrainClass* list[ARRAY_SIZE(Map[(CELL)0].Overlapper) + 1] = {};
     int listidx = 0;
     int lp, lp2;
 
@@ -513,7 +513,7 @@ void RadarClass::Render_Terrain(CELL cell, int x, int y, int size)
     ** Now loop through all the occupiers and add them to the list if they
     ** are terrain type.
     */
-    for (lp = 0; lp < 3; lp++) {
+    for (lp = 0; lp < ARRAY_SIZE(Map[cell].Overlapper); lp++) {
         obj = Map[cell].Overlapper[lp];
         if (obj && obj->IsActive && obj->What_Am_I() == RTTI_TERRAIN)
             list[listidx++] = (TerrainClass*)obj;
@@ -814,7 +814,7 @@ void RadarClass::Plot_Radar_Pixel(CELL cell)
             if (ZoomFactor > 1) {
                 void const* ptr;
                 int32_t offset;
-                int icon;
+                unsigned char icon;
 
                 if (cellptr->TType != TEMPLATE_NONE) {
                     ptr = TemplateTypeClass::As_Reference(cellptr->TType).Get_Image_Data();
@@ -828,10 +828,11 @@ void RadarClass::Plot_Radar_Pixel(CELL cell)
                 **	Convert the logical icon number into the actual icon number.
                 */
                 Mem_Copy(Add_Long_To_Pointer((void*)ptr, 28), &offset, sizeof(offset));
-                Mem_Copy(Add_Long_To_Pointer((void*)ptr, offset + icon), &icon, sizeof(char));
-                icon &= 0x00FF;
+                offset = le32toh(offset);
+                Mem_Copy(Add_Long_To_Pointer((void*)ptr, offset + icon), &icon, sizeof(icon));
 
                 Mem_Copy(Add_Long_To_Pointer((void*)ptr, 12), &offset, sizeof(offset));
+                offset = le32toh(offset);
                 ptr = Add_Long_To_Pointer((void*)ptr, offset + icon * (24 * 24));
 
                 unsigned char* data = (unsigned char*)ptr;

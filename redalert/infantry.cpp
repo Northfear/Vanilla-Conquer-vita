@@ -260,7 +260,7 @@ InfantryClass::~InfantryClass(void)
  * HISTORY:                                                                                    *
  *   09/01/1994 JLB : Created.                                                                 *
  *=============================================================================================*/
-void* InfantryClass::operator new(size_t)
+void* InfantryClass::operator new(size_t) noexcept
 {
     void* ptr = Infantry.Allocate();
     if (ptr != NULL) {
@@ -426,7 +426,7 @@ ResultType InfantryClass::Take_Damage(int& damage, int distance, WarheadType war
     **	When infantry gets hit, it gets scared.
     */
     if (res != RESULT_DESTROYED) {
-        COORDINATE source_coord = (source) ? source->Coord : NULL;
+        COORDINATE source_coord = (source) ? source->Coord : 0;
 
         /*
         **	If an engineer is damaged and it is just sitting there, then tell it
@@ -762,15 +762,15 @@ void InfantryClass::Per_Cell_Process(PCPType why)
                                     if (IsOwnedByPlayer || bldg->IsOwnedByPlayer)
                                         Speak(VOX_MONEY_STOLEN);
 #ifdef OBSOLETE
-                                    long capacity = bldg->Class->Capacity * 256;
+                                    int capacity = bldg->Class->Capacity * 256;
                                     capacity /= (bldg->House->Tiberium + 1);
                                     int bldgcap = bldg->Class->Capacity;
 
-                                    long cash = (bldgcap * 256) / (capacity + 1);
+                                    int cash = (bldgcap * 256) / (capacity + 1);
                                     if (cash > (bldgcap / 2))
                                         cash = bldgcap / 2;
 #else
-                                    long cash = bldg->House->Available_Money() / 2;
+                                    int cash = bldg->House->Available_Money() / 2;
 #endif
                                     bldg->House->Spend_Money(cash);
                                     House->Refund_Money(cash);
@@ -1903,7 +1903,7 @@ bool InfantryClass::Random_Animate(void)
         **		"When in darkness or in doubt, run in circles, scream, and shout!"
         */
         if (Class->IsFraidyCat && !House->IsHuman && Fear > FEAR_ANXIOUS) {
-            Scatter(NULL, true);
+            Scatter(0, true);
             return (true);
         }
 
@@ -1958,7 +1958,7 @@ bool InfantryClass::Random_Animate(void)
             PrimaryFacing.Set(Facing_Dir(Random_Pick(FACING_N, FACING_NW)));
             Mark(MARK_CHANGE_REDRAW);
             if (!House->IsHuman && Class->IsFraidyCat) {
-                Scatter(NULL, true);
+                Scatter(0, true);
             }
             break;
 
@@ -2406,7 +2406,7 @@ bool InfantryClass::Unlimbo(COORDINATE coord, DirType facing)
     **	Make sure that the infantry start in a legal position on the map.
     */
     coord = Map[coord].Closest_Free_Spot(coord, ScenarioInit);
-    if (coord == NULL) {
+    if (coord == 0) {
         return (false);
     }
 
@@ -3972,6 +3972,10 @@ void InfantryClass::Doing_AI(void)
  *=============================================================================================*/
 void InfantryClass::Movement_AI(void)
 {
+    if (!IsActive) {
+        return;
+    }
+
     /*
     **	Special hack check to ensure that infantry will never get stuck in a movement order if
     **	there is no place to go.

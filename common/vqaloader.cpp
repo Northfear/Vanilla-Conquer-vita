@@ -21,13 +21,49 @@
 #include <stdlib.h>
 #include <string.h>
 
+static void VQA_ByteSwapAudio(VQAAudio* audio, void* buffer, size_t bufferbytecount)
+{
+    unsigned int i;
+
+    if (audio->BitsPerSample == 16) {
+        unsigned short* usbuffer = (unsigned short*)buffer;
+
+        for (i = 0; i < bufferbytecount / 2; i++) {
+            usbuffer[i] = le16toh(usbuffer[i]);
+        }
+    }
+}
+
+void Flip_VQAHeader(VQAHeader* header)
+{
+    header->Version = le16toh(header->Version);
+    header->Flags = le16toh(header->Flags);
+    header->Frames = le16toh(header->Frames);
+    header->ImageWidth = le16toh(header->ImageWidth);
+    header->ImageHeight = le16toh(header->ImageHeight);
+    header->Num1Colors = le16toh(header->Num1Colors);
+    header->CBentries = le16toh(header->CBentries);
+    header->Xpos = le16toh(header->Xpos);
+    header->Ypos = le16toh(header->Ypos);
+    header->MaxFramesize = le16toh(header->MaxFramesize);
+    header->SampleRate = le16toh(header->SampleRate);
+    header->AltSampleRate = le16toh(header->AltSampleRate);
+    header->MaxCompressedCBSize = le32toh(header->MaxCompressedCBSize);
+    header->field_26 = le32toh(header->field_26);
+}
+
 int VQA_Load_FINF(VQAHandle* handle, unsigned iffsize)
 {
     VQAData* data = handle->VQABuf;
+    int i;
 
     if (data != nullptr && data->Foff != nullptr) {
         if (handle->StreamHandler(handle, VQACMD_READ, data->Foff, (iffsize + 1) & (~1))) {
             return VQAERR_READ;
+        }
+
+        for (i = 0; i < iffsize / 4; i++) {
+            data->Foff[i] = le32toh(data->Foff[i]);
         }
     } else if (handle->StreamHandler(handle, VQACMD_SEEK, (void*)SEEK_CUR, (iffsize + 1) & (~1))) {
         return VQAERR_SEEK;
@@ -225,6 +261,7 @@ int VQA_Load_SND0(VQAHandle* handle, unsigned iffsize)
             return VQAERR_READ;
         }
 
+        VQA_ByteSwapAudio(audio, audio->TempBuf, size_aligned);
         audio->TempBufSize = iffsize;
         return VQAERR_NONE;
     }
@@ -233,6 +270,7 @@ int VQA_Load_SND0(VQAHandle* handle, unsigned iffsize)
         return VQAERR_READ;
     }
 
+    VQA_ByteSwapAudio(audio, audio->Buffer, size_aligned);
     audio->AudBufPos += iffsize;
 
     for (unsigned i = 0; i < (iffsize / config->HMIBufSize); ++i) {
@@ -572,6 +610,8 @@ int VQA_Open(VQAHandle* handle, const char* filename, VQAConfig* config)
                 VQA_Close(handle);
                 return VQAERR_READ;
             }
+
+            Flip_VQAHeader(header);
 
             // in LOLG VQAs Groupsize is 0 because it only has one codebook chunk so forcing it to common default here,
             // allows LOLG VQAs to be played

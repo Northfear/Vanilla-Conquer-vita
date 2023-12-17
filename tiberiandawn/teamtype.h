@@ -134,14 +134,14 @@ public:
     */
     static char const* Name_From_Mission(TeamMissionType order);
     static TeamMissionType Mission_From_Name(char const* name);
-    static TeamTypeClass const* Suggested_New_Team(HouseClass* house, long utypes, long itypes, bool alerted);
+    static TeamTypeClass const* Suggested_New_Team(HouseClass* house, int utypes, int itypes, bool alerted);
 
     TARGET As_Target(void) const;
 
     /*
     **	Overloaded operators
     */
-    void* operator new(size_t);
+    void* operator new(size_t) noexcept;
     static void* operator new(size_t, void* ptr)
     {
         return (ptr);
@@ -262,7 +262,6 @@ public:
     ** Some additional padding in case we need to add data to the class and maintain backwards compatibility for
     *save/load
     */
-    unsigned char SaveLoadPadding[32];
 
 private:
     static char const* TMissions[TMISSION_COUNT];

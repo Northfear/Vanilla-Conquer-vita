@@ -195,9 +195,14 @@ void SidebarClass::One_Time(void)
     **	clipped at the top and bottom edges.
     */
     WindowList[WINDOW_SIDEBAR][WINDOWX] = SideX + PowWidth;
-    WindowList[WINDOW_SIDEBAR][WINDOWY] = SideY + 1 + TopHeight;
+    WindowList[WINDOW_SIDEBAR][WINDOWY] = SideY + TopHeight;
     WindowList[WINDOW_SIDEBAR][WINDOWWIDTH] = SideWidth;
-    WindowList[WINDOW_SIDEBAR][WINDOWHEIGHT] = (MaxVisible * (StripClass::OBJECT_HEIGHT * factor)) - 1;
+    WindowList[WINDOW_SIDEBAR][WINDOWHEIGHT] = (MaxVisible * (StripClass::OBJECT_HEIGHT * factor));
+
+    if (factor == 1) {
+        WindowList[WINDOW_SIDEBAR][WINDOWY] += 1;
+        WindowList[WINDOW_SIDEBAR][WINDOWHEIGHT] -= 1;
+    }
 
     /*
     **	Set up the coordinates for the sidebar strips. These coordinates are for
@@ -776,6 +781,15 @@ void SidebarClass::Draw_It(bool complete)
                     // Draw rectangle covering "Repair", "Sell", and "Map Buttons"
                     LogicPage->Fill_Rect(SideX, SideY - 1, SideX + SideWidth, SideY + TopHeight - 1, LTGREY);
                 }
+
+                // Draw a small rectangle strip between sidebar button strip to
+                // erase helpbox messages when mouse is moved from the right
+                // strip.
+                LogicPage->Fill_Rect(Column[0].X + Column[0].ObjectWidth + 1,
+                                     SideY + TopHeight + 1,
+                                     Column[1].X,
+                                     SideY + SideHeight - 1,
+                                     LTGREY);
 
                 Draw_Box(SideX + Map.PowWidth,
                          SideY + TopHeight,

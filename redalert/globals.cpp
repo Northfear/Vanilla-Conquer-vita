@@ -34,7 +34,7 @@
 #include "function.h"
 
 bool IsVQ640 = false;
-unsigned long GameVersion = 0;
+unsigned int GameVersion = 0;
 bool Debug_MotionCapture = false;
 bool Debug_Quiet = false;
 bool Debug_Cheat = false;
@@ -189,7 +189,7 @@ int AllDone;
 **	This is true if the game is the currently in focus windows app
 **
 */
-#ifdef SDL2_BUILD
+#ifdef SDL_BUILD
 bool GameInFocus = true;
 #else
 bool GameInFocus = false;
@@ -325,7 +325,7 @@ bool AllowVoice = true;
 **	upward at the rate of one per game logic process. The target rate is 15
 **	per second. This value is saved and restored with the saved game.
 */
-long Frame = 0;
+int Frame = 0;
 
 /***************************************************************************
 **	These globals are constantly monitored to determine if the player
@@ -362,11 +362,11 @@ Buffer* TheaterBuffer;
 ** This accumulates into a useful value that contributes to a
 **	histogram of game performance.
 */
-long SpareTicks;
-long PathCount;      // Number of findpaths called.
-long CellCount;      // Number of cells redrawn.
-long TargetScan;     // Number of target scans.
-long SidebarRedraws; // Number of sidebar redraws.
+int SpareTicks;
+int PathCount;      // Number of findpaths called.
+int CellCount;      // Number of cells redrawn.
+int TargetScan;     // Number of target scans.
+int SidebarRedraws; // Number of sidebar redraws.
 
 /***************************************************************************
 **	This is the monochrome debug page array. The various monochrome data
@@ -464,7 +464,7 @@ bool GameActive;
 **	a long, but the value wasn't supplied to a function. This is used
 **	specifically for the default reference value. As such, it is not stable.
 */
-long LParam;
+int LParam;
 
 #ifdef SCENARIO_EDITOR
 /***************************************************************************
@@ -545,7 +545,7 @@ CarryoverClass* Carryover;
 ** This value is computed every time a new scenario is loaded; it's a
 ** CRC of the INI and binary map files.
 */
-unsigned long ScenarioCRC;
+unsigned int ScenarioCRC;
 
 /***************************************************************************
 ** This class manages data specific to multiplayer games.
@@ -570,8 +570,8 @@ int NewMaxAheadFrame2;
 #ifdef FIXIT_VERSION_3
 bool bAftermathMultiplayer; //	Is multiplayer game being played with Aftermath rules?
 #else
-unsigned long PlayingAgainstVersion; // Negotiated version number
-bool Version107InMix;                // Is there a v1.07 in the game
+unsigned int PlayingAgainstVersion; // Negotiated version number
+bool Version107InMix;               // Is there a v1.07 in the game
 #endif
 
 /***************************************************************************
@@ -598,13 +598,14 @@ NullModemClass NullModem(16, // number of send entries
 //	8, 													// # entries in Private Queues
 //	VIRGIN_SOCKET, 									// Socket ID #
 //	IPXGlobalConnClass::COMMAND_AND_CONQUER0);// Product ID #
-
+#ifdef NETWORKING
 IPXManagerClass Ipx(MAX(sizeof(GlobalPacketType), sizeof(RemoteFileTransferType)), // size of Global Channel packets
                     ((546 - sizeof(CommHeaderType)) / sizeof(EventClass)) * sizeof(EventClass),
                     160,                                       // # entries in Global Queue
                     32,                                        // # entries in Private Queues
                     VIRGIN_SOCKET,                             // Socket ID #
                     IPXGlobalConnClass::COMMAND_AND_CONQUER0); // Product ID #
+#endif
 
 /***************************************************************************
 **	This is the random-number seed; it's synchronized between systems for
@@ -653,8 +654,8 @@ int MouseInstalled;
 //multiple definition of `LogLevel' with openal
 int LogLevel = 0;
 #endif
-unsigned long LogLevelTime[MAX_LOG_LEVEL] = {0};
-unsigned long LogLastTime = 0;
+unsigned int LogLevelTime[MAX_LOG_LEVEL] = {0};
+unsigned int LogLastTime = 0;
 bool LogDump_Print = false; // true = print the Log time Stuff
 
 /***************************************************************************
@@ -687,3 +688,6 @@ bool bAutoSonarPulse = false;
 // ST - 5/14/2019
 bool RunningAsDLL = false;
 bool RunningFromEditor = false;
+
+// OmniBlade - Moves from tcpip.cpp as part of networking cleanup.
+bool Server; // Is this player acting as client or server

@@ -274,7 +274,7 @@ public:
     */
     bool Basic_Path(void);
 
-    virtual RadioMessageType Receive_Message(RadioClass* from, RadioMessageType message, long& param);
+    virtual RadioMessageType Receive_Message(RadioClass* from, RadioMessageType message, int& param);
     virtual bool Can_Demolish(void) const;
     bool Is_Recruitable(HouseClass const* house = NULL) const;
     bool Is_On_Priority_Mission(void) const;
@@ -400,7 +400,6 @@ private:
     ** Some additional padding in case we need to add data to the class and maintain backwards compatibility for
     *save/load
     */
-    unsigned char SaveLoadPadding[16];
 };
 
 #endif

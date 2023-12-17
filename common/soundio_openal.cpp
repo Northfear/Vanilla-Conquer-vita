@@ -15,9 +15,11 @@
 #include "memflag.h"
 #include "soscomp.h"
 #include "sound.h"
+#include "endianness.h"
 #include <al.h>
 #include <alc.h>
 #include <algorithm>
+#include <stdlib.h>
 
 enum
 {
@@ -131,11 +133,11 @@ struct SampleTrackerType
     **	Streaming control handlers.
     */
     bool (*Callback)(short id, short* odd, void** buffer, int* size);
-    int FilePending;      // Number of buffers already filled ahead.
-    long FilePendingSize; // Number of bytes in last filled buffer.
-    short Odd;            // Block number tracker (0..StreamBufferCount-1).
-    void* QueueBuffer;    // Pointer to continued sample data.
-    int QueueSize;        // Size of queue buffer attached.
+    int FilePending;     // Number of buffers already filled ahead.
+    int FilePendingSize; // Number of bytes in last filled buffer.
+    short Odd;           // Block number tracker (0..StreamBufferCount-1).
+    void* QueueBuffer;   // Pointer to continued sample data.
+    int QueueSize;       // Size of queue buffer attached.
 
     /*
     **	The file variables are used when streaming directly off of the
@@ -195,7 +197,7 @@ struct LockedDataType
     bool ServiceSomething;   // = false;
     unsigned MagicNumber;    // = 0xDEAF;
     void* UncompBuffer;      // = NULL;
-    long StreamBufferSize;   // = (2*SECONDARY_BUFFER_SIZE)+128;
+    int StreamBufferSize;    // = (2*SECONDARY_BUFFER_SIZE)+128;
     short StreamBufferCount; // = 32;
     SampleTrackerType SampleTracker[MAX_SAMPLE_TRACKERS];
     unsigned SoundVolume;
@@ -355,12 +357,25 @@ int Sample_Copy(SampleTrackerType* st,
             break;
         }
 
-        if (Simple_Copy(source, ssize, alternate, altsize, &dptr, sizeof(dsize)) < sizeof(dsize) || dsize > size) {
+        fsize = le16toh(fsize);
+
+        if (Simple_Copy(source, ssize, alternate, altsize, &dptr, sizeof(dsize)) < sizeof(dsize)) {
             break;
         }
 
-        if (Simple_Copy(source, ssize, alternate, altsize, &mptr, sizeof(magic)) < sizeof(magic)
-            || magic != LockedData.MagicNumber) {
+        dsize = le16toh(dsize);
+
+        if (dsize > size) {
+            break;
+        }
+
+        if (Simple_Copy(source, ssize, alternate, altsize, &mptr, sizeof(magic)) < sizeof(magic)) {
+            break;
+        }
+
+        magic = le32toh(magic);
+
+        if (magic != LockedData.MagicNumber) {
             break;
         }
 
@@ -410,7 +425,7 @@ int Stream_Sample_Vol(void* buffer, int size, bool (*callback)(short, short*, vo
     AUDHeaderType header;
     memcpy(&header, buffer, sizeof(header));
     int oldsize = header.Size;
-    header.Size = size - sizeof(header);
+    header.Size = htole32(size - sizeof(header));
     memcpy(buffer, &header, sizeof(header));
     int playid = Play_Sample_Handle(buffer, PRIORITY_MAX, volume, 0, handle);
     header.Size = oldsize;
@@ -564,7 +579,7 @@ int File_Stream_Sample_Vol(char const* filename, int volume, bool real_time_star
     }
 
     if (FileStreamBuffer == nullptr) {
-        FileStreamBuffer = malloc((unsigned long)(LockedData.StreamBufferSize * LockedData.StreamBufferCount));
+        FileStreamBuffer = malloc((unsigned int)(LockedData.StreamBufferSize * LockedData.StreamBufferCount));
 
         for (int i = 0; i < MAX_SAMPLE_TRACKERS; ++i) {
             LockedData.SampleTracker[i].FileBuffer = FileStreamBuffer;
@@ -771,7 +786,7 @@ void* Load_Sample(char const* filename)
     return data;
 };
 
-long Load_Sample_Into_Buffer(char const* filename, void* buffer, long size)
+int Load_Sample_Into_Buffer(char const* filename, void* buffer, int size)
 {
     if (buffer == nullptr || size == 0 || LockedData.DigiHandle == INVALID_AUDIO_HANDLE || !filename
         || !Find_File(filename)) {
@@ -789,7 +804,7 @@ long Load_Sample_Into_Buffer(char const* filename, void* buffer, long size)
     return sample_size;
 }
 
-long Sample_Read(int fh, void* buffer, long size)
+int Sample_Read(int fh, void* buffer, int size)
 {
     if (buffer == nullptr || fh == INVALID_AUDIO_HANDLE || size <= sizeof(AUDHeaderType)) {
         return 0;
@@ -1034,6 +1049,9 @@ int Play_Sample_Handle(const void* sample, int priority, int volume, signed shor
         // Read in the sample's header.
         AUDHeaderType raw_header;
         memcpy(&raw_header, sample, sizeof(raw_header));
+        raw_header.Rate = le16toh(raw_header.Rate);
+        raw_header.Size = le32toh(raw_header.Size);
+        raw_header.UncompSize = le32toh(raw_header.UncompSize);
 
         // We don't support anything lower than 20000 hz.
         if (raw_header.Rate < 24000 && raw_header.Rate > 20000) {
@@ -1231,7 +1249,7 @@ int Get_Digi_Handle()
     return LockedData.DigiHandle;
 }
 
-long Sample_Length(const void* sample)
+int Sample_Length(const void* sample)
 {
     if (sample == nullptr) {
         return 0;

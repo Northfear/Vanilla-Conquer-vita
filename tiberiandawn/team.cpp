@@ -117,7 +117,7 @@ void TeamClass::Init(void)
     memset(Success, 0, sizeof(Success));
 }
 
-void* TeamClass::operator new(size_t)
+void* TeamClass::operator new(size_t) noexcept
 {
     void* ptr = Teams.Allocate();
     if (ptr) {
@@ -474,7 +474,7 @@ void TeamClass::AI(void)
                 **	Argument can be a waypoint index or a direct target.
                 */
                 if (mission->Argument < WAYPT_COUNT) {
-                    Assign_Mission_Target(::As_Target((CELL)Waypoint[mission->Argument]));
+                    Assign_Mission_Target(::As_Target((CELL)Scen.Waypoint[mission->Argument]));
                 } else {
                     Assign_Mission_Target((TARGET)mission->Argument);
                 }
@@ -996,8 +996,8 @@ TARGET TeamClass::As_Target(void) const
 void TeamClass::Calc_Center(CELL& center, CELL& obj_center) const
 {
     Validate();
-    long x = 0;
-    long y = 0;
+    int x = 0;
+    int y = 0;
     int dist = 0x7FFFFFFF;
     int quantity = 0;
     FootClass* unit;

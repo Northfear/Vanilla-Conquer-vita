@@ -1,0 +1,109 @@
+name: macos
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  vanilla-macos:
+    runs-on: macos-12
+    steps:
+    - uses: actions/checkout@v3.3.0
+      with:
+        submodules: 'true'
+        fetch-depth: 0
+        ref: ${{ github.event.pull_request.head.sha }}
+    
+    - name: Set Git Info
+      id: gitinfo
+      run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+    - name: Setting up Cache-Key
+      run: echo "DEP_CACHE_KEY=$(curl 'https://ports.macports.org/api/v1/ports/dylibbundler/?format=json' | grep -ioE '("version":).[^,]*')-$(curl 'https://ports.macports.org/api/v1/ports/libsdl2/?format=json' | grep -ioE '("version":).[^,]*')-$(curl 'https://ports.macports.org/api/v1/ports/openal-soft/?format=json' | grep -ioE '("version":).[^,]*')" >> $GITHUB_ENV
+
+    - name: Printing Cache-Key
+      run: echo $DEP_CACHE_KEY
+
+    - name: Restore cache
+      id: dep-cache
+      uses: actions/cache@v3
+      env:
+        cache-name: cache-dependencies
+      with:
+        path: ~/macports
+        key: ${{ env.DEP_CACHE_KEY }}
+    
+    - name: Install ninja
+      run: |
+        brew install ninja
+    
+    - if: ${{ steps.dep-cache.outputs.cache-hit != 'true' }}
+      name: Install dependencies
+      run: |
+        wget -q https://github.com/macports/macports-base/releases/download/v2.8.1/MacPorts-2.8.1-12-Monterey.pkg
+        sudo installer -pkg ./MacPorts-2.8.1-12-Monterey.pkg -target /
+        export PATH="/opt/local/bin:/opt/local/sbin:$PATH"
+        sudo port selfupdate -N
+        sudo port install dylibbundler -N
+        sudo port install libsdl2 +universal -N
+        sudo port install openal-soft +universal -N
+        sudo port install imageMagick -N
+        mkdir ~/macports
+        sudo cp -R /opt/local ~/macports
+        sudo chown -R $USER:staff ~/macports
+
+    - if: ${{ steps.dep-cache.outputs.cache-hit == 'true' }}
+      name: Restore dependencies from cache
+      run: |
+        sudo cp -R ~/macports/local /opt
+
+    - name: Configure Vanilla Conquer
+      run: |
+        export PATH="/opt/local/bin:/opt/local/sbin:$PATH"
+        cmake -G Ninja -DCMAKE_FIND_FRAMEWORK=LAST -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DMAP_EDITORTD=ON -DMAP_EDITORRA=ON -DBUILD_TOOLS=ON -B build
+        
+    - name: Build Vanilla Conquer
+      run: |
+        export PATH="/opt/local/bin:/opt/local/sbin:$PATH"
+        cmake --build build
+        dsymutil build/vanillatd.app/Contents/MacOS/vanillatd -o build/vanillatd.dSYM
+        dsymutil build/vanillara.app/Contents/MacOS/vanillara -o build/vanillara.dSYM
+        dsymutil build/vanillamix -o build/vanillamix.dSYM
+        strip -Sx build/vanillatd.app/Contents/MacOS/vanillatd
+        strip -Sx build/vanillara.app/Contents/MacOS/vanillara
+        strip -Sx build/vanillamix
+        dylibbundler --create-dir --bundle-deps --overwrite-files --dest-dir ./build/vanillatd.app/Contents/libs --fix-file build/vanillatd.app/Contents/MacOS/vanillatd
+        dylibbundler --create-dir --bundle-deps --overwrite-files --dest-dir ./build/vanillara.app/Contents/libs --fix-file build/vanillara.app/Contents/MacOS/vanillara
+
+    - name: Create archives
+      run: |
+        mkdir artifact
+        7z a artifact/vanilla-conquer-macos-clang-universal2-${{ steps.gitinfo.outputs.sha_short }}.zip ./build/vanillatd.app ./build/vanillara.app ./build/vanillamix
+        7z a artifact/vanilla-conquer-macos-clang-universal2-${{ steps.gitinfo.outputs.sha_short }}-debug.zip ./build/vanillatd.dSYM ./build/vanillara.dSYM ./build/vanillamix.dSYM
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3.1.2
+      with:
+        name: vanilla-conquer-macos-clang-universal2
+        path: artifact
+        
+    - name: Upload development release
+      if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/vanilla' }}
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Development Build
+        tag_name: "latest"
+        prerelease: true
+        files: |
+          artifact/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload tagged release
+      if: ${{ startsWith(github.ref, 'refs/tags/') }}
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          artifact/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

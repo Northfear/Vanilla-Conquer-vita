@@ -43,10 +43,10 @@
 #include "function.h"
 #include "loaddlg.h"
 #include "common/gitinfo.h"
-#include "common/tcpip.h"
 #include "common/vqaconfig.h"
 #include "common/wspudp.h"
 #include "common/paths.h"
+#include "common/winasm.h"
 #include <time.h>
 
 /****************************************
@@ -55,9 +55,11 @@
 static void Play_Intro(bool for_real = false);
 void Init_CDROM_Access(void);
 
-extern unsigned long RandNumb;
+extern unsigned int RandNumb;
 
-extern int SimRandIndex;
+// extern int SimRandIndex;
+
+void Init_Random(void);
 
 #define ATTRACT_MODE_TIMEOUT 3600 // timeout for attract mode
 #if (0)
@@ -144,7 +146,7 @@ bool Init_Game(int, char*[])
     **	Initialize all the waypoints to invalid values.
     */
     CCDebugString("C&C95 - About to clear waypoints\n");
-    memset(Waypoint, 0xFF, sizeof(Waypoint));
+    memset(Scen.Waypoint, 0xFF, sizeof(Scen.Waypoint));
 
     /*
     **	Setup the keyboard processor in preparation for the game.
@@ -255,7 +257,7 @@ bool Init_Game(int, char*[])
     ** Since there is no mouse shape currently available we need'
     ** to set one of our own.
     */
-#if defined(_WIN32) && !defined(SDL2_BUILD)
+#if defined(_WIN32) && !defined(SDL_BUILD)
     ShowCursor(FALSE);
 #endif
     if (MouseInstalled) {
@@ -346,7 +348,7 @@ bool Init_Game(int, char*[])
         }
 
         strcpy(scan_path, search_path);
-        strcat(scan_path, "SC*.MIX");
+        strcat(scan_path, "sc*.mix");
         found = Find_First(scan_path, 0, &ffd);
         while (found) {
             char* ptr = (char*)ffd->GetName();
@@ -359,7 +361,7 @@ bool Init_Game(int, char*[])
         }
 
         strcpy(scan_path, search_path);
-        strcat(scan_path, "SS*.MIX");
+        strcat(scan_path, "ss*.mix");
         found = Find_First(scan_path, 0, &ffd);
         while (found) {
             char* ptr = (char*)ffd->GetName();
@@ -456,6 +458,11 @@ bool Init_Game(int, char*[])
     CCFileClass rulesIniFile("RULES.INI");
     if (RuleINI.Load(rulesIniFile, false)) {
         Rule.Process(RuleINI);
+    }
+
+    /* Initialize the Interpolation Table.  */
+    if (Get_Resolution_Factor()) {
+        InterpolationTable = new struct InterpolationTable();
     }
 
     /*
@@ -626,8 +633,6 @@ bool Init_Game(int, char*[])
 //#ifndef NOMEMCHECK
 void Uninit_Game(void)
 {
-    delete Map.ShadowPage;
-    Map.ShadowPage = NULL;
     Map.Free_Cells();
 
     delete[] SpeechBuffer;
@@ -660,6 +665,11 @@ void Uninit_Game(void)
 
     WWDOS_Shutdown();
     delete[] Palette;
+
+    if (InterpolationTable) {
+        delete InterpolationTable;
+        InterpolationTable = NULL;
+    }
 }
 //#endif
 
@@ -865,32 +875,32 @@ bool Select_Game(bool fade)
             **	Pick an expansion scenario.
             */
             case SEL_NEW_SCENARIO:
-                CarryOverMoney = 0;
+                Scen.CarryOverMoney = 0;
                 if (Expansion_Dialog()) {
                     switch (Fetch_Difficulty()) {
                     case 0:
-                        ScenCDifficulty = DIFF_HARD;
-                        ScenDifficulty = DIFF_EASY;
+                        Scen.CDifficulty = DIFF_HARD;
+                        Scen.Difficulty = DIFF_EASY;
                         break;
 
                     case 1:
-                        ScenCDifficulty = DIFF_HARD;
-                        ScenDifficulty = DIFF_NORMAL;
+                        Scen.CDifficulty = DIFF_HARD;
+                        Scen.Difficulty = DIFF_NORMAL;
                         break;
 
                     case 2:
-                        ScenCDifficulty = DIFF_NORMAL;
-                        ScenDifficulty = DIFF_NORMAL;
+                        Scen.CDifficulty = DIFF_NORMAL;
+                        Scen.Difficulty = DIFF_NORMAL;
                         break;
 
                     case 3:
-                        ScenCDifficulty = DIFF_EASY;
-                        ScenDifficulty = DIFF_NORMAL;
+                        Scen.CDifficulty = DIFF_EASY;
+                        Scen.Difficulty = DIFF_NORMAL;
                         break;
 
                     case 4:
-                        ScenCDifficulty = DIFF_EASY;
-                        ScenDifficulty = DIFF_HARD;
+                        Scen.CDifficulty = DIFF_EASY;
+                        Scen.Difficulty = DIFF_HARD;
                         break;
                     }
 
@@ -947,38 +957,38 @@ bool Select_Game(bool fade)
             */
             case SEL_START_NEW_GAME:
                 if (Special.IsFromInstall) {
-                    ScenCDifficulty = DIFF_NORMAL;
-                    ScenDifficulty = DIFF_NORMAL;
+                    Scen.CDifficulty = DIFF_NORMAL;
+                    Scen.Difficulty = DIFF_NORMAL;
                 } else {
                     switch (Fetch_Difficulty()) {
                     case 0:
-                        ScenCDifficulty = DIFF_HARD;
-                        ScenDifficulty = DIFF_EASY;
+                        Scen.CDifficulty = DIFF_HARD;
+                        Scen.Difficulty = DIFF_EASY;
                         break;
 
                     case 1:
-                        ScenCDifficulty = DIFF_HARD;
-                        ScenDifficulty = DIFF_NORMAL;
+                        Scen.CDifficulty = DIFF_HARD;
+                        Scen.Difficulty = DIFF_NORMAL;
                         break;
 
                     case 2:
-                        ScenCDifficulty = DIFF_NORMAL;
-                        ScenDifficulty = DIFF_NORMAL;
+                        Scen.CDifficulty = DIFF_NORMAL;
+                        Scen.Difficulty = DIFF_NORMAL;
                         break;
 
                     case 3:
-                        ScenCDifficulty = DIFF_EASY;
-                        ScenDifficulty = DIFF_NORMAL;
+                        Scen.CDifficulty = DIFF_EASY;
+                        Scen.Difficulty = DIFF_NORMAL;
                         break;
 
                     case 4:
-                        ScenCDifficulty = DIFF_EASY;
-                        ScenDifficulty = DIFF_HARD;
+                        Scen.CDifficulty = DIFF_EASY;
+                        Scen.Difficulty = DIFF_HARD;
                         break;
                     }
                 }
 
-                CarryOverMoney = 0;
+                Scen.CarryOverMoney = 0;
 
                 if (Is_Demo()) {
                     Hide_Mouse();
@@ -992,7 +1002,7 @@ bool Select_Game(bool fade)
                     Show_Mouse();
                 }
 
-                Scenario = 1;
+                Scen.Scenario = 1;
                 BuildLevel = 1;
 
                 ScenPlayer = SCEN_PLAYER_GDI;
@@ -1144,7 +1154,6 @@ bool Select_Game(bool fade)
 
                     PacketTransport = new UDPInterfaceClass;
                     assert(PacketTransport != NULL);
-#endif
 
                     DBG_LOG("C&C - About to call Init_Network.\n");
                     if (GameToPlay == GAME_IPX && Init_Network() && Remote_Connect()) {
@@ -1154,14 +1163,15 @@ bool Select_Game(bool fade)
                         process = false;
                         Theme.Fade_Out();
                     } else { // user hit cancel, or init failed
+#endif
                         GameToPlay = GAME_NORMAL;
                         display = true;
                         selection = SEL_NONE;
 #ifdef NETWORKING
                         delete PacketTransport;
                         PacketTransport = NULL;
-#endif
                     }
+#endif
                     break;
                 }
                 break;
@@ -1303,7 +1313,7 @@ bool Select_Game(bool fade)
         /*
         ** For Debug_Map (editor) mode, if JP option is on, set to load that scenario
         */
-        Scenario = 1;
+        Scen.Scenario = 1;
         if (Special.IsJurassic && AreThingiesEnabled) {
             ScenPlayer = SCEN_PLAYER_JP;
             ScenDir = SCEN_DIR_EAST;
@@ -1322,34 +1332,9 @@ bool Select_Game(bool fade)
     Keyboard->Clear();
 
     /*
-    ** Get a pointer to the compiler's random number seed.
-    **	the Get_EAX() must follow immediately after the srand(0) in order to save
-    **	the address of the random seed.  (Currently not used.)
+    ** Initialize the random number generator(s)
     */
-    srand(0);
-    // RandSeedPtr = (long *)Get_EAX();	 // ST - 1/2/2019 5:26PM
-
-    /*
-    **	Initialize the random number Seed.  For multiplayer, this will have been done
-    ** in the connection dialogs.  For single-player games, AND if we're not playing
-    ** back a recording, init the Seed to a random value.
-    */
-    if (GameToPlay == GAME_NORMAL && !PlaybackGame) {
-#ifdef _WIN32
-        srand(timeGetTime());
-#else
-        srand(time(NULL));
-#endif
-        // randomize();
-        Seed = rand();
-    }
-
-    /*
-    ** If user has specified a desired random number seed, use it for multiplayer games
-    */
-    if (CustomSeed != 0) {
-        Seed = CustomSeed;
-    }
+    Init_Random();
 
     /*
     ** Save initialization values if we're recording this game.
@@ -1364,44 +1349,15 @@ bool Select_Game(bool fade)
     }
 
     /*
-    **	Initialize the random-number generator.
-    */
-    // Seed = 1;
-
-    srand(Seed);
-    RandNumb = Seed;
-    SimRandIndex = 0;
-#if (0)
-    DWORD actual;
-    HANDLE sfile = CreateFile("random.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-
-    if (sfile != INVALID_HANDLE_VALUE) {
-        SetFilePointer(sfile, 0, NULL, FILE_END);
-
-        int minimum;
-        int maximum;
-        char whatever[80];
-        for (int i = 0; i < 1000; i++) {
-            minimum = rand();
-            maximum = rand();
-
-            sprintf(whatever, "%04x\n", Random_Pick(minimum, maximum));
-            WriteFile(sfile, whatever, strlen(whatever), &actual, NULL);
-        }
-        CloseHandle(sfile);
-    }
-#endif
-
-    /*
     **	Load the scenario.  Specify variation 'A' for the editor; for the game,
     **	don't specify a variation, to make 'Set_Scenario_Name()' pick a random one.
     **	Skip this if we've already loaded a save-game.
     */
     if (!gameloaded) {
         if (Debug_Map) {
-            Set_Scenario_Name(ScenarioName, Scenario, ScenPlayer, ScenDir, SCEN_VAR_A);
+            Set_Scenario_Name(Scen.ScenarioName, Scen.Scenario, ScenPlayer, ScenDir, SCEN_VAR_A);
         } else {
-            Set_Scenario_Name(ScenarioName, Scenario, ScenPlayer, ScenDir);
+            Set_Scenario_Name(Scen.ScenarioName, Scen.Scenario, ScenPlayer, ScenDir);
         }
 
         /*
@@ -1419,7 +1375,7 @@ bool Select_Game(bool fade)
 
         Special.IsFromInstall = 0;
         CCDebugString("C&C95 - Starting scenario.\n");
-        if (!Start_Scenario(ScenarioName)) {
+        if (!Start_Scenario(Scen.ScenarioName)) {
             return (false);
         }
         CCDebugString("C&C95 - Scenario started OK.\n");
@@ -1645,9 +1601,9 @@ bool Parse_Command_Line(int argc, char* argv[])
     **	passed in.
     */
 #ifdef DEMO
-    Scenario = 3;
+    Scen.Scenario = 3;
 #else
-    Scenario = 1;
+    Scen.Scenario = 1;
 #endif
     ScenPlayer = SCEN_PLAYER_GDI;
     ScenDir = SCEN_DIR_EAST;
@@ -1721,7 +1677,6 @@ bool Parse_Command_Line(int argc, char* argv[])
                  //						"  -CD<path> = Set search path for data files.\r\n"
                  "  -DESTNET  = Specify Network Number of destination system\r\n"
                  "              (Syntax: DESTNETxx.xx.xx.xx)\r\n"
-                 "  -SOCKET   = Network Socket ID (0 - 16383)\n"
                  "  -STEALTH  = Hide multiplayer names (\"Boss mode\")\r\n"
                  "  -MESSAGES = Allow messages from outside this game.\r\n"
                  "  -o        = Enable compatability with version 1.07.\r\n"
@@ -1909,57 +1864,6 @@ bool Parse_Command_Line(int argc, char* argv[])
             continue;
         }
 #endif
-
-        /*
-        **	Specify destination connection for network play
-        */
-        if (strstr(string, "-DESTNET")) {
-            NetNumType net;
-            NetNodeType node;
-
-            /*
-            ** Scan the command-line string, pulling off each address piece
-            */
-            int i = 0;
-            char* p = strtok(string + 8, ".");
-            while (p) {
-                int x;
-
-                sscanf(p, "%x", &x); // convert from hex string to int
-                if (i < 4) {
-                    net[i] = (char)x; // fill NetNum
-                } else {
-                    node[i - 4] = (char)x; // fill NetNode
-                }
-                i++;
-                p = strtok(NULL, ".");
-            }
-
-            /*
-            ** If all the address components were successfully read, fill in the
-            ** BridgeNet with a broadcast address to the network across the bridge.
-            */
-            if (i >= 4) {
-                IsBridge = 1;
-                memset(node, 0xff, 6);
-                BridgeNet = IPXAddressClass(net, node);
-            }
-            continue;
-        }
-
-        /*
-        **	Specify socket ID, as an offset from 0x4000.
-        */
-        if (strstr(string, "-SOCKET")) {
-            unsigned short socket;
-
-            socket = (unsigned short)(atoi(string + strlen("SOCKET")));
-            socket += 0x4000;
-            if (socket >= 0x4000 && socket < 0x8000) {
-                Ipx.Set_Socket(socket);
-            }
-            continue;
-        }
 
         /*
         **	Set the Net Stealth option
@@ -2326,7 +2230,7 @@ void Save_Recording_Values(void)
     RecordFile.Write(MPlayerID, sizeof(MPlayerID));
     RecordFile.Write(MPlayerHouses, sizeof(MPlayerHouses));
     RecordFile.Write(&Seed, sizeof(Seed));
-    RecordFile.Write(&Scenario, sizeof(Scenario));
+    RecordFile.Write(&Scen.Scenario, sizeof(Scen.Scenario));
     RecordFile.Write(&ScenPlayer, sizeof(ScenPlayer));
     RecordFile.Write(&ScenDir, sizeof(ScenDir));
     RecordFile.Write(&Whom, sizeof(Whom));
@@ -2377,7 +2281,7 @@ void Load_Recording_Values(void)
     RecordFile.Read(MPlayerID, sizeof(MPlayerID));
     RecordFile.Read(MPlayerHouses, sizeof(MPlayerHouses));
     RecordFile.Read(&Seed, sizeof(Seed));
-    RecordFile.Read(&Scenario, sizeof(Scenario));
+    RecordFile.Read(&Scen.Scenario, sizeof(Scen.Scenario));
     RecordFile.Read(&ScenPlayer, sizeof(ScenPlayer));
     RecordFile.Read(&ScenDir, sizeof(ScenDir));
     RecordFile.Read(&Whom, sizeof(Whom));
@@ -2469,13 +2373,13 @@ long Obfuscate(char const* string)
     **	Transform the buffer into a number. This transformation is character
     **	order dependant.
     */
-    long code = Calculate_CRC(buffer, length);
+    int code = Calculate_CRC(buffer, length);
 
     /*
     **	Record a copy of this initial transformation to be used in a later
     **	self referential transformation.
     */
-    long copy = code;
+    int copy = code;
 
     /*
     **	Reverse the character string and combine with the previous transformation.
@@ -2502,7 +2406,7 @@ long Obfuscate(char const* string)
         unsigned char temp = (unsigned char)code;
         buffer[index] ^= temp;
         code >>= 8;
-        code |= (((long)temp) << 24);
+        code |= (((int)temp) << 24);
     }
 
     /*
@@ -2573,4 +2477,56 @@ long Obfuscate(char const* string)
     **	Return the final code value.
     */
     return (code);
+}
+
+/***************************************************************************
+ * Init_Random -- Initializes the random-number generator                  *
+ *                                                                         *
+ * INPUT:                                                                  *
+ *		none.																						*
+ *                                                                         *
+ * OUTPUT:                                                                 *
+ *		none.																						*
+ *                                                                         *
+ * WARNINGS:                                                               *
+ *		none.																						*
+ *                                                                         *
+ * HISTORY:                                                                *
+ *   12/04/1995 BRR : Created.                                             *
+ *=========================================================================*/
+void Init_Random(void)
+{
+    //
+    // If we're playing a recording, the Seed is loaded in
+    // Load_Recording_Values().  Just init the random # and return.
+    //
+    if (PlaybackGame) {
+        RandNumb = Seed;
+        Scen.RandomNumber = Seed;
+        return;
+    }
+
+    /*
+    **	Initialize the random number Seed.  For multiplayer, this will have been done
+    ** in the connection dialogs.  For single-player games, AND if we're not playing
+    ** back a recording, init the Seed to a random value.
+    */
+    if (GameToPlay == GAME_NORMAL || GameToPlay == GAME_SKIRMISH && PlaybackGame) {
+
+        /*
+        ** Set the optional user-specified seed
+        */
+        if (CustomSeed != 0) {
+            Seed = CustomSeed;
+        } else {
+            srand((unsigned)time(NULL));
+            Seed = rand();
+        }
+    }
+
+    /*
+    **	Initialize the random-number generators
+    */
+    Scen.RandomNumber = Seed;
+    RandNumb = Seed;
 }

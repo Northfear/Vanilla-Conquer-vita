@@ -56,7 +56,7 @@ public:
     CCPtr<AircraftTypeClass> Class;
 
     //-----------------------------------------------------------------------------
-    static void* operator new(size_t);
+    static void* operator new(size_t) noexcept;
     static void* operator new(size_t, void* ptr)
     {
         return (ptr);
@@ -179,7 +179,7 @@ public:
     int Paradrop_Cargo(void);
     virtual void AI(void);
     virtual void Enter_Idle_Mode(bool initial = false);
-    virtual RadioMessageType Receive_Message(RadioClass* from, RadioMessageType message, long& param);
+    virtual RadioMessageType Receive_Message(RadioClass* from, RadioMessageType message, int& param);
     virtual void Scatter(COORDINATE threat, bool forced = false, bool nokidding = false);
 
 /*
@@ -271,7 +271,6 @@ private:
     ** Some additional padding in case we need to add data to the class and maintain backwards compatibility for
     *save/load
     */
-    unsigned char SaveLoadPadding[32];
 };
 
 #endif

@@ -144,7 +144,7 @@ typedef struct
 //#include <vqa32\vqafile.h>
 
 extern bool GameActive;
-extern long LParam;
+extern int LParam;
 
 #include "vector.h"
 #include "heap.h"
@@ -161,14 +161,15 @@ extern long LParam;
 //#include <modem.h>
 //#include <fast.h>
 
-extern long Frame;
+extern int Frame;
 inline CELL Coord_XCell(COORDINATE coord)
 {
-    return (CELL)(*(((unsigned char*)&coord) + 1));
+    return (((COORD_COMPOSITE&)coord).Sub.X.Sub.Cell);
 }
+
 inline CELL Coord_YCell(COORDINATE coord)
 {
-    return (CELL)(*(((unsigned char*)&coord) + 3));
+    return (((COORD_COMPOSITE&)coord).Sub.Y.Sub.Cell);
 }
 
 #include "miscasm.h"
@@ -204,7 +205,6 @@ inline CELL Coord_YCell(COORDINATE coord)
 #include "tab.h"
 #include "help.h"
 #include "mouse.h"
-//#include	"mapedit.h"
 #include "help.h"
 #include "target.h"
 #include "theme.h"
@@ -234,15 +234,12 @@ inline CELL Coord_YCell(COORDINATE coord)
 #include "queue.h"
 #include "event.h"
 #include "base.h" // defines the AI's pre-built base
+#include "scenario.h"
 #include "ipxmgr.h"
 #include "combuf.h"
 #include "connect.h"
 #include "connmgr.h"
-#include "noseqcon.h"
 #include "msglist.h"
-//#include	"nullconn.h"
-//#include	"nullmgr.h"
-//#include "phone.h"
 #include "loaddlg.h"
 #include "ipxaddr.h"
 #include "common/miscasm.h"
@@ -254,14 +251,16 @@ inline CELL Coord_YCell(COORDINATE coord)
 typedef struct NodeNameTag
 {
     char Name[MPLAYER_NAME_MAX];
+#ifdef NETWORKING
     IPXAddressClass Address;
+#endif
     union
     {
         struct
         {
             int Version;
             unsigned char IsOpen;
-            unsigned long LastTime;
+            unsigned int LastTime;
         } Game;
         struct
         {
@@ -290,7 +289,7 @@ int Sound_Effect(VocType voc, VolType volume, int variation = 1, signed short pa
 void Speak(VoxType voice, HouseClass* house = NULL, COORDINATE coord = 0);
 void Speak_AI(void);
 void Stop_Speaking(void);
-void Sound_Effect(VocType voc, COORDINATE coord = NULL, int variation = 1);
+void Sound_Effect(VocType voc, COORDINATE coord = 0, int variation = 1);
 bool Is_Speaking(void);
 
 /*
@@ -315,7 +314,7 @@ bool Main_Loop();
 TheaterType Theater_From_Name(char const* name);
 // DirType Rotation_Calc(DirType current, DirType desired, int rate);
 void Main_Game(int argc, char* argv[]);
-long VQ_Call_Back(unsigned char* buffer = NULL, long frame = 0);
+int VQ_Call_Back(unsigned char* buffer = NULL, int frame = 0);
 void Call_Back(void);
 char const* Language_Name(char const* basename);
 SourceType Source_From_Name(char const* name);
@@ -371,7 +370,7 @@ void CC_Draw_Pip(ObjectClass* object,
 void CC_Draw_Line(int x, int y, int x1, int y1, unsigned char color, int frame, WindowNumberType window);
 
 void Go_Editor(bool flag);
-// long MixFileHandler(VQAHandle *vqa, long action, void *buffer, long nbytes);
+// long MixFileHandler(VQAHandle *vqa, int action, void *buffer, int nbytes);
 
 char* CC_Get_Shape_Filename(void const* shapeptr);
 void CC_Add_Shape_To_Global(void const* shapeptr, char* filename, char code);
@@ -380,7 +379,7 @@ void Bubba_Print(char* format, ...);
 
 void Heap_Dump_Check(const char* string);
 void Dump_Heap_Pointers(void);
-unsigned long Disk_Space_Available(void);
+unsigned int Disk_Space_Available(void);
 
 void Validate_Error(const char* name);
 void const* Hires_Retrieve(const char* name);
@@ -547,11 +546,11 @@ int Coord_Spillage_Number(COORDINATE coord, int maxsize);
 /*
 **	MENUS.CPP
 */
-void Setup_Menu(int menu, char const* text[], unsigned long field, int index, int skip);
-int Check_Menu(int menu, char const* text[], char* selection, long field, int index);
+void Setup_Menu(int menu, char const* text[], unsigned int field, int index, int skip);
+int Check_Menu(int menu, char const* text[], char* selection, int field, int index);
 int Do_Menu(char const** strings, bool blue);
 extern int UnknownKey;
-int Main_Menu(unsigned long timeout);
+int Main_Menu(unsigned int timeout);
 
 /*
 ** MPLAYER.CPP
@@ -573,7 +572,7 @@ bool Remote_Connect(void);
 void Destroy_Connection(int id, int error);
 bool Process_Global_Packet(GlobalPacketType* packet, IPXAddressClass* address);
 uint32_t Compute_Name_CRC(char* name);
-void Net_Reconnect_Dialog(int reconn, int fresh, int oldest_index, unsigned long timeval);
+void Net_Reconnect_Dialog(int reconn, int fresh, int oldest_index, unsigned int timeval);
 
 /*
 ** NULLDLG.CPP
@@ -603,12 +602,6 @@ bool Queue_Options(void);
 bool Queue_Exit(void);
 void Queue_AI(void);
 void Add_CRC(uint32_t* crc, uint32_t val);
-
-/*
-**	RAND.CPP
-*/
-int Sim_IRandom(int minval, int maxval);
-int Sim_Random(void);
 
 /*
 **	REINF.CPP
@@ -745,64 +738,103 @@ inline int Lepton_To_Cell(int lepton)
 
 inline CELL XY_Cell(int x, int y)
 {
-    return ((CELL)(((y) << MAP_CELL_MAX_X_BITS) | (x)));
+    CELL_COMPOSITE cell;
+    cell.Cell = 0;
+    cell.Sub.X = x;
+    cell.Sub.Y = y;
+    return (cell.Cell);
 }
 
 inline COORDINATE XY_Coord(int x, int y)
 {
-    return ((COORDINATE)MAKE_LONG(y, x));
+    COORD_COMPOSITE coord;
+
+    coord.Sub.X.Raw = x;
+    coord.Sub.Y.Raw = y;
+    return (coord.Coord);
 }
+
 inline int Coord_X(COORDINATE coord)
 {
-    return (short)(LOW_WORD(coord));
+    return (((COORD_COMPOSITE&)coord).Sub.X.Raw);
 }
 inline int Coord_Y(COORDINATE coord)
 {
-    return (short)(HIGH_WORD(coord));
+    return (((COORD_COMPOSITE&)coord).Sub.Y.Raw);
 }
 
 inline int Cell_X(CELL cell)
 {
-    return (int)(((unsigned)cell) & MAP_CELL_X_MASK);
+    return (((CELL_COMPOSITE&)cell).Sub.X);
 }
 
 inline int Cell_Y(CELL cell)
 {
-    return (int)(((unsigned)cell) >> MAP_CELL_MAX_X_BITS);
+    return (((CELL_COMPOSITE&)cell).Sub.Y);
 }
 
 inline CELL Coord_XLepton(COORDINATE coord)
 {
-    return (CELL)(*((unsigned char*)&coord));
+    return (CELL)(((COORD_COMPOSITE&)coord).Sub.X.Sub.Lepton);
 }
 
 inline CELL Coord_YLepton(COORDINATE coord)
 {
-    return (CELL)(*(((unsigned char*)&coord) + 2));
+    return (CELL)(((COORD_COMPOSITE&)coord).Sub.Y.Sub.Lepton);
+}
+
+inline COORDINATE Coord_Whole(COORDINATE coord)
+{
+    ((COORD_COMPOSITE&)coord).Sub.X.Sub.Lepton = 0;
+    ((COORD_COMPOSITE&)coord).Sub.Y.Sub.Lepton = 0;
+    return (coord);
+}
+
+inline COORDINATE Coord_Fraction(COORDINATE coord)
+{
+    ((COORD_COMPOSITE&)coord).Sub.X.Sub.Cell = 0;
+    ((COORD_COMPOSITE&)coord).Sub.Y.Sub.Cell = 0;
+    return (coord);
 }
 
 inline COORDINATE Coord_Add(COORDINATE coord1, COORDINATE coord2)
 {
-    return (COORDINATE)MAKE_LONG((*((short*)(&coord1) + 1) + *((short*)(&coord2) + 1)),
-                                 (*((short*)(&coord1)) + *((short*)(&coord2))));
+    COORD_COMPOSITE coord;
+
+    coord.Sub.X.Raw =
+        (LEPTON)((int)(short)((COORD_COMPOSITE&)coord1).Sub.X.Raw + (int)(short)((COORD_COMPOSITE&)coord2).Sub.X.Raw);
+    coord.Sub.Y.Raw =
+        (LEPTON)((int)(short)((COORD_COMPOSITE&)coord1).Sub.Y.Raw + (int)(short)((COORD_COMPOSITE&)coord2).Sub.Y.Raw);
+    return (coord.Coord);
 }
 
 inline COORDINATE Coord_Sub(COORDINATE coord1, COORDINATE coord2)
 {
-    return (COORDINATE)MAKE_LONG((*((short*)(&coord1) + 1) - *((short*)(&coord2) + 1)),
-                                 (*((short*)(&coord1)) - *((short*)(&coord2))));
+    COORD_COMPOSITE coord;
+
+    coord.Sub.X.Raw =
+        (LEPTON)((int)(short)((COORD_COMPOSITE&)coord1).Sub.X.Raw - (int)(short)((COORD_COMPOSITE&)coord2).Sub.X.Raw);
+    coord.Sub.Y.Raw =
+        (LEPTON)((int)(short)((COORD_COMPOSITE&)coord1).Sub.Y.Raw - (int)(short)((COORD_COMPOSITE&)coord2).Sub.Y.Raw);
+    return (coord.Coord);
 }
 
 inline COORDINATE Coord_Snap(COORDINATE coord)
 {
-    return (COORDINATE)MAKE_LONG((((*(((unsigned short*)&coord) + 1)) & 0xFF00) | 0x80),
-                                 (((*((unsigned short*)&coord)) & 0xFF00) | 0x80));
+    ((COORD_COMPOSITE&)coord).Sub.X.Sub.Lepton = CELL_LEPTON_W / 2;
+    ((COORD_COMPOSITE&)coord).Sub.Y.Sub.Lepton = CELL_LEPTON_W / 2;
+    return (coord);
 }
 
 inline COORDINATE Coord_Mid(COORDINATE coord1, COORDINATE coord2)
 {
-    return (COORDINATE)MAKE_LONG((*((unsigned short*)(&coord1) + 1) + *((unsigned short*)(&coord2) + 1)) >> 1,
-                                 (*((unsigned short*)(&coord1)) + *((unsigned short*)(&coord2))) >> 1);
+    COORD_COMPOSITE coord;
+
+    coord.Sub.X.Raw =
+        (LEPTON)(((int)((COORD_COMPOSITE&)coord1).Sub.X.Raw + (int)((COORD_COMPOSITE&)coord2).Sub.X.Raw) / 2);
+    coord.Sub.Y.Raw =
+        (LEPTON)(((int)((COORD_COMPOSITE&)coord1).Sub.Y.Raw + (int)((COORD_COMPOSITE&)coord2).Sub.Y.Raw) / 2);
+    return (coord.Coord);
 }
 
 inline COORDINATE XYPixel_Coord(int x, int y)
@@ -823,19 +855,14 @@ inline int Pixel_To_Lepton(int pixel)
 
 inline COORDINATE XYP_Coord(int x, int y)
 {
-    return XY_Coord(Pixel_To_Lepton(x), Pixel_To_Lepton(y));
-};
+    COORD_COMPOSITE coord;
 
-#ifdef MEGAMAPS
-/*
-**   Added copies for mega maps.
-**   Cell_Coord - 0x0FC0 to 0x3F80, 0x003F to 0x007F
-*/
-inline COORDINATE Cell_Coord(CELL cell)
-{
-    return (COORDINATE)MAKE_LONG((((cell & 0x3F80) << 1) | 0x80), ((((cell & 0x007F) << 1) + 1) << 7));
+    coord.Sub.X.Raw = Pixel_To_Lepton(x);
+    coord.Sub.Y.Raw = Pixel_To_Lepton(y);
+    return (coord.Coord);
 }
 
+#ifdef MEGAMAPS
 /*
 **	Takes a old cell value (that assumes a map of 64x64) and adjusts it within 
 **  the new enlarged map array (128x128). All old maps are aligned to the top left
@@ -845,13 +872,18 @@ inline CELL Confine_Old_Cell(CELL cell)
 {
     return (cell % 64) + (cell / 64) * 128;
 }
+#endif //MEGAMAPS
 
-#else  // MEGAMAPS
 inline COORDINATE Cell_Coord(CELL cell)
 {
-    return (COORDINATE)MAKE_LONG((((cell & 0x0FC0) << 2) | 0x80), ((((cell & 0x003F) << 1) + 1) << 7));
+    COORD_COMPOSITE coord;
+
+    coord.Sub.X.Sub.Cell = (unsigned char)(((CELL_COMPOSITE&)cell).Sub.X);
+    coord.Sub.X.Sub.Lepton = (unsigned char)(CELL_LEPTON_W / 2);
+    coord.Sub.Y.Sub.Cell = (unsigned char)(((CELL_COMPOSITE&)cell).Sub.Y);
+    coord.Sub.Y.Sub.Lepton = (unsigned char)(CELL_LEPTON_W / 2);
+    return (coord.Coord);
 }
-#endif //MEGAMAPS
 
 inline int Dir_Diff(DirType dir1, DirType dir2)
 {
@@ -924,12 +956,25 @@ template <class T> inline T Random_Picky(T a, T b, const char* sfile, int line)
     return (T)IRandom((int)a, (int)b); //, sfile, line);
 };
 
-#define Random_Pick(low, high) Random_Picky((low), (high), __FILE__, __LINE__)
+template <class T> inline T Random_Pick(T a, T b)
+{
+    return T(Scen.RandomNumber((int)a, (int)b));
+};
+
+inline bool Percent_Chance(int percent)
+{
+    return (Scen.RandomNumber(0, 99) < percent);
+}
 
 template <class T> inline T Sim_Random_Pick(T a, T b)
 {
-    return (T)Sim_IRandom((int)a, (int)b);
+    return (T)NonCriticalRandomNumber((int)a, (int)b);
 };
+
+inline bool Sim_Percent_Chance(int percent)
+{
+    return (NonCriticalRandomNumber(0, 99) < percent);
+}
 
 #ifdef CHEAT_KEYS
 #define Check_Ptr(ptr, file, line)                                                                                     \
@@ -975,7 +1020,6 @@ extern unsigned char* InterpolatedPalettes[100];
 extern bool PalettesRead;
 extern unsigned PaletteCounter;
 
-extern unsigned char PaletteInterpolationTable[SIZE_OF_PALETTE][SIZE_OF_PALETTE];
 extern unsigned char* InterpolationPalette;
 
 extern void Free_Interpolated_Palettes(void);

@@ -125,7 +125,7 @@ bool Remote_Connect(void)
 {
     return false;
 }
-void Net_Reconnect_Dialog(int reconn, int fresh, int oldest_index, unsigned long timeval)
+void Net_Reconnect_Dialog(int reconn, int fresh, int oldest_index, unsigned int timeval)
 {
 }
 #endif
@@ -156,7 +156,20 @@ void Net_Reconnect_Dialog(int reconn, int fresh, int oldest_index, unsigned long
 bool Is_Mission_126x126(char* file_name);
 bool Is_Mission_Aftermath(char* file_name);
 bool Is_Mission_Counterstrike(char* file_name);
-bool bSpecialAftermathScenario(const char* szScenarioDescription);
+bool bSpecialAftermathScenario(const char* szScenarioDescription)
+{
+    //	Returns true if szScenarioDescription matches one of the descriptions for Aftermath multiplayer
+    //	scenarios that have special Aftermath-only units *embedded* within them.
+    if (strcmp(szScenarioDescription, "Booby Traps (Mega 8 players)") == 0
+        || strcmp(szScenarioDescription, "Central Conflict Extreme (Mega 8 players)") == 0
+        || strcmp(szScenarioDescription, "Circles of Death (Mega 8 players)") == 0
+        || strcmp(szScenarioDescription, "Holy Grounds (Mega 8 players)") == 0
+        || strcmp(szScenarioDescription, "Island Wars Extreme (Mega 8 players)") == 0
+        || strcmp(szScenarioDescription, "King of the Hills Extreme (Mega 8 players)") == 0
+        || strcmp(szScenarioDescription, "The Hills Have Eyes (Mega 8 players)") == 0)
+        return true;
+    return false;
+}
 #endif
 
 #ifdef FIXIT_VERSION_3
@@ -205,1180 +218,7 @@ typedef enum
     REJECT_MISMATCH,        // "rules.ini" file mismatch.
 } RejectType;
 
-#ifdef ENGLISH
-char const* EngMisStr[] = {"Coastal Influence (Med)",
-                           "Middle Mayhem (Sm)",
-                           "Equal Opportunity (Sm)",
-                           "Marooned II (Med)",
-                           "Keep off the Grass (Sm)",
-                           "Isle of Fury (Lg)",
-                           "Ivory Wastelands (Sm)",
-                           "Shallow Grave (Med)",
-                           "North By Northwest (Lg)",
-                           "First Come, First Serve (Sm)",
-                           "Island Hoppers (Sm)",
-                           "Raraku (Lg)",
-                           "Central Conflict (Lg)",
-                           "Combat Alley (Med)",
-                           "Island Wars (Lg)",
-                           "Desolation (Lg)",
-                           "No Escape (Med)",
-                           "No Man's Land (Med)",
-                           "Normandy (Med)",
-                           "Pond Skirmish (Med)",
-                           "Ridge War (Med)",
-                           "A Path Beyond (Lg)",
-                           "Dugout Isle (Med)",
-                           "Treasure Isle (Med)",
-
-                           "Africa (Lg)",
-                           "Alaska Anarchy (Lg)",
-                           "All that Glitters... (Lg)",
-                           "Apre's Peace (Lg)",
-                           "Antartica (Lg)",
-                           "Armourgarden (Lg)",
-                           "Austraila (Med)",
-                           "Barrier to Entry (Lg)",
-                           "Bavarian Blast (Med)",
-                           "Be Shore (Med)",
-                           "Bearing Straits (Med)",
-                           "Blow Holes (Lg)",
-                           "Bonsai (Sm)",
-                           "Brother Stalin (Lg)",
-                           "Bullseye (Lg)",
-                           "C&C (Med)",
-                           "Camos Canyon (Med)",
-                           "Camos Coves (Lg)",
-                           "Camos Cross (Lg)",
-                           "Camos Crossing (Sm)",
-                           "Central Arena (Lg)",
-                           "Canyon River (Med)",
-                           "Crossroads (Sm)",
-                           "Czech Mate (Lg)",
-                           "Dday (Med)",
-                           "Disaster Central (Lg)",
-                           "Docklands (Med)",
-                           "East Coast (Med)",
-                           "Eastern Seaboard (Lg)",
-                           "Finger Lake (Lg)",
-                           "Fjords (Med)",
-                           "Floodlands (Lg)",
-                           "Forest under fire (Lg)",
-                           "Four Corners (Lg)",
-                           "Frostbit Fjords (Lg)",
-                           "Glenboig (Sm)",
-                           "Hell Frozen Over (Lg)",
-                           "India (Lg)",
-                           "Indirect Fire (Lg)",
-                           "Island Wars II (Lg)",
-                           "Italy (Lg)",
-                           "Kabalo (Lg)",
-                           "King of the Hills (Lg)",
-                           "Lake Divide (Med)",
-                           "Lakelands (Lg)",
-                           "Land Ladder (Lg)",
-                           "Lotsa Lakes (Lg)",
-                           "Lunar Battlefield (Lg Special)",
-                           "Malibu Fields (Med)",
-                           "Marshland (Med)",
-                           "MyLai Delta (Med)",
-                           "Natural Harbor (Med)",
-                           "No Way Out (Lg)",
-                           "Normandy Landing (Lg)",
-                           "Ore Wars (Med)",
-                           "Oz (Lg)",
-                           "Pilgrim Fathers II (Lg)",
-                           "Pip's Ice Tea (Med)",
-                           "Polar Panic (Lg)",
-                           "Ponds (Med)",
-                           "Putney (Lg)",
-                           "Return to Zion (Lg)",
-                           "Ring of Land (Lg)",
-                           "River Basin (Lg)",
-                           "River Delta (Med)",
-                           "River Islands (Med)",
-                           "River Maze (Sm)",
-                           "Rivers (Sm)",
-                           "Run the Gauntlet (Med)",
-                           "Scappa Flow (Lg)",
-                           "Siberian Slaughter (Lg)",
-                           "Sleepy Valley (Sm)",
-                           "Snake River (Lg)",
-                           "Snow Wars (Lg)",
-                           "Snowball fight (Lg)",
-                           "Snowy Island (Lg)",
-                           "So Near So Far (Sm)",
-                           "South America (Lg)",
-                           "Spring Line (Lg)",
-                           "Star (Lg)",
-                           "Straighter & Narrower (Sm)",
-                           "TerrainSpotting (Sm)",
-                           "The Bay (Lg)",
-                           "The Garden (Lg)",
-                           "The Great Lakes (Med)",
-                           "The Ice Arena (Lg)",
-                           "The Lake District (Lg)",
-                           "The Linked lands (Lg)",
-                           "The Mississippi (Med)",
-                           "The Sticky Bit (Lg)",
-                           "The Valley (Med)",
-                           "The Woods Today (Lg)",
-                           "Things to Come (Lg)",
-                           "Tiger Core (Sm)",
-                           "To the Core (Sm)",
-                           "Tournament Hills (Lg)",
-                           "Tropical Storm (Med)",
-                           "Tundra Trouble (Lg)",
-                           "Uk (Med)",
-                           "Undiscovered Country (Sm)",
-                           "United States (Med)",
-                           "Volcano (Sm)",
-                           "Wastelands (Lg)",
-                           "Water Works (Sm)",
-                           "World Map (Med)",
-                           "Zambezi (Lg)",
-
-                           "A Pattern of Islands (Lg 8 players)",
-                           "Arena Valley Extreme (Mega 8 players)",
-                           "Around the Rim (Sm 4 players)",
-                           "Ashes to Ashes (Lg 6 players)",
-                           "Artic Wasteland (Mega 8 players)",
-                           "Badajoz (Med 4 players)",
-                           "Baptism of Fire (Lg 6 players)",
-                           "Big Fish, Small Pond (Lg 6 players)",
-                           "Blue Lakes (Lg 8 players)",
-                           "Booby Traps (Mega 8 players)",
-                           "Bridgehead (Lg 6 players)",
-                           "Butterfly Bay (Lg 6 players)",
-                           "Central Conflict Extreme (Mega 8 players)",
-                           "Circles of Death (Mega 8 players)",
-                           "Cold Front (Med 6 players)",
-                           "Cold Pass (Med 4 players)",
-                           "Combat Zones (Mega 8 players)",
-                           "Conflict Cove (Sm 4 players)",
-                           "Culloden Moor (Med 8 players)",
-                           "Damnation Alley (Mega 8 players)",
-                           "Death Valley (Mega 8 players)",
-                           "Deep Six (Mega 8 players)",
-                           "Destruction Derby (Mega 8 players)",
-                           "Diamonds Aren't Forever (Mega 8 players)",
-                           "Elysium (Sm 4 players)",
-                           "Equal Shares (Lg 4 players)",
-                           "Frost Bitten (Mega 8 players)",
-                           "Frozen Valley (Med 6 players)",
-                           "Gettysburg (Sm 4 players)",
-                           "Glacial Valley (Sm 4 players)",
-                           "Gold Coast (Med 6 players)",
-                           "Gold Rush (Lg 4 players)",
-                           "Habitat (Lg 4 players)",
-                           "Hades Frozen Over (Sm 4 players)",
-                           "Hamburger Hill (Mega 8 players)",
-                           "Hastings (Sm 4 players)",
-                           "Hell's Pass (Med 6 players)",
-                           "Holy Grounds (Mega 8 players)",
-                           "Ice Bergs (Med 6 players)",
-                           "Ice Station (Lg 6 players)",
-                           "Ice Queen (Lg 4 players)",
-                           "In the Sun (Med 6 players)",
-                           "Innocents? (Mega 8 players)",
-                           "Islands (Med 8 players)",
-                           "Island Plateau (Lg 4 players)",
-                           "Island Wars Extreme (Mega 8 players)",
-                           "Kananga (Med 6 players)",
-                           "King of the Hills Extreme (Mega 8 players)",
-                           "Lake Land (Lg 8 players)",
-                           "Land Locked (Lg 8 players)",
-                           "Lanes (Med 8 players)",
-                           "Leipzip (Sm 4 players)",
-                           "Meander (Lg 8 players)",
-                           "Mekong (Med 8 players)",
-                           "Middle Ground (Med 8 players)",
-                           "Naval Conquests (Mega 8 players)",
-                           "On your Marks (Med 4 players)",
-                           "Open Warfare (Mega 8 players)",
-                           "Ore Gardens (Lg 8 players)",
-                           "Potholes (Mega 8 players)",
-                           "Puddles (Med 4 players)",
-                           "Random Violence (Mega 8 players)",
-                           "Revenge (Med 8 players)",
-                           "Rias (Med 8 players)",
-                           "River Crossing (Sm 4 players)",
-                           "River Rampage (Mega 8 players)",
-                           "River Rapids (Lg 6 players)",
-                           "Rivers Wild (Mega 8 players)",
-                           "Rorkes Drift (Lg 4 players)",
-                           "Seaside (Med 4 players)",
-                           "Shades (Med 8 players)",
-                           "Smuggler's Cove (Lg 6 players)",
-                           "Snow Garden (Sm 2 players)",
-                           "Stalingrad (Sm 4 players)",
-                           "Sticks & Stones (Med 4 players)",
-                           "Strathearn Valley (Lg 6 players)",
-                           "Super Bridgehead (Mega 8 players)",
-                           "Super Mekong (Mega 8 players)",
-                           "Super Ore Gardens (Mega 8 players)",
-                           "Switch (Med 4 players)",
-                           "The Berg (Mega 8 players)",
-                           "The Boyne (Med 4 players)",
-                           "The Bulge (Sm 4 players)",
-                           "The Cauldron (Lg 6 players)",
-                           "The Finger (Lg 6 players)",
-                           "The Hills Have Eyes (Mega 8 players)",
-                           "The Keyes (Med 6 players)",
-                           "The Lakes (Med 8 players)",
-                           "The Neck (Med 6 players)",
-                           "The Web (Lg 6 players)",
-                           "To the Core (Lg 4 players)",
-                           "Trafalgar (Lg 4 players)",
-                           "Twin Rivers (Sm 4 players)",
-                           "Umtumbo Gorge (Lg 4 players)",
-                           "Watch Your Step Extreme (Mega 8 players)",
-                           "Waterfalls (Lg 8 players)",
-                           "Waterloo Revisited (Lg 6 players)",
-                           "Water Werks (Mega 8 players)",
-                           "Warlord's Lake (Sm 4 players)",
-                           "Zama (Sm 4 players)",
-
-                           NULL};
-#endif
-
-#ifdef GERMAN
-char const* EngMisStr[] = {
-
-    "A Path Beyond (Lg)",
-    "Weg ins Jenseits (Gr)",
-    "Central Conflict (Lg)",
-    "Der zentrale Konflikt (Gr)",
-    "Coastal Influence (Med)",
-    "Sturm an der Kste (Mit)",
-    "Combat Alley (Med)",
-    "Boulevard der Schlachten (Mit)",
-    "Desolation (Lg)",
-    "Verwstung (Gr)",
-    "Dugout Isle (Med)",
-    "Buddelschiff (Mit)",
-    "Equal Opportunity (Sm)",
-    "Gleiche Chancen (Kl)",
-    "First Come, First Serve (Sm)",
-    "Wer zuerst kommt... (Kl)",
-    "Island Hoppers (Sm)",
-    "Inselspringen (Kl)",
-    "Island Wars (Lg)",
-    "Der Krieg der Eilande (Gr)",
-    "Isle of Fury (Lg)",
-    "Insel des Zorns (Gr)",
-    "Ivory Wastelands (Sm)",
-    "Elfenbeinwste (Kl)",
-    "Keep off the Grass (Sm)",
-    "Rasen betreten verboten (Kl)",
-    "Marooned II (Med)",
-    "Gestrandet (Mit)",
-    "Middle Mayhem (Sm)",
-    "Mittelsmann (Kl)",
-    "No Escape (Med)",
-    "Kein Entrinnen (Mit)",
-    "No Man's Land (Med)",
-    "Niemandsland (Mit)",
-    "Normandy (Med)",
-    "Normandie (Mit)",
-    "North By Northwest (Lg)",
-    "Nord auf Nordwest (Gr)",
-    "Pond Skirmish (Med)",
-    "Teichgepl„nkel (Mit)",
-    "Raraku (Lg)",
-    "Raraku (Gr)",
-    "Ridge War (Med)",
-    "Das Tal der Cyborgs (Mit)",
-    "Shallow Grave (Med)",
-    "Ein enges Grab (Mit)",
-    "Treasure Isle (Med)",
-    "Die Schatzinsel (Mit)",
-
-    "Africa (Lg)",
-    "Afrika (Gr)",
-    "Alaska Anarchy (Lg)",
-    "Anarchie in Alaska (Gr)",
-    "All that Glitters... (Lg)",
-    "Alles was gl„nzt... (Gr)",
-    "Apre's Peace (Lg)",
-    "Apres Frieden (Gr)",
-    "Antartica (Lg)",
-    "Antarktica (Gr)",
-    "Armourgarden (Lg)",
-    "Garten der Panzer (Gr)",
-    "Austraila (Med)",
-    "Koalaland (Mit)",
-    "Barrier to Entry (Lg)",
-    "Zutritt verboten (Gr)",
-    "Bavarian Blast (Med)",
-    "Bayrische Blasmusik (Mit)",
-    "Be Shore (Med)",
-    "Strandl„ufer (Mit)",
-    "Bearing Straits (Med)",
-    "Die Heringstrasse (Mit)",
-    "Blow Holes (Lg)",
-    "L”cheriger K„se (Gr)",
-    "Bonsai (Sm)",
-    "Bonsai (Kl)",
-    "Brother Stalin (Lg)",
-    "Brderchen Stalin (Gr)",
-    "Bullseye (Lg)",
-    "Bullseye (Gr)",
-    "C&C (Med)",
-    "C&C (Mit)",
-    "Camos Canyon (Med)",
-    "Camos-Canyon (Mit)",
-    "Camos Coves (Lg)",
-    "Camos-Grotte (Gr)",
-    "Camos Cross (Lg)",
-    "Camos-Kreuz (Gr)",
-    "Camos Crossing (Sm)",
-    "Camos-Kreuzweg (Kl)",
-    "Central Arena (Lg)",
-    "Spielplatz des Teufels (Gr)",
-    "Canyon River (Med)",
-    "Canyonfluss (Mit)",
-    "Crossroads (Sm)",
-    "Kreuzung (Kl)",
-    "Czech Mate (Lg)",
-    "Tschechische Er”ffnung (Gr)",
-    "Dday (Med)",
-    "D-Day (Mit)",
-    "Disaster Central (Lg)",
-    "Endstation Schweinebucht (Gr)",
-    "Docklands (Med)",
-    "Docklands (Mit)",
-    "East Coast (Med)",
-    "Ostkste (Mit)",
-    "Eastern Seaboard (Lg)",
-    "Die Passage nach Osten (Gr)",
-    "Finger Lake (Lg)",
-    "Fingersee (Gr)",
-    "Fjords (Med)",
-    "Fjorde (Mit)",
-    "Floodlands (Lg)",
-    "Land unter! (Gr)",
-    "Forest under fire (Lg)",
-    "Waldsterben im Feuer (Gr)",
-    "Four Corners (Lg)",
-    "Viereck (Gr)",
-    "Frostbit Fjords (Lg)",
-    "Frostbeulenfjord (Gr)",
-    "Glenboig (Sm)",
-    "Glenboig (Kl)",
-    "Hell Frozen Over (Lg)",
-    "Winter in der H”lle (Gr)",
-    "India (Lg)",
-    "Indien (Gr)",
-    "Indirect Fire (Lg)",
-    "Indirekter Beschuss (Gr)",
-    "Island Wars II (Lg)",
-    "Krieg der Inseln (Gr)",
-    "Italy (Lg)",
-    "Italien (Gr)",
-    "Kabalo (Lg)",
-    "Kabalo (Gr)",
-    "King of the Hills (Lg)",
-    "K”nig des Maulwurfshgels (Gr)",
-    "Lake Divide (Med)",
-    "Wasserscheide (Mit)",
-    "Lakelands (Lg)",
-    "Seenplatte (Gr)",
-    "Land Ladder (Lg)",
-    "Das Leiterspiel (Gr)",
-    "Lotsa Lakes (Lg)",
-    "Mehr Seen (Gr)",
-    "Lunar Battlefield (Lg Special)",
-    "Schlachtfeld Mond (Gr Spezial)",
-    "Malibu Fields (Med)",
-    "Malibu (Mit)",
-    "Marshland (Med)",
-    "Schlammschlacht (Mit)",
-    "MyLai Delta (Med)",
-    "Das Delta von My Lai (Mit)",
-    "Natural Harbor (Med)",
-    "Natrlicher Hafen (Mit)",
-    "No Way Out (Lg)",
-    "Kein Entkommen (Gr)",
-    "Normandy Landing (Lg)",
-    "Landung in der Normandie (Gr)",
-    "Ore Wars (Med)",
-    "Die Erz-Kriege (Mit)",
-    "Oz (Lg)",
-    "Das Land Oz (Gr)",
-    "Pilgrim Fathers II (Lg)",
-    "Die Grnderv„ter (Gr)",
-    "Pip's Ice Tea (Med)",
-    "Pips Eistee (Mit)",
-    "Polar Panic (Lg)",
-    "Panik am Pol (Gr)",
-    "Ponds (Med)",
-    "Tmpelspringer (Mit)",
-    "Putney (Lg)",
-    "Putney (Gr)",
-    "Return to Zion (Lg)",
-    "Rckkehr nach Zion (Gr)",
-    "Ring of Land (Lg)",
-    "Der Landring (Gr)",
-    "River Basin (Lg)",
-    "Flusslauf (Gr)",
-    "River Delta (Med)",
-    "Flussdelta (Mit)",
-    "River Islands (Med)",
-    "Flussinsel (Mit)",
-    "River Maze (Sm)",
-    "Flussgewirr (Kl)",
-    "Rivers (Sm)",
-    "Flsse (Kl)",
-    "Run the Gauntlet (Med)",
-    "Spiessrutenlauf (Mit)",
-    "Scappa Flow (Lg)",
-    "Scapa Flow (Gr)",
-    "Siberian Slaughter (Lg)",
-    "Sibirisches Gemetzel (Gr)",
-    "Sleepy Valley (Sm)",
-    "Tal der Ahnungslosen (Kl)",
-    "Snake River (Lg)",
-    "Am Schlangenfluss (Gr)",
-    "Snow Wars (Lg)",
-    "Krieg der Flocken (Gr)",
-    "Snowball fight (Lg)",
-    "Schneeballschlacht (Gr)",
-    "Snowy Island (Lg)",
-    "Schneeinsel (Gr)",
-    "So Near So Far (Sm)",
-    "So nah und doch so fern (Kl)",
-    "South America (Lg)",
-    "Sdamerika (Gr)",
-    "Spring Line (Lg)",
-    "Frhlingsgefhle (Gr)",
-    "Star (Lg)",
-    "Stern (Gr)",
-    "Straighter & Narrower (Sm)",
-    "Enger & schmaler (Kl)",
-    "TerrainSpotting (Sm)",
-    "TerrainSpotting (Kl)",
-    "The Bay (Lg)",
-    "Die Bucht (Gr)",
-    "The Garden (Lg)",
-    "Der Garten (Gr)",
-    "The Great Lakes (Med)",
-    "Die Grossen Seen (Mit)",
-    "The Ice Arena (Lg)",
-    "Eisarena (Gr)",
-    "The Lake District (Lg)",
-    "Kalte Seenplatte (Gr)",
-    "The Linked lands (Lg)",
-    "Die verbundenen L„nder (Gr)",
-    "The Mississippi (Med)",
-    "Grsse von Tom Sawyer (Mit)",
-    "The Sticky Bit (Lg)",
-    "Der klebrige Teil (Gr)",
-    "The Valley (Med)",
-    "Das Tal (Mit)",
-    "The Woods Today (Lg)",
-    "Waldl„ufer (Gr)",
-    "Things to Come (Lg)",
-    "Was die Zukunft bringt (Gr)",
-    "Tiger Core (Sm)",
-    "Das Herz des Tigers (Kl)",
-    "To the Core (Sm)",
-    "Mitten ins Herz (Kl)",
-    "Tournament Hills (Lg)",
-    "Hgel der Entscheidung (Gr)",
-    "Tropical Storm (Med)",
-    "Tropenstrme (Mit)",
-    "Tundra Trouble (Lg)",
-    "Tauziehen in der Tundra (Gr)",
-    "Uk (Med)",
-    "GB (Mit)",
-    "Undiscovered Country (Sm)",
-    "Unentdecktes Land (Kl)",
-    "United States (Med)",
-    "US (Mit)",
-    "Volcano (Sm)",
-    "Vulkan (Kl)",
-    "Wastelands (Lg)",
-    "Wstenei (Gr)",
-    "Water Works (Sm)",
-    "Wasserwerke (Kl)",
-    "World Map (Med)",
-    "Weltkarte (Kl)",
-    "Zambezi (Lg)",
-    "Sambesi (Gr)",
-
-    //#if 0
-    "A Pattern of Islands (Lg 8 players)",
-    "Inselmuster (gross, 8 Spieler)",
-    "Arena Valley Extreme (Mega 8 players)",
-    "Arenatal (sehr gross, 8 Spieler)",
-    "Around the Rim (Sm 4 players)",
-    "Um die Kante (klein, 4 Spieler)",
-    "Ashes to Ashes (Lg 6 players)",
-    "Asche zu Asche (gross, 6 Spieler)",
-    "Artic Wasteland (Mega 8 players)",
-    "Arktische Wste (sehr gross, 8 Spieler)",
-    "Badajoz (Med 4 players)",
-    "Badjoz (mittelgross, 4 Spieler)",
-    "Baptism of Fire (Lg 6 players)",
-    "Feuertaufe (gross, 6 Spieler)",
-    "Big Fish, Small Pond (Lg 6 players)",
-    "Grosser Fisch im kleinen Teich (gross, 6 Spieler)",
-    "Blue Lakes (Lg 8 players)",
-    "Die blauen Seen (gross, 8 Spieler)",
-    "Booby Traps (Mega 8 players)",
-    "Vorsicht, Falle! (sehr gross, 8 Spieler)",
-    "Bridgehead (Lg 6 players)",
-    "Brckenkopf im Niemandsland (gross, 6 Spieler)",
-    "Butterfly Bay (Lg 6 players)",
-    "Schmetterlingsbucht (gross, 6 Spieler)",
-    "Central Conflict Extreme (Mega 8 players)",
-    "Zentraler Konflikt fr K”nner (sehr gross, 8 Spieler)",
-    "Circles of Death (Mega 8 players)",
-    "Todeskreise (sehr gross, 8 Spieler)",
-    "Cold Front (Med 6 players)",
-    "Kaltfront ( mittelgross, 6 Spieler)",
-    "Cold Pass (Med 4 players)",
-    "Cooler Pass (mittelgross, 4 Spieler)",
-    "Combat Zones (Mega 8 players)",
-    "Kampfgebiete (sehr gross, 8 Spieler)",
-    "Conflict Cove (Sm 4 players)",
-    "H”hlenkonflikt (klein, 4 Spieler)",
-    "Culloden Moor (Med 8 players)",
-    "Culloden-Moor (mittelgross, 8 Spieler)",
-    "Damnation Alley (Mega 8 players)",
-    "Strasse der Verdammten (sehr gross, 8 Spieler)",
-    "Death Valley (Mega 8 players)",
-    "Tal des Todes (sehr gross, 8 Spieler)",
-    "Deep Six (Mega 8 players)",
-    "Tiefe Sechs (sehr gross, 8 Spieler)",
-    "Destruction Derby (Mega 8 players)",
-    "Destruction Derby (sehr gross, 8 Spieler)",
-    "Diamonds Aren't Forever (Mega 8 players)",
-    "Verg„ngliche Diamanten (sehr gross, 8 Spieler)",
-    "Elysium (Sm 4 players)",
-    "Elysium (klein, 4 Spieler)",
-    "Equal Shares (Lg 4 players)",
-    "Gleiche Anteile (gross, 4 Spieler)",
-    "Frost Bitten (Mega 8 players)",
-    "Frostbrand (sehr gross, 8 Spieler)",
-    "Frozen Valley (Med 6 players)",
-    "Eisiges Tal (mittelgross, 6 Spieler)",
-    "Gettysburg (Sm 4 players)",
-    "Gettysburg (klein, 4 Spieler)",
-    "Glacial Valley (Sm 4 players)",
-    "Gletschertal (klein, 4 Spieler)",
-    "Gold Coast (Med 6 players)",
-    "Goldkste (mittelgross, 6 Spieler)",
-    "Gold Rush (Lg 4 players)",
-    "Goldrausch (gross, 4 Spieler)",
-    "Habitat (Lg 4 players)",
-    "Habitat (gross, 4 Spieler)",
-    "Hades Frozen Over (Sm 4 players)",
-    "Frostschutz fr die H”lle (klein, 4 Spieler)",
-    "Hamburger Hill (Mega 8 players)",
-    "Hamburger Hill (sehr gross, 8 Spieler)",
-    "Hastings (Sm 4 players)",
-    "Hastings (klein, 4 Spieler)",
-    "Hell's Pass (Med 6 players)",
-    "H”llenpass (mittelgross, 6 Spieler)",
-    "Holy Grounds (Mega 8 players)",
-    "Heiliger Boden (sehr gross, 8 Spieler)",
-    "Ice Bergs (Med 6 players)",
-    "Eisberge (mittelgross, 6 Spieler)",
-    "Ice Station (Lg 6 players)",
-    "Eisstation  (gross, 6 Spieler)",
-    "Ice Queen (Lg 4 players)",
-    "Eisk”nigin (gross, 4 Spieler)",
-    "In the Sun (Med 6 players)",
-    "Unter der Sonne (mittelgross, 6 Spieler)",
-    "Innocents? (Mega 8 players)",
-    "Unschuldig? Wer? (sehr gross, 8 Spieler)",
-    "Islands (Med 8 players)",
-    "Inseln im Nebel (mittelgross, 8 Spieler)",
-    "Island Plateau (Lg 4 players)",
-    "Inselplateau (gross, 4 Spieler)",
-    "Island Wars Extreme (Mega 8 players)",
-    "Extremes Inselspringen (sehr gross, 8 Spieler)",
-    "Kananga (Med 6 players)",
-    "Kananga (mittelgross, 6 Spieler)",
-    "King of the Hills Extreme (Mega 8 players)",
-    "K”nig des Maulwurfshgels (sehr gross, 8 Spieler)",
-    "Lake Land (Lg 8 players)",
-    "Seenland (gross, 8 Spieler)",
-    "Land Locked (Lg 8 players)",
-    "Das Verschlossene Land (gross, 8 Spieler)",
-    "Lanes (Med 8 players)",
-    "Gassenjungen (mittelgross, 8 Spieler)",
-    "Leipzip (Sm 4 players)",
-    "Leipzig (klein, 4 Spieler)",
-    "Meander (Lg 8 players)",
-    "M„ander (gross, 8 Spieler)",
-    "Mekong (Med 8 players)",
-    "Mekong (mittelgross, 8 Spieler)",
-    "Middle Ground (Med 8 players)",
-    "Mittelsmann (mittelgross, 8 Spieler)",
-    "Naval Conquests (Mega 8 players)",
-    "Kommt zur Marine, haben sie gesagt (sehr gross, 8 Spieler)",
-    "On your Marks (Med 4 players)",
-    "Auf die Pl„tze (mittelgross, 4 Spieler)",
-    "Open Warfare (Mega 8 players)",
-    "Offener Schlagabtausch (sehr gross, 8 Spieler)",
-    "Ore Gardens (Lg 8 players)",
-    "Erzparadies (gross, 8 Spieler)",
-    "Potholes (Mega 8 players)",
-    "Schlagl”cher (sehr gross, 8 Spieler)",
-    "Puddles (Med 4 players)",
-    "Pftzen (mittelgross, 4 Spieler)",
-    "Random Violence (Mega 8 players)",
-    "Unberechenbare Gewalt (sehr gross, 8 Spieler)",
-    "Revenge (Med 8 players)",
-    "Rache (mittelgross, 8 Spieler)",
-    "Rias (Med 8 players)",
-    "Kabul (mittelgross, 8 Spieler)",
-    "River Crossing (Sm 4 players)",
-    "Die Furt (klein, 4 Spieler)",
-    "River Rampage (Mega 8 players)",
-    "Flussfahrt (sehr gross, 8 Spieler)",
-    "River Rapids (Lg 6 players)",
-    "Stromschnellen (gross, 6 Spieler)",
-    "Rivers Wild (Mega 8 players)",
-    "Wildwasser (sehr gross, 8 Spieler)",
-    "Rorkes Drift (Lg 4 players)",
-    "Rorkes Drift (gross, 4 Spieler)",
-    "Seaside (Med 4 players)",
-    "Strandleben (mittelgross, 4 Spieler)",
-    "Shades (Med 8 players)",
-    "Schattenreich (mittelgross, 8 Spieler)",
-    "Smuggler's Cove (Lg 6 players)",
-    "Schmugglerh”hle (gross, 6 Spieler)",
-    "Snow Garden (Sm 2 players)",
-    "Schneegest”ber (klein, 2 Spieler)",
-    "Stalingrad (Sm 4 players)",
-    "Stalingrad (klein, 4 Spieler)",
-    "Sticks & Stones (Med 4 players)",
-    "Holz und Steine (mittelgross, 4 Spieler)",
-    "Strathearn Valley (Lg 6 players)",
-    "Das Tal von Strathearn (gross, 6 Spieler)",
-    "Super Bridgehead (Mega 8 players)",
-    "Super-Brckenkopf (sehr gross, 8 Spieler)",
-    "Super Mekong (Mega 8 players)",
-    "Super-Mekong (sehr gross, 8 Spieler)",
-    "Super Ore Gardens (Mega 8 players)",
-    "Super-Erzparadies (sehr gross, 8 Spieler)",
-    "Switch (Med 4 players)",
-    "Schalter (mittelgross, 4 Spieler)",
-    "The Berg (Mega 8 players)",
-    "Der Berg (sehr gross, 8 Spieler)",
-    "The Boyne (Med 4 players)",
-    "Boyne (mittelgross, 4 Spieler)",
-    "The Bulge (Sm 4 players)",
-    "Die W”lbung (klein, 4 Spieler)",
-    "The Cauldron (Lg 6 players)",
-    "Der Kessel (gross, 6 Spieler)",
-    "The Finger (Lg 6 players)",
-    "Der Finger (gross, 6 Spieler)",
-    "The Hills Have Eyes (Mega 8 players)",
-    "Die Hgel haben Augen (sehr gross, 8 Spieler)",
-    "The Keyes (Med 6 players)",
-    "Ein Sumpf (mittelgross, 6 Spieler)",
-    "The Lakes (Med 8 players)",
-    "Die Seen (mittelgross, 8 Spieler)",
-    "The Neck (Med 6 players)",
-    "Der Hals (mittelgross, 6 Spieler)",
-    "The Web (Lg 6 players)",
-    "Das Netz (gross, 6 Spieler)",
-    "To the Core (Lg 4 players)",
-    "Mitten ins Herz (gross, 4 Spieler)",
-    "Trafalgar (Lg 4 players)",
-    "Trafalgar (gross, 4 Spieler)",
-    "Twin Rivers (Sm 4 players)",
-    "Zwillingsstr”me (klein, 4 Spieler)",
-    "Umtumbo Gorge (Lg 4 players)",
-    "Die Umtumbo-Schlucht (gross, 4 Spieler)",
-    "Watch Your Step Extreme (Mega 8 players)",
-    "Vorsicht, Lebensgefahr (sehr gross, 8 Spieler)",
-    "Waterfalls (Lg 8 players)",
-    "Wasserfall (gross, 8 Spieler)",
-    "Waterloo Revisited (Lg 6 players)",
-    "Zu Besuch in Waterloo (gross, 6 Spieler)",
-    "Water Werks (Mega 8 players)",
-    "Wasserwerk (sehr gross, 8 Spieler)",
-    "Warlord's Lake (Sm 4 players)",
-    "Der See des Kriegsgottes (klein, 4 Spieler)",
-    "Zama (Sm 4 players)",
-    "Zama (klein, 4 Spieler)",
-    //#endif
-    NULL};
-#endif
-#ifdef FRENCH
-char const* EngMisStr[] = {
-
-    "A Path Beyond (Lg)",
-    "Le Passage (Max)",
-    "Central Conflict (Lg)",
-    "Conflit Central (Max)",
-    "Coastal Influence (Med)",
-    "Le Chant des Canons (Moy)",
-    "Combat Alley (Med)",
-    "Aux Armes! (Moy)",
-    "Desolation (Lg)",
-    "D‚solation (Max)",
-    "Dugout Isle (Med)",
-    "L'Ile Maudite (Moy)",
-    "Equal Opportunity (Sm)",
-    "A Chances Egales (Min)",
-    "First Come, First Serve (Sm)",
-    "La Loi du Plus Fort (Min)",
-    "Island Hoppers (Sm)",
-    "D'une Ile … l'autre (Min)",
-    "Island Wars (Lg)",
-    "Guerres Insulaires (Max)",
-    "Isle of Fury (Lg)",
-    "L'Ile de la Furie(Max)",
-    "Ivory Wastelands (Sm)",
-    "Terres d'Ivoire (Min)",
-    "Keep off the Grass (Sm)",
-    "Hors de mon Chemin (Min)",
-    "Marooned II (Med)",
-    "Isolement II (Moy)",
-    "Middle Mayhem (Sm)",
-    "Chaos Interne (Min)",
-    "No Escape (Med)",
-    "Le PiŠge (Moy)",
-    "No Man's Land (Med)",
-    "No Man's Land (Moy)",
-    "Normandy (Med)",
-    "Normandie (Moy)",
-    "North By Northwest (Lg)",
-    "Nord, Nord-Ouest (Max)",
-    "Pond Skirmish (Med)",
-    "Bain de Sang (Moy)",
-    "Raraku (Lg)",
-    "Raraku (Max)",
-    "Ridge War (Med)",
-    "Guerre au Sommet (Moy)",
-    "Shallow Grave (Med)",
-    "La Saveur de la Mort (Moy)",
-    "Treasure Isle (Med)",
-    "L'Ile au Tr‚sor (Moy)",
-
-    "Africa (Lg)",
-    "Afrique (Max)",
-    "Alaska Anarchy (Lg)",
-    "Anarchie en Alaska (Max)",
-    "All that Glitters... (Lg)",
-    "Tout ce qui brille... (Max)",
-    "Apre's Peace (Lg)",
-    "Une Paix Durement N‚goci‚e... (Max)",
-    "Antartica (Lg)",
-    "Antarctique (Max)",
-    "Armourgarden (Lg)",
-    "La Guerre des Blind‚s (Max)",
-    "Austraila (Med)",
-    "Australie (Moy)",
-    "Barrier to Entry (Lg)",
-    "BarriŠre … l'Entr‚e (Max)",
-    "Bavarian Blast (Med)",
-    "Tonnerre Bavarois (Moy)",
-    "Be Shore (Med)",
-    "Plages Menac‚es (Moy)",
-    "Bearing Straits (Med)",
-    "Droit Devant ! (Moy)",
-    "Blow Holes (Lg)",
-    "CratŠres (Max)",
-    "Bonsai (Sm)",
-    "Bonsa‹ (Min)",
-    "Brother Stalin (Lg)",
-    "FrŠre Staline (Max)",
-    "Bullseye (Lg)",
-    "L'oeil du Taureau (Max)",
-    "C&C (Med)",
-    "C&C (Moy)",
-    "Camos Canyon (Med)",
-    "Le Canyon (Moy)",
-    "Camos Coves (Lg)",
-    "Criques (Max)",
-    "Camos Cross (Lg)",
-    "La Croix de Guerre (Max)",
-    "Camos Crossing (Sm)",
-    "La Crois‚e des Chemins (Min)",
-    "Central Arena (Lg)",
-    "L'ArŠne Diabolique (Max)",
-    "Canyon River (Med)",
-    "Au Milieu Coule Une RiviŠre (Moy)",
-    "Crossroads (Sm)",
-    "Carrefours (Min)",
-    "Czech Mate (Lg)",
-    "TchŠque et Mat (Max)",
-    "Dday (Med)",
-    "Le Jour J (Moy)",
-    "Disaster Central (Lg)",
-    "D‚sastre Central (Max)",
-    "Docklands (Med)",
-    "L'Enfer des Docks (Moy)",
-    "East Coast (Med)",
-    "C“te Est (Moy)",
-    "Eastern Seaboard (Lg)",
-    "Rivages de l'Est (Max)",
-    "Finger Lake (Lg)",
-    "Le Lac de tous les Dangers (Max)",
-    "Fjords (Med)",
-    "Fjords (Moy)",
-    "Floodlands (Lg)",
-    "Campagne Lacustre (Max)",
-    "Forest under fire (Lg)",
-    "Forˆt en flammes (Max)",
-    "Four Corners (Lg)",
-    "4 Coins (Max)",
-    "Frostbit Fjords (Lg)",
-    "Fjords Gel‚s (Max)",
-    "Glenboig (Sm)",
-    "Glenboig (Min)",
-    "Hell Frozen Over (Lg)",
-    "Enfer de Glace Max)",
-    "India (Lg)",
-    "Inde (Max)",
-    "Indirect Fire (Lg)",
-    "Attaque Indirecte (Max)",
-    "Island Wars II (Lg)",
-    "Guerres Insulaires II (Max)",
-    "Italy (Lg)",
-    "Italie (Max)",
-    "Kabalo (Lg)",
-    "Kabalo (Max)",
-    "King of the Hills (Lg)",
-    "Le Roi des Montagnes (Max)",
-    "Lake Divide (Med)",
-    "La Guerre du Lac (Moy)",
-    "Lakelands (Lg)",
-    "Terres Submerg‚es (Max)",
-    "Land Ladder (Lg)",
-    "Jusqu'au Sommet (Max)",
-    "Lotsa Lakes (Lg)",
-    "Terres de Lacs (Max)",
-    "Lunar Battlefield (Lg Special)",
-    "Combat Lunaire (Max Sp‚cial)",
-    "Malibu Fields (Med)",
-    "Les Champs de Malibu (Moy)",
-    "Marshland (Med)",
-    "Mar‚cages (Moy)",
-    "MyLai Delta (Med)",
-    "Le Delta Mylai (Moy)",
-    "Natural Harbor (Med)",
-    "Port Naturel (Moy)",
-    "No Way Out (Lg)",
-    "Sans Issue (Max)",
-    "Normandy Landing (Lg)",
-    "Le D‚barquement (Max)",
-    "Ore Wars (Med)",
-    "La Guerre du Minerai (Moy)",
-    "Oz (Lg)",
-    "Oz (Max)",
-    "Pilgrim Fathers II (Lg)",
-    "Les PŠlerins 2 (Max)",
-    "Pip's Ice Tea (Med)",
-    "Les Tranch‚es de Glace (Moy)",
-    "Polar Panic (Lg)",
-    "Panique Polaire (Max)",
-    "Ponds (Med)",
-    "Les Etangs (Moy)",
-    "Putney (Lg)",
-    "La Meilleure D‚fense... (Max)",
-    "Return to Zion (Lg)",
-    "Retour … Sion (Max)",
-    "Ring of Land (Lg)",
-    "Le Cycle Infernal (Max)",
-    "River Basin (Lg)",
-    "Confrontation Navale (Max)",
-    "River Delta (Med)",
-    "Le Delta (Moy)",
-    "River Islands (Med)",
-    "C“tes … Surveiller de PrŠs (Moy)",
-    "River Maze (Sm)",
-    "Labyrinthe Fluvial (Min)",
-    "Rivers (Sm)",
-    "RiviŠres (Min)",
-    "Run the Gauntlet (Med)",
-    "Relevons le D‚fi ! (Moy)",
-    "Scappa Flow (Lg)",
-    "Combats Sanglants (Max)",
-    "Siberian Slaughter (Lg)",
-    "Carnage Sib‚rien (Max)",
-    "Sleepy Valley (Sm)",
-    "La Vall‚e Endormie (Min)",
-    "Snake River (Lg)",
-    "La RiviŠre aux Serpents (Max)",
-    "Snow Wars (Lg)",
-    "Guerres de Neige (Max)",
-    "Snowball fight (Lg)",
-    "Bataille de Boules de Neige (Max)",
-    "Snowy Island (Lg)",
-    "L'Ile sous la Neige (Max)",
-    "So Near So Far (Sm)",
-    "Si Loin, Si Proche (Min)",
-    "South America (Lg)",
-    "Am‚rique du Sud (Max)",
-    "Spring Line (Lg)",
-    "Ligne de Front (Max)",
-    "Star (Lg)",
-    "Etoile (Max)",
-    "Straighter & Narrower (Sm)",
-    "L'Entonnoir (Min)",
-    "TerrainSpotting (Sm)",
-    "TerrainSpotting (Min)",
-    "The Bay (Lg)",
-    "La Baie (Max)",
-    "The Garden (Lg)",
-    "Le Jardin (Max)",
-    "The Great Lakes (Med)",
-    "Les Grands Lacs (Moy)",
-    "The Ice Arena (Lg)",
-    "L'ArŠne de Glace (Max)",
-    "The Lake District (Lg)",
-    "Un Lac Imprenable (Max)",
-    "The Linked lands (Lg)",
-    "Passages … Gu‚ (Max)",
-    "The Mississippi (Med)",
-    "Mississippi (Moy)",
-    "The Sticky Bit (Lg)",
-    "Marasme (Max)",
-    "The Valley (Med)",
-    "La Vall‚e (Moy)",
-    "The Woods Today (Lg)",
-    "Aujoud'hui: la Mort ! (Max)",
-    "Things to Come (Lg)",
-    "D‚nouement Incertain (Max)",
-    "Tiger Core (Sm)",
-    "Le Coeur du Tigre (Min)",
-    "To the Core (Sm)",
-    "Le Coeur du Conflit (Min)",
-    "Tournament Hills (Lg)",
-    "Combat en Altitude (Max)",
-    "Tropical Storm (Med)",
-    "Ouragan Tropical (Moy)",
-    "Tundra Trouble (Lg)",
-    "La Toundra (Max)",
-    "Uk (Med)",
-    "Royaume Uni (Moy)",
-    "Undiscovered Country (Sm)",
-    "Terre Inconnue (Min)",
-    "United States (Med)",
-    "Etats Unis (Moy)",
-    "Volcano (Sm)",
-    "Le Volcan (Min)",
-    "Wastelands (Lg)",
-    "Terres D‚sol‚es (Max)",
-    "Water Works (Sm)",
-    "Jeux d'Eau (Min)",
-    "World Map (Med)",
-    "Carte du Monde (Moy)",
-    "Zambezi (Lg)",
-    "ZambŠze (Max)",
-    //#if 0
-    "A Pattern of Islands (Lg 8 players)",
-    "Archipel (Max. 8 joueurs)",
-    "Arena Valley Extreme (Mega 8 players)",
-    "La Vall‚e de l'arŠne (XL 8 joueurs)",
-    "Around the Rim (Sm 4 players)",
-    "Autour de la crˆte (Min. 4 joueurs)",
-    "Ashes to Ashes (Lg 6 players)",
-    "R‚duit en cendres (Max. 6 joueurs)",
-    "Artic Wasteland (Mega 8 players)",
-    "D‚solation arctique (XL 8 joueurs)",
-    "Badajoz (Med 4 players)",
-    "Badjoz (Moy. 4 joueurs)",
-    "Baptism of Fire (Lg 6 players)",
-    "Baptˆme du feu (Max. 6 joueurs)",
-    "Big Fish, Small Pond (Lg 6 players)",
-    "Gros poisson, Min. Mare (Max. 6 joueurs)",
-    "Blue Lakes (Lg 8 players)",
-    "Lacs bleus (Max. 8 joueurs)",
-    "Booby Traps (Mega 8 players)",
-    "PiŠges (XL 8 joueurs)",
-    "Bridgehead (Lg 6 players)",
-    "Tˆte de pont (Max. 6 joueurs)",
-    "Butterfly Bay (Lg 6 players)",
-    "La baie du papillon (Max. 6 joueurs)",
-    "Central Conflict Extreme (Mega 8 players)",
-    "Conflit central extrˆme (XL 8 joueurs)",
-    "Circles of Death (Mega 8 players)",
-    "Les cercles de la mort (XL 8 joueurs)",
-    "Cold Front (Med 6 players)",
-    "Front froid ( Moy. 6 joueurs)",
-    "Cold Pass (Med 4 players)",
-    "La Passe Glac‚e (Moy. 4 joueurs)",
-    "Combat Zones (Mega 8 players)",
-    "Zones de combat (XL 8 joueurs)",
-    "Conflict Cove (Sm 4 players)",
-    "La Crique du conflit (Min. 4 joueurs)",
-    "Culloden Moor (Med 8 players)",
-    "La Lande de Culloden (Moy. 8 joueurs)",
-    "Damnation Alley (Mega 8 players)",
-    "Le chemin de la damnation (XL 8 joueurs)",
-    "Death Valley (Mega 8 players)",
-    "La vall‚e de la mort (XL 8 joueurs)",
-    "Deep Six (Mega 8 players)",
-    "Six de profondeur (XL 8 joueurs)",
-    "Destruction Derby (Mega 8 players)",
-    "Stock car (XL 8 joueurs)",
-    "Diamonds Aren't Forever (Mega 8 players)",
-    "Les diamants ne sont pas ‚ternels (XL 8 joueurs)",
-    "Elysium (Sm 4 players)",
-    "Elys‚e (Min. 4 joueurs)",
-    "Equal Shares (Lg 4 players)",
-    "Parts ‚gales (Max. 4 joueurs)",
-    "Frost Bitten (Mega 8 players)",
-    "Engelures (XL 8 joueurs)",
-    "Frozen Valley (Med 6 players)",
-    "La Vall‚e glac‚e (Moy. 6 joueurs)",
-    "Gettysburg (Sm 4 players)",
-    "Gettysburg (Min. 4 joueurs)",
-    "Glacial Valley (Sm 4 players)",
-    "Vall‚e de glace (Min. 4 joueurs)",
-    "Gold Coast (Med 6 players)",
-    "La c“te dor‚e (Moy. 6 joueurs)",
-    "Gold Rush (Lg 4 players)",
-    "La ru‚e vers l'or (Max. 4 joueurs)",
-    "Habitat (Lg 4 players)",
-    "Habitat (Max. 4 joueurs)",
-    "Hades Frozen Over (Sm 4 players)",
-    "Les enfers glac‚s (Min. 4 joueurs)",
-    "Hamburger Hill (Mega 8 players)",
-    "Hamburger Hill (XL 8 joueurs)",
-    "Hastings (Sm 4 players)",
-    "Hastings (Min. 4 joueurs)",
-    "Hell's Pass (Med 6 players)",
-    "La route de l'enfer (Moy. 6 joueurs)",
-    "Holy Grounds (Mega 8 players)",
-    "Terres saintes (XL 8 joueurs)",
-    "Ice Bergs (Med 6 players)",
-    "Icebergs (Moy. 6 joueurs)",
-    "Ice Station (Lg 6 players)",
-    "Station glac‚e (Max. 6 joueurs)",
-    "Ice Queen (Lg 4 players)",
-    "Reine des glaces (Max. 4 joueurs)",
-    "In the Sun (Med 6 players)",
-    "Sous le soleil (Moy. 6 joueurs)",
-    "Innocents? (Mega 8 players)",
-    "Innocents ? (XL 8 joueurs)",
-    "Islands (Med 8 players)",
-    "Iles (Moy. 8 joueurs)",
-    "Island Plateau (Lg 4 players)",
-    "Plateau des Œles (Max. 4 joueurs)",
-    "Island Wars Extreme (Mega 8 players)",
-    "Guerres insulaires extrˆme (XL 8 joueurs)",
-    "Kananga (Med 6 players)",
-    "Kananga (Moy. 6 joueurs)",
-    "King of the Hills Extreme (Mega 8 players)",
-    "Roi des collines extrˆme (XL 8 joueurs)",
-    "Lake Land (Lg 8 players)",
-    "Paysage lacustre (Max. 8 joueurs)",
-    "Land Locked (Lg 8 players)",
-    "Enclave (Max. 8 joueurs)",
-    "Lanes (Med 8 players)",
-    "Le parcours du combattant (Moy. 8 joueurs)",
-    "Leipzip (Sm 4 players)",
-    "Leipzig (Min. 4 joueurs)",
-    "Meander (Lg 8 players)",
-    "M‚andre (Max. 8 joueurs)",
-    "Mekong (Med 8 players)",
-    "M‚kong (Moy. 8 joueurs)",
-    "Middle Ground (Med 8 players)",
-    "Plateau m‚dian (Moy. 8 joueurs)",
-    "Naval Conquests (Mega 8 players)",
-    "Conquˆtes navales (XL 8 joueurs)",
-    "On your Marks (Med 4 players)",
-    "A vos marques (Moy. 4 joueurs)",
-    "Open Warfare (Mega 8 players)",
-    "Guerre ouverte (XL 8 joueurs)",
-    "Ore Gardens (Lg 8 players)",
-    "Jardins de minerai (Max. 8 joueurs)",
-    "Potholes (Mega 8 players)",
-    "Nids de poules (XL 8 joueurs)",
-    "Puddles (Med 4 players)",
-    "Flaques (Moy. 4 joueurs)",
-    "Random Violence (Mega 8 players)",
-    "Violence al‚atoire (XL 8 joueurs)",
-    "Revenge (Med 8 players)",
-    "Vengeance (Moy. 8 joueurs)",
-    "Rias (Med 8 players)",
-    "Rias (Moy. 8 joueurs)",
-    "River Crossing (Sm 4 players)",
-    "Passage … gu‚ (Min. 4 joueurs)",
-    "River Rampage (Mega 8 players)",
-    "RiviŠre d‚chaŒn‚e (XL 8 joueurs)",
-    "River Rapids (Lg 6 players)",
-    "Rapides (Max. 6 joueurs)",
-    "Rivers Wild (Mega 8 players)",
-    "RiviŠres sauvages (XL 8 joueurs)",
-    "Rorkes Drift (Lg 4 players)",
-    "L'Exode de Rorkes (Max. 4 joueurs)",
-    "Seaside (Med 4 players)",
-    "C“te (Moy. 4 joueurs)",
-    "Shades (Med 8 players)",
-    "Ombres (Moy. 8 joueurs)",
-    "Smuggler's Cove (Lg 6 players)",
-    "La Crique du contrebandier (Max. 6 joueurs)",
-    "Snow Garden (Sm 2 players)",
-    "Jardin de neige (Min. 2 joueurs)",
-    "Stalingrad (Sm 4 players)",
-    "Stalingrad (Min. 4 joueurs)",
-    "Sticks & Stones (Med 4 players)",
-    "Bƒton & Roches (Moy. 4 joueurs)",
-    "Strathearn Valley (Lg 6 players)",
-    "La Vall‚e de Strathearn (Max. 6 joueurs)",
-    "Super Bridgehead (Mega 8 players)",
-    "Super tˆte de pont (XL 8 joueurs)",
-    "Super Mekong (Mega 8 players)",
-    "Super M‚kong (XL 8 joueurs)",
-    "Super Ore Gardens (Mega 8 players)",
-    "Super jardin de minerai (XL 8 joueurs)",
-    "Switch (Med 4 players)",
-    "Permutation (Moy. 4 joueurs)",
-    "The Berg (Mega 8 players)",
-    "Le Berg (XL 8 joueurs)",
-    "The Boyne (Med 4 players)",
-    "Le Boyne (Moy. 4 joueurs)",
-    "The Bulge (Sm 4 players)",
-    "Le bombement (Min. 4 joueurs)",
-    "The Cauldron (Lg 6 players)",
-    "Le chaudron (Max. 6 joueurs)",
-    "The Finger (Lg 6 players)",
-    "Le doigt (Max. 6 joueurs)",
-    "The Hills Have Eyes (Mega 8 players)",
-    "Les collines ont des yeux (XL 8 joueurs)",
-    "The Keyes (Med 6 players)",
-    "Les Keyes (Moy. 6 joueurs)",
-    "The Lakes (Med 8 players)",
-    "Les lacs (Moy. 8 joueurs)",
-    "The Neck (Med 6 players)",
-    "Le goulot (Moy. 6 joueurs)",
-    "The Web (Lg 6 players)",
-    "La toile (Max. 6 joueurs)",
-    "To the Core (Lg 4 players)",
-    "Jusqu'au cour (Max. 4 joueurs)",
-    "Trafalgar (Lg 4 players)",
-    "Trafalgar (Max. 4 joueurs)",
-    "Twin Rivers (Sm 4 players)",
-    "Les deux riviŠres (Min. 4 joueurs)",
-    "Umtumbo Gorge (Lg 4 players)",
-    "La Gorge de Umtumbo (Max. 4 joueurs)",
-    "Watch Your Step Extreme (Mega 8 players)",
-    "Pas-…-pas extrˆme (XL 8 joueurs)",
-    "Waterfalls (Lg 8 players)",
-    "Chutes d'eau (Max. 8 joueurs)",
-    "Waterloo Revisited (Lg 6 players)",
-    "Waterloo II (Max. 6 joueurs)",
-    "Water Werks (Mega 8 players)",
-    "Jeux d'eau (XL 8 joueurs)",
-    "Warlord's Lake (Sm 4 players)",
-    "Le lac du guerrier (Min. 4 joueurs)",
-    "Zama (Sm 4 players)",
-    "Zama (Min. 4 joueurs)",
-    //#endif
-    NULL};
-#endif
+extern char const* EngMisStr[];
 
 #ifndef REMASTER_BUILD // PG
 /*
@@ -1447,16 +287,6 @@ bool Init_Network(void)
     //------------------------------------------------------------------------
     if (!Ipx.Init()) {
         return (false);
-    }
-
-    //------------------------------------------------------------------------
-    //	Set up the IPX manager to cross a bridge
-    //------------------------------------------------------------------------
-    if (Session.Type != GAME_INTERNET) {
-        if (Session.IsBridge) {
-            Session.BridgeNet.Get_Address(net, node);
-            Ipx.Set_Bridge(net);
-        }
     }
 
     return (true);
@@ -2047,7 +877,7 @@ static int Net_Join_Dialog(void)
     Session.Options.ScenarioDescription[0] = 0; // Flag that we dont know the scenario name yet
 
     char* item;
-    unsigned long starttime;
+    unsigned int starttime;
     int load_game = 0; // 1 = load saved game
     int goto_lobby;
     bool messages_have_focus = true; // Gadget focus starts on the message system
@@ -2846,9 +1676,6 @@ static int Net_Join_Dialog(void)
                 //	Now broadcast a SIGN_OFF just to be thorough
                 //............................................................
                 Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, NULL);
-                if (Session.IsBridge) {
-                    Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, &Session.BridgeNet);
-                }
 
                 while (Ipx.Global_Num_Send() > 0 && Ipx.Service() != 0)
                     ;
@@ -3120,7 +1947,7 @@ static int Net_Join_Dialog(void)
                 **	need to request that it is sent. If we can identify the scenario locally then
                 **	we need to fix up the file name so we load the right one.
                 */
-                Ipx.Set_Timing(25, (unsigned long)-1, 1000);
+                Ipx.Set_Timing(25, (unsigned int)-1, 1000);
                 if (Find_Local_Scenario(Session.Options.ScenarioDescription,
                                         Session.ScenarioFileName,
                                         Session.ScenarioFileLength,
@@ -3173,7 +2000,7 @@ static int Net_Join_Dialog(void)
 #endif
                 }
 
-                Ipx.Set_Timing(30, (unsigned long)-1, 600);
+                Ipx.Set_Timing(30, (unsigned int)-1, 600);
                 strcpy(Scen.ScenarioName, Session.ScenarioFileName);
                 rc = 0;
                 process = false;
@@ -3505,11 +2332,6 @@ static int Net_Join_Dialog(void)
             Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, NULL);
             Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, NULL);
 
-            if (Session.IsBridge) {
-                Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, &Session.BridgeNet);
-                Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, &Session.BridgeNet);
-            }
-
             while (Ipx.Global_Num_Send() > 0 && Ipx.Service() != 0)
                 ;
 
@@ -3544,7 +2366,7 @@ static int Net_Join_Dialog(void)
     //------------------------------------------------------------------------
     //	Ipx.Set_Timing (Ipx.Global_Response_Time() + 2, -1,
     //		Ipx.Global_Response_Time() * 4);
-    Ipx.Set_Timing(Ipx.Global_Response_Time() + 2, (unsigned long)-1, max(120, Ipx.Global_Response_Time() * 8));
+    Ipx.Set_Timing(Ipx.Global_Response_Time() + 2, (unsigned int)-1, max(120, Ipx.Global_Response_Time() * 8));
 
     //------------------------------------------------------------------------
     //	Clear all lists, but NOT the Games & Players vectors.
@@ -3838,14 +2660,6 @@ Send_Join_Queries(int curgame, JoinStateType joinstate, int gamenow, int playern
         Session.GPacket.Command = NET_QUERY_GAME;
 
         Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, NULL);
-
-        //.....................................................................
-        //	If the user specified a remote server address, broadcast over that
-        //	network, too.
-        //.....................................................................
-        if (Session.IsBridge) {
-            Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, &Session.BridgeNet);
-        }
     }
 
     //------------------------------------------------------------------------
@@ -3863,14 +2677,6 @@ Send_Join_Queries(int curgame, JoinStateType joinstate, int gamenow, int playern
         strcpy(Session.GPacket.Name, Session.Games[curgame]->Name);
 
         Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, NULL);
-
-        //.....................................................................
-        //	If the user specified a remote server address, broadcast over that
-        //	network, too.
-        //.....................................................................
-        if (Session.IsBridge) {
-            Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, &Session.BridgeNet);
-        }
     }
 
     //------------------------------------------------------------------------
@@ -3888,10 +2694,6 @@ Send_Join_Queries(int curgame, JoinStateType joinstate, int gamenow, int playern
         Session.GPacket.Chat.Color = Session.ColorIdx;
 
         Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, NULL);
-
-        if (Session.IsBridge) {
-            Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, &Session.BridgeNet);
-        }
     }
 
 } /* end of Send_Join_Queries */
@@ -4221,9 +3023,6 @@ static JoinEventType Get_Join_Responses(JoinStateType* joinstate,
             }
 
             Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, NULL);
-            if (Session.IsBridge) {
-                Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, &Session.BridgeNet);
-            }
 
             while (Ipx.Global_Num_Send() > 0 && Ipx.Service() != 0)
                 ;
@@ -4276,7 +3075,7 @@ static JoinEventType Get_Join_Responses(JoinStateType* joinstate,
 #ifdef FIXIT_VERSION_3
             //	Guest receives game version number from host.
             //	Added to the transmitted version number is a bit indicating presence of Aftermath expansion.
-            unsigned long lVersion = Session.GPacket.ScenarioInfo.Version & ~0x80000000; //	Actual version number.
+            unsigned int lVersion = Session.GPacket.ScenarioInfo.Version & ~0x80000000; //	Actual version number.
             Session.CommProtocol = VerNum.Version_Protocol(lVersion);
             bAftermathMultiplayer = Session.GPacket.ScenarioInfo.Version & 0x80000000;
 //			if( bAftermathMultiplayer )
@@ -4729,8 +3528,8 @@ static int Net_New_Dialog(void)
     int tabs[] = {77 * RESFACTOR};      // tabs for player list box
     int optiontabs[] = {8 * RESFACTOR}; // tabs for option list box
 
-    NodeNameType* who;   // node to add to Players
-    long ping_timer = 0; // for sending Ping packets
+    NodeNameType* who;  // node to add to Players
+    int ping_timer = 0; // for sending Ping packets
 
     int color_used[MAX_MPLAYER_COLORS]; // 1 = color has been used
     char txt[80];
@@ -5371,16 +4170,6 @@ static int Net_New_Dialog(void)
                 ;
 
             //...............................................................
-            //	Broadcast my sign-off over a bridged network if there is one
-            //...............................................................
-            if (Session.IsBridge) {
-                Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, &Session.BridgeNet);
-                Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, &Session.BridgeNet);
-            }
-            while (Ipx.Global_Num_Send() > 0 && Ipx.Service() != 0)
-                ;
-
-            //...............................................................
             //	And now, just be absolutely sure, send my sign-off to each
             //	player in my game.  (If there's a bridge between us, the other
             //	player will have specified my address, so he can cross the
@@ -5665,7 +4454,7 @@ static int Net_New_Dialog(void)
             Session.MaxAhead = max((Ipx.Global_Response_Time() / 8), NETWORK_MIN_MAX_AHEAD);
         }
 
-        Ipx.Set_Timing(25, (unsigned long)-1, 1000);
+        Ipx.Set_Timing(25, (unsigned int)-1, 1000);
 
         //.....................................................................
         //	Send all players the NET_GO packet.  Wait until all ACK's have been
@@ -5750,7 +4539,7 @@ static int Net_New_Dialog(void)
     //	of what our retry delta & timeout should be.
     //------------------------------------------------------------------------
     // Ipx.Set_Timing (Ipx.Global_Response_Time() + 2, -1, Ipx.Global_Response_Time() * 4);
-    Ipx.Set_Timing(Ipx.Global_Response_Time() + 2, (unsigned long)-1, max(120, Ipx.Global_Response_Time() * 8));
+    Ipx.Set_Timing(Ipx.Global_Response_Time() + 2, (unsigned int)-1, max(120, Ipx.Global_Response_Time() * 8));
 
     //------------------------------------------------------------------------
     //	Clear all lists, but NOT the Games or Players vectors.
@@ -5827,7 +4616,7 @@ static JoinEventType Get_NewGame_Responses(ColorListClass* playerlist, int* colo
     int found;
     JoinEventType retval = EV_NONE;
     int resend;
-    unsigned long version; // version # to use
+    unsigned int version; // version # to use
 
     //------------------------------------------------------------------------
     //	If there is no incoming packet, just return
@@ -6115,7 +4904,7 @@ static JoinEventType Get_NewGame_Responses(ColorListClass* playerlist, int* colo
  * HISTORY:                                                                *
  *   06/29/1995 BRR : Created.                                             *
  *=========================================================================*/
-unsigned long Compute_Name_CRC(char* name)
+unsigned int Compute_Name_CRC(char* name)
 {
     char buf[80];
     unsigned int crc = 0;
@@ -6125,7 +4914,7 @@ unsigned long Compute_Name_CRC(char* name)
     strupr(buf);
 
     for (i = 0; i < (int)strlen(buf); i++) {
-        Add_CRC(&crc, (unsigned long)buf[i]);
+        Add_CRC(&crc, (unsigned int)buf[i]);
     }
 
     return (crc);
@@ -6151,7 +4940,7 @@ unsigned long Compute_Name_CRC(char* name)
  * HISTORY:                                                                *
  *   07/08/1995 BRR : Created.                                             *
  *=========================================================================*/
-void Net_Reconnect_Dialog(int reconn, int fresh, int oldest_index, unsigned long timeval)
+void Net_Reconnect_Dialog(int reconn, int fresh, int oldest_index, unsigned int timeval)
 {
     reconn;
     fresh;
@@ -6292,7 +5081,7 @@ struct WWPerson
     char Name[MAX_CHAT_NAME];
     char Phrase[MAX_CHAT_PHRASE];
     PlayerColorType Color;
-    unsigned long LastTime;
+    unsigned int LastTime;
 };
 
 struct WWPerson WWPersons[] = {
@@ -8024,15 +6813,15 @@ static int Net_Fake_New_Dialog(void)
 
     int transmit; // 1 = re-transmit new game options
 
-    long ok_timer = 0; // for timing OK button
+    int ok_timer = 0; // for timing OK button
     int rc;
     int i;
     char* item;
     int tabs[] = {77};      // tabs for player list box
     int optiontabs[] = {8}; // tabs for option list box
 
-    NodeNameType* who;   // node to add to Players
-    long ping_timer = 0; // for sending Ping packets
+    NodeNameType* who;  // node to add to Players
+    int ping_timer = 0; // for sending Ping packets
 
     int color_used[MAX_MPLAYER_COLORS]; // 1 = color has been used
     JoinEventType whahoppa;             // event generated by received packets
@@ -8618,7 +7407,7 @@ static int Net_Fake_New_Dialog(void)
     //------------------------------------------------------------------------
     // Ipx.Set_Timing (Ipx.Global_Response_Time() + 2, -1,
     //	Ipx.Global_Response_Time() * 4);
-    Ipx.Set_Timing(Ipx.Global_Response_Time() + 2, (unsigned long)-1, max(120, Ipx.Global_Response_Time() * 8));
+    Ipx.Set_Timing(Ipx.Global_Response_Time() + 2, (unsigned int)-1, max(120, Ipx.Global_Response_Time() * 8));
 
     Clear_Listbox(&playerlist);
 
@@ -8837,7 +7626,7 @@ static int Net_Fake_Join_Dialog(void)
     // Fancy_Text_Print(TXT_NONE,0,0,TBLACK,TBLACK,TPF_6PT_GRAD | TPF_NOSHADOW);
     Format_Window_String((char*)TXT_HACKHACK, SeenBuff.Get_Height(), width, height);
     char* item;
-    unsigned long starttime;
+    unsigned int starttime;
     int load_game = 0; // 1 = load saved game
 
     //------------------------------------------------------------------------
@@ -9074,9 +7863,6 @@ static int Net_Fake_Join_Dialog(void)
                 //	Now broadcast a SIGN_OFF just to be thorough
                 //............................................................
                 Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, NULL);
-                if (Session.IsBridge) {
-                    Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, &Session.BridgeNet);
-                }
 
                 while (Ipx.Global_Num_Send() > 0 && Ipx.Service() != 0)
                     ;
@@ -9466,11 +8252,6 @@ static int Net_Fake_Join_Dialog(void)
             Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, NULL);
             Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, NULL);
 
-            if (Session.IsBridge) {
-                Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, &Session.BridgeNet);
-                Ipx.Send_Global_Message(&Session.GPacket, sizeof(GlobalPacketType), 0, &Session.BridgeNet);
-            }
-
             while (Ipx.Global_Num_Send() > 0 && Ipx.Service() != 0)
                 ;
 
@@ -9511,7 +8292,7 @@ static int Net_Fake_Join_Dialog(void)
     //------------------------------------------------------------------------
     // Ipx.Set_Timing (Ipx.Global_Response_Time() + 2, -1,
     //	Ipx.Global_Response_Time() * 4);
-    Ipx.Set_Timing(Ipx.Global_Response_Time() + 2, (unsigned long)-1, max(120, Ipx.Global_Response_Time() * 8));
+    Ipx.Set_Timing(Ipx.Global_Response_Time() + 2, (unsigned int)-1, max(120, Ipx.Global_Response_Time() * 8));
 
     //------------------------------------------------------------------------
     //	Clear all lists, but NOT the Games & Players vectors.

@@ -46,12 +46,9 @@
 #include "msgbox.h"
 #include "language.h"
 
-#ifdef WINSOCK_IPX
+#ifdef NETWORKING
 #include "wsproto.h"
-#else // WINSOCK_IPX
-#include "common/tcpip.h"
-#include "ipx95.h"
-#endif // WINSOCK_IPX
+#endif // NETWORKING
 #include "common/vqaaudio.h"
 
 void output(short, short)
@@ -59,7 +56,7 @@ void output(short, short)
 }
 
 #ifdef _WIN32
-unsigned long CCFocusMessage = WM_USER + 50; // Private message for receiving application focus
+unsigned int CCFocusMessage = WM_USER + 50; // Private message for receiving application focus
 #endif
 
 //#include "WolDebug.h"
@@ -81,7 +78,7 @@ unsigned long CCFocusMessage = WM_USER + 50; // Private message for receiving ap
 
 void Focus_Loss(void)
 {
-#ifdef SDL2_BUILD
+#ifdef SDL_BUILD
     GameInFocus = false;
     VQA_PauseAudio();
 #endif
@@ -91,14 +88,14 @@ void Focus_Loss(void)
 
 void Focus_Restore(void)
 {
-#ifdef SDL2_BUILD
+#ifdef SDL_BUILD
     GameInFocus = true;
     VQA_ResumeAudio();
 #endif
     Map.Flag_To_Redraw(true);
     Start_Primary_Sound_Buffer(true);
 
-#ifndef SDL2_BUILD
+#ifndef SDL_BUILD
     VisiblePage.Clear();
     HiddenPage.Clear();
 #endif
@@ -121,7 +118,7 @@ void Focus_Restore(void)
 
 void Check_For_Focus_Loss(void)
 {
-#if defined(SDL2_BUILD)
+#if defined(SDL_BUILD)
     Keyboard->Check();
 #elif defined(_WIN32) && !defined(REMASTER_BUILD) // PG
     static BOOL focus_last_time = 1;
@@ -167,7 +164,7 @@ void Check_For_Focus_Loss(void)
 }
 
 extern bool InMovie;
-#if !defined(REMASTER_BUILD) && defined(_WIN32) && !defined(SDL2_BUILD)
+#if !defined(REMASTER_BUILD) && defined(_WIN32) && !defined(SDL_BUILD)
 long FAR PASCAL Windows_Procedure(HWND hwnd, UINT message, UINT wParam, LONG lParam)
 {
 
@@ -250,6 +247,7 @@ long FAR PASCAL Windows_Procedure(HWND hwnd, UINT message, UINT wParam, LONG lPa
             break;
 
         case 0:
+#ifdef NETWORKING
             // Stubbed out until further work done to restore network stuff. - OmniBlade
             // Shutdown_Network();
 #ifndef WINSOCK_IPX
@@ -260,9 +258,11 @@ long FAR PASCAL Windows_Procedure(HWND hwnd, UINT message, UINT wParam, LONG lPa
             */
             Unload_IPX_Dll();
 #endif // WINSOCK_IPX
+#endif // NETWORKING
             ExitProcess(0);
             break;
         case 3:
+#ifdef NETWORKING
             // Stubbed out until further work done to restore network stuff. - OmniBlade
             // Shutdown_Network();
 #ifndef WINSOCK_IPX
@@ -284,6 +284,7 @@ long FAR PASCAL Windows_Procedure(HWND hwnd, UINT message, UINT wParam, LONG lPa
             if (Winsock.Get_Connected())
                 Winsock.Close();
 #endif // WINSOCK_IPX
+#endif // NETWORKING
             ReadyToQuit = 2;
             break;
         }
@@ -330,6 +331,7 @@ long FAR PASCAL Windows_Procedure(HWND hwnd, UINT message, UINT wParam, LONG lPa
         }
         break;
 
+#ifdef NETWORKING
 #ifndef WINSOCK_IPX
     case WM_ACCEPT:
     case WM_HOSTBYADDRESS:
@@ -339,6 +341,7 @@ long FAR PASCAL Windows_Procedure(HWND hwnd, UINT message, UINT wParam, LONG lPa
         Winsock.Message_Handler(hwnd, message, wParam, lParam);
         return (0);
 #endif // WINSOCK_IPX
+#endif // NETWORKING
     }
 
     return DefWindowProc(hwnd, message, wParam, lParam);
@@ -378,7 +381,7 @@ HANDLE DebugFile = INVALID_HANDLE_VALUE;
 #define WINDOW_NAME "Alarmstufe Rot"
 #endif
 
-#if defined(_WIN32) && !defined(SDL2_BUILD)
+#if defined(_WIN32) && !defined(SDL_BUILD)
 void Create_Main_Window(HANDLE instance, int command_show, int width, int height)
 
 {
@@ -387,7 +390,7 @@ void Create_Main_Window(HANDLE instance, int command_show, int width, int height
     return;
 #else // PG
     HWND hwnd;
-    WNDCLASS wndclass;
+    WNDCLASSA wndclass;
     //
     // Register the window class
     //
@@ -397,7 +400,7 @@ void Create_Main_Window(HANDLE instance, int command_show, int width, int height
     wndclass.cbClsExtra = 0;
     wndclass.cbWndExtra = 0;
     wndclass.hInstance = (HINSTANCE)instance;
-    wndclass.hIcon = LoadIconA((HINSTANCE)instance, MAKEINTRESOURCE(CC_ICON));
+    wndclass.hIcon = LoadIconA((HINSTANCE)instance, MAKEINTRESOURCEA(CC_ICON));
     wndclass.hCursor = NULL;
     wndclass.hbrBackground = NULL;
     wndclass.lpszMenuName = WINDOW_NAME; // NULL
@@ -519,70 +522,6 @@ bool Any_Locked()
         return false;
     }
 }
-
-//
-// Miscellaneous stubs. Mainly for multi player stuff
-//
-//
-//
-
-// IPXAddressClass::IPXAddressClass(void) {
-//	int i;
-//	i++;
-//}
-// int IPXManagerClass::Num_Connections(void) { return (0); }
-// int IPXManagerClass::Connection_ID( int ) { return (0); }
-// IPXAddressClass * IPXManagerClass::Connection_Address( int ) { return ((IPXAddressClass*)0); }
-// char * IPXManagerClass::Connection_Name( int ) { return ((char*)0); }
-// int IPXAddressClass::Is_Broadcast() { return (0); }
-// int IPXManagerClass::Send_Global_Message( void *, int, int, IPXAddressClass * ) { return (0); }
-// int IPXManagerClass::Service() { return (0); }
-// int IPXManagerClass::Get_Global_Message( void  *, int  *, IPXAddressClass  *, short unsigned  * ) { return (0); }
-// int IPXAddressClass::operator ==( IPXAddressClass  & ) { return (0); }
-// IPXManagerClass::IPXManagerClass( int, int, int, int, short unsigned, short unsigned ) {}
-// IPXManagerClass::~IPXManagerClass() {
-//	int i;
-//	i++;
-//	}
-// int  IPXManagerClass::Delete_Connection( int ) { return (0); }
-// IPXAddressClass::IPXAddressClass( char unsigned  *, char unsigned  * ) {}
-// void  IPXManagerClass::Set_Socket( short unsigned ) {}
-// int  IPXManagerClass::Is_IPX() { return (0); }
-// int  IPXManagerClass::Init() { return (0); }
-// void  IPXAddressClass::Get_Address( char unsigned  *, char unsigned  * ) {}
-// void  IPXManagerClass::Set_Bridge( char unsigned  * ) {}
-// int  IPXManagerClass::Global_Num_Send() { return (0); }
-// void  IPXManagerClass::Set_Timing( long unsigned, long unsigned, long unsigned ) {}
-// unsigned long IPXManagerClass::Global_Response_Time() { return (0); }
-// int  IPXManagerClass::Create_Connection( int, char  *, IPXAddressClass  * ) { return (0); }
-// int  IPXAddressClass::operator !=( IPXAddressClass  & ) { return (0); }
-// int  IPXManagerClass::Send_Private_Message( void  *, int, int, int ) { return (0); }
-// int  IPXManagerClass::Get_Private_Message( void  *, int  *, int  * ) { return (0); }
-// int  IPXManagerClass::Connection_Index( int ) { return (0); }
-// void  IPXManagerClass::Reset_Response_Time() {}
-// long unsigned  IPXManagerClass::Response_Time() { return (0); }
-// int  IPXManagerClass::Private_Num_Send( int ) { return (0); }
-
-//_VQAHandle  *  VQA_Alloc(void) { return ((_VQAHandle *)0); }
-// void  VQA_Init( _VQAHandle  *, long ( *)()) {}
-// long  VQA_Open( _VQAHandle  *, char const  *, _VQAConfig  * ) { return (0); }
-// void  VQA_Free( _VQAHandle  * ) {}
-// void  VQA_Close( _VQAHandle  * ) {}
-// long  VQA_Play( _VQAHandle  *, long ) { return (0); }
-
-// void VQA_Init(VQAHandle *, long(*)(VQAHandle *vqa, long action,	void *buffer, long nbytes)) {}
-
-// long VQA_Open(VQAHandle *, char const *, VQAConfig *)
-//{
-//	return (0);
-//}
-
-// void VQA_Close(VQAHandle *) {}
-
-// long VQA_Play(VQAHandle *, long)
-//{
-//	return (0);
-//}
 
 #ifndef NDEBUG
 /***********************************************************************************************

@@ -135,9 +135,9 @@ public:
     /*
     **	Processing routines
     */
-    bool Spring(EventType event, ObjectClass* object);             // object-based
-    bool Spring(EventType event, CELL cell);                       // cell-based
-    bool Spring(EventType event, HousesType house, long data = 0); // house-based
+    bool Spring(EventType event, ObjectClass* object);            // object-based
+    bool Spring(EventType event, CELL cell);                      // cell-based
+    bool Spring(EventType event, HousesType house, int data = 0); // house-based
     bool Remove(void);
 
     /*
@@ -195,7 +195,7 @@ public:
     /*
     **	Overloaded operators
     */
-    static void* operator new(size_t size);
+    static void* operator new(size_t size) noexcept;
     static void* operator new(size_t, void* ptr)
     {
         return (ptr);
@@ -264,8 +264,8 @@ public:
     **	generate the trigger. For time-based triggers, this is the number
     **	of minutes that must elapse.
     */
-    long Data;
-    long DataCopy;
+    int Data;
+    int DataCopy;
 
 private:
     /*
@@ -278,7 +278,6 @@ private:
     ** Some additional padding in case we need to add data to the class and maintain backwards compatibility for
     *save/load
     */
-    unsigned char SaveLoadPadding[32];
 };
 
 #endif

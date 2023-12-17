@@ -57,11 +57,6 @@ set(TIBDAWN_SRC
     intro.cpp
     iomap.cpp
     ioobj.cpp
-    ipx.cpp
-    ipx95.cpp
-    ipxconn.cpp
-    ipxgconn.cpp
-    ipxmgr.cpp
     jshell.cpp
     layer.cpp
     lib.cpp
@@ -83,8 +78,6 @@ set(TIBDAWN_SRC
     mplayer.cpp
     msgbox.cpp
     msglist.cpp
-    netdlg.cpp
-    noseqcon.cpp
     nulldlg.cpp
     object.cpp
     odata.cpp
@@ -131,6 +124,15 @@ set(TIBDAWN_SRC
     visudlg.cpp
     winstub.cpp
 )
+
+if(NETWORKING)
+    list(APPEND TIBDAWN_NET_SRC
+        ipxconn.cpp
+        ipxgconn.cpp
+        ipxmgr.cpp
+        netdlg.cpp
+    )
+endif()
 
 if(CMAKE_CONFIGURATION_TYPES)
     # Glob all the header files together to add to the project for msvc/xcode.
@@ -193,10 +195,10 @@ endif()
 
 if(BUILD_VANILLATD)
     include(BuildIcons)
+    # Create the custom command for generating the ico/icns files for display in the OS.
+    make_icon(INPUT "${CMAKE_SOURCE_DIR}/resources/vanillatd_icon.svg" OUTPUT VANILLATD_ICON)
 
     if(WIN32 OR CMAKE_SYSTEM_NAME STREQUAL "Windows")
-        # Create the custom command for generating the ico file for windows.
-        make_icon(INPUT "${CMAKE_SOURCE_DIR}/resources/vanillatd_icon.svg" OUTPUT VANILLATD_ICON)
         # Generate windows version info.
         generate_product_version(
             VANILLATD_RC
@@ -213,16 +215,27 @@ if(BUILD_VANILLATD)
     endif()
 
     # A target must include the icon for the custom command to run.
-    add_executable(VanillaTD ${TIBDAWN_SRC} ${TIBDAWN_HEADERS} ${VANILLATD_RC} ${VANILLATD_ICON})
+    add_executable(VanillaTD ${TIBDAWN_SRC} ${TIBDAWN_NET_SRC} ${TIBDAWN_HEADERS} ${VANILLATD_RC} ${VANILLATD_ICON})
+
+    if(MAKE_BUNDLE)
+        set_source_files_properties(${VANILLATD_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+        set_target_properties(VanillaTD PROPERTIES
+            MACOSX_BUNDLE True
+            MACOSX_BUNDLE_GUI_IDENTIFIER com.vanilla-conquer.vanillatd
+            MACOSX_BUNDLE_BUNDLE_NAME VanillaTD
+            MACOSX_BUNDLE_BUNDLE_VERSION "1.0"
+            MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0"
+            MACOSX_BUNDLE_COPYRIGHT "Based on code released under GPLv3 by EA"
+            MACOSX_BUNDLE_ICON_FILE "vanillatd_icon.icns"
+        )
+    endif()
+
     target_compile_definitions(VanillaTD PUBLIC $<$<CONFIG:Debug>:_DEBUG> ${VANILLA_DEFS} MEGAMAPS)
     target_include_directories(VanillaTD PUBLIC ${CMAKE_SOURCE_DIR} .)
     target_link_libraries(VanillaTD commonv ${VANILLA_LIBS} ${STATIC_LIBS})
     set_target_properties(VanillaTD PROPERTIES OUTPUT_NAME vanillatd)
     if(MAP_EDITORTD)
         target_compile_definitions(VanillaTD PUBLIC INTERNAL_VERSION)
-    endif()
-    if(NETWORKING)
-        target_compile_definitions(VanillaTD PUBLIC WINSOCK_IPX)
     endif()
     # Control if we auto generate a console and which "main" function we link using MSVC.
     if(MSVC)

@@ -14,6 +14,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <errno.h>
 #include <dlfcn.h>
 #include <pwd.h>
 #include <stdexcept>
@@ -196,7 +197,7 @@ const char* PathsClass::Data_Path()
 const char* PathsClass::User_Path()
 {
     if (UserPath.empty()) {
-#ifdef TARGET_OS_MAC
+#ifdef __APPLE__
         UserPath = User_Home() + "/Library/Application Support/Vanilla-Conquer";
 #else
         UserPath = Get_Posix_Default("XDG_CONFIG_HOME", ".config") + "/vanilla-conquer";
@@ -238,6 +239,11 @@ bool PathsClass::Create_Directory(const char* dirname)
 bool PathsClass::Is_Absolute(const char* path)
 {
     return path != nullptr && path[0] == '/';
+}
+
+std::string PathsClass::Concatenate_Paths(const char* path1, const char* path2)
+{
+    return std::string(path1) + SEP + path2;
 }
 
 std::string PathsClass::Argv_Path(const char* cmd_arg)

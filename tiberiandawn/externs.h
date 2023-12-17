@@ -107,16 +107,15 @@ extern void const* WarFactoryOverlay;
 extern bool IsV107;
 extern char OverridePath[128];
 #endif
+extern ScenarioClass Scen;
 extern bool SlowPalette;
 extern char VersionText[64];
 extern bool ScoresPresent;
 extern int CrateCount;
 extern TCountDownTimerClass CrateTimer;
 extern bool CrateMaker;
-extern ThemeType TransitTheme;
 extern bool AllowVoice;
 extern NewConfigType NewConfig;
-extern char BriefingText[512];
 extern char IntroMovie[_MAX_FNAME + _MAX_EXT];
 extern char ActionMovie[_MAX_FNAME + _MAX_EXT];
 extern char BriefMovie[_MAX_FNAME + _MAX_EXT];
@@ -132,12 +131,11 @@ extern bool PlayerLoses;
 extern bool PlayerRestarts;
 extern StructType SabotagedType;
 extern bool TempleIoned;
-extern long Frame;
+extern int Frame;
 extern void* SpeechBuffer;
 extern int PreserveVQAScreen;
 extern bool BreakoutAllowed;
 extern bool Brokeout;
-extern CELL Views[4];
 
 extern GameOptionsClass Options;
 
@@ -187,8 +185,6 @@ extern SelectedObjectsType CurrentObject;
 extern DynamicVectorClass<TriggerClass*> CellTriggers;
 extern DynamicVectorClass<TriggerClass*> HouseTriggers[HOUSE_COUNT];
 
-extern CELL Waypoint[WAYPT_COUNT];
-
 extern BaseClass Base;
 
 /*
@@ -211,30 +207,24 @@ extern char const* SystemStrings;
 */
 extern HousesType Whom;
 extern VQAConfig AnimControl;
-extern long SpareTicks;
+extern int SpareTicks;
 extern int MonoPage;
 extern unsigned char* OriginalPalette;
 extern int EndCountDown;
 extern bool GameActive;
 extern bool SpecialFlag;
 extern int ScenarioInit;
-extern long TutorFlags[2];
+extern int TutorFlags[2];
 extern HouseClass* PlayerPtr;
 extern unsigned char* BlackPalette;
 extern unsigned char* WhitePalette;
 extern unsigned char* GamePalette;
-extern DiffType ScenDifficulty;  // For human player.
-extern DiffType ScenCDifficulty; // For computer players.
-extern unsigned Scenario;
 extern ScenarioPlayerType ScenPlayer;
 extern ScenarioDirType ScenDir;
 extern ScenarioVarType ScenVar;
-extern int CarryOverMoney;
-extern int CarryOverCap;
-extern int CarryOverPercent;
-extern char ScenarioName[_MAX_FNAME + _MAX_EXT];
 extern unsigned BuildLevel;
 extern uint32_t ScenarioCRC;
+extern RandomClass NonCriticalRandomNumber;
 
 #ifdef SCENARIO_EDITOR
 extern CELL CurrentCell;
@@ -280,7 +270,7 @@ extern int MPlayerColorIdx;
 extern HousesType MPlayerHouse;
 extern unsigned char MPlayerLocalID;
 extern int MPlayerCount;
-extern int MPlayerBases;
+extern bool MPlayerBases;
 extern int MPlayerCredits;
 extern int MPlayerTiberium;
 extern int MPlayerGoodies;
@@ -289,13 +279,15 @@ extern int MPlayerSolo;
 extern int MPlayerUnitCount;
 extern int MPlayerCountMin[2];
 extern int MPlayerCountMax[2];
-extern unsigned long MPlayerMaxAhead;
-extern unsigned long FrameSendRate;
+extern unsigned int MPlayerMaxAhead;
+extern unsigned int FrameSendRate;
 extern unsigned char MPlayerID[MAX_PLAYERS];
 extern HousesType MPlayerHouses[MAX_PLAYERS];
 extern char MPlayerNames[MAX_PLAYERS][MPLAYER_NAME_MAX];
 extern MessageListClass Messages;
+#ifdef NETWORKING
 extern IPXAddressClass MessageAddress;
+#endif
 extern char LastMessage[MAX_MESSAGE_LENGTH];
 extern int MPlayerBlitz;
 extern int MPlayerObiWan;
@@ -325,7 +317,7 @@ typedef struct
     } Ptr;
 } TrapObjectType;
 
-extern long TrapFrame;
+extern int TrapFrame;
 extern RTTIType TrapObjType;
 extern TrapObjectType TrapObject;
 extern COORDINATE TrapCoord;
@@ -336,9 +328,9 @@ extern int TrapCheckHeap;
 /*
 ** Network (IPX) globals
 */
+#ifdef NETWORKING
 extern IPXManagerClass Ipx;
-extern int IsBridge;
-extern IPXAddressClass BridgeNet;
+#endif
 extern bool NetMaster;
 extern bool NetStealth;
 extern bool NetProtect;
@@ -346,7 +338,9 @@ extern bool NetOpen;
 extern char MPlayerGameName[MPLAYER_NAME_MAX];
 extern GlobalPacketType GPacket;
 extern int GPacketlen;
+#ifdef NETWORKING
 extern IPXAddressClass GAddress;
+#endif
 extern unsigned short GProductID;
 extern char* MetaPacket;
 extern int MetaSize;
@@ -354,7 +348,7 @@ extern DynamicVectorClass<NodeNameType*> Games;
 extern DynamicVectorClass<NodeNameType*> Players;
 
 extern int Seed;
-extern long* RandSeedPtr;
+extern int* RandSeedPtr;
 extern int CustomSeed;
 extern int NewMaxAheadFrame1;
 extern int NewMaxAheadFrame2;
@@ -420,6 +414,7 @@ extern bool InMainLoop; // True if in game state rather than menu state
 #ifndef REMASTER_BUILD
 #define GlyphX_Debug_Print(x) DBG_LOG(x)
 #endif
+extern int ShowCommand;
 extern void* PacketLater;
 
 extern unsigned int IsTheaterShape;
@@ -428,5 +423,8 @@ extern void Reset_Theater_Shapes(void);
 extern TheaterType LastTheater;
 
 extern bool ShareAllyVisibility;
+
+// OmniBlade - Moves from tcpip.cpp as part of networking cleanup.
+extern bool Server; // Is this player acting as client or server
 
 #endif

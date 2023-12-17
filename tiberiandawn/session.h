@@ -169,7 +169,7 @@ typedef enum ModemGameType
 //...........................................................................
 // Commands sent over the serial Global Channel
 //...........................................................................
-typedef enum SerialCommandType
+typedef enum SerialCommandType : int32_t
 {
     SERIAL_CONNECT = 100,      // Are you there?  Hello?  McFly?
     SERIAL_GAME_OPTIONS = 101, // Hey, dudes, here's some new game options
@@ -185,7 +185,7 @@ typedef enum SerialCommandType
 //...........................................................................
 // Commands sent over the network Global Channel
 //...........................................................................
-typedef enum NetCommandType
+typedef enum NetCommandType : int32_t
 {
     NET_QUERY_GAME,    // Hey, what games are out there?
     NET_ANSWER_GAME,   // Yo, Here's my game's name!
@@ -239,13 +239,15 @@ typedef struct
 typedef struct NodeNameTag
 {
     char Name[MPLAYER_NAME_MAX]; // player or game name
+#ifdef NETWORKING
     IPXAddressClass Address;
+#endif
     union
     {
         struct
         {
-            unsigned char IsOpen;   // is the game open?
-            unsigned long LastTime; // last time we heard from this guy
+            unsigned char IsOpen;  // is the game open?
+            unsigned int LastTime; // last time we heard from this guy
         } Game;
         struct
         {
@@ -255,7 +257,7 @@ typedef struct NodeNameTag
         } Player;
         struct
         {
-            unsigned long LastTime;   // last time we heard from this guy
+            unsigned int LastTime;    // last time we heard from this guy
             unsigned char LastChance; // we're about to remove him from the list
             unsigned char Color;      // chat player's color
         } Chat;
@@ -265,12 +267,13 @@ typedef struct NodeNameTag
 //...........................................................................
 // Packet sent over the serial Global Channel
 //...........................................................................
-typedef struct
+#pragma pack(push, 1)
+typedef struct BITFIELD_STRUCT
 {
     SerialCommandType Command;           // One of the enum's defined above
     char Name[MPLAYER_NAME_MAX];         // Player or Game Name
-    unsigned long MinVersion;            // min version this game supports
-    unsigned long MaxVersion;            // max version this game supports
+    unsigned int MinVersion;             // min version this game supports
+    unsigned int MaxVersion;             // max version this game supports
     HousesType House;                    // player's House
     unsigned char Color;                 // player's color or SIGNOFF ID
     unsigned char Scenario;              // Scenario #
@@ -284,7 +287,7 @@ typedef struct
     int Seed;                            // random number seed
     SpecialClass Special;                // command-line options
     unsigned int GameSpeed;              // Game Speed
-    unsigned long ResponseTime;          // packet response time
+    unsigned int ResponseTime;           // packet response time
     char Message[COMPAT_MESSAGE_LENGTH]; // inter-player message
     unsigned char ID;                    // unique ID of sender of message
 } SerialPacketType;
@@ -298,19 +301,19 @@ typedef struct
     char Name[MPLAYER_NAME_MAX]; // Player or Game Name
     union
     {
-        struct
+        struct BITFIELD_STRUCT
         {
             unsigned int IsOpen : 1; // 1 = game is open for joining
         } GameInfo;
         struct
         {
-            HousesType House;         // player's House
-            unsigned int Color;       // player's color
-            unsigned long NameCRC;    // CRC of player's game's name
-            unsigned long MinVersion; // game's min supported version
-            unsigned long MaxVersion; // game's max supported version
+            HousesType House;        // player's House
+            unsigned int Color;      // player's color
+            unsigned int NameCRC;    // CRC of player's game's name
+            unsigned int MinVersion; // game's min supported version
+            unsigned int MaxVersion; // game's max supported version
         } PlayerInfo;
-        struct
+        struct BITFIELD_STRUCT
         {
             unsigned char Scenario;      // Scenario #
             unsigned int Credits;        // player's credits
@@ -323,13 +326,13 @@ typedef struct
             int Seed;                    // random number seed
             SpecialClass Special;        // command-line options
             unsigned int GameSpeed;      // Game Speed
-            unsigned long Version;       // version # common to all players
+            unsigned int Version;        // version # common to all players
         } ScenarioInfo;
         struct
         {
             char Buf[COMPAT_MESSAGE_LENGTH]; // inter-user message
             unsigned char Color;             // color of sender of message
-            unsigned long NameCRC;           // CRC of sender's Game Name
+            unsigned int NameCRC;            // CRC of sender's Game Name
         } Message;
         struct
         {
@@ -341,11 +344,12 @@ typedef struct
         } Reject;
         struct
         {
-            unsigned long ID;    // unique ID for this chat node
+            unsigned int ID;     // unique ID for this chat node
             unsigned char Color; // my color
         } Chat;
     };
 } GlobalPacketType;
+#pragma pack(pop)
 
 //...........................................................................
 // For finding sync bugs; filled in by the engine when certain conditions
@@ -410,7 +414,7 @@ public:
     //.....................................................................
     int Create_Connections(void);
     bool Am_I_Master(void);
-    unsigned long Compute_Unique_ID(void);
+    unsigned int Compute_Unique_ID(void);
 
     //.....................................................................
     // File I/O
@@ -444,7 +448,7 @@ public:
     //.....................................................................
     // Unique workstation ID, for detecting my own packets
     //.....................................................................
-    unsigned long UniqueID;
+    unsigned int UniqueID;
 
     //.....................................................................
     // Player's local options
@@ -471,9 +475,9 @@ public:
     // 'FrameRateDelay' is the time ticks to wait between frames, for
     // smoothing.
     //.....................................................................
-    unsigned long MaxAhead;
-    unsigned long FrameSendRate;
-    unsigned long FrameRateDelay;
+    unsigned int MaxAhead;
+    unsigned int FrameSendRate;
+    unsigned int FrameRateDelay;
 
     //.....................................................................
     // This flag is set when we've loaded a multiplayer game.
@@ -563,7 +567,7 @@ public:
     //.....................................................................
     // For finding Sync Bugs
     //.....................................................................
-    long TrapFrame;
+    int TrapFrame;
     RTTIType TrapObjType;
     TrapObjectType TrapObject;
     COORD TrapCoord;

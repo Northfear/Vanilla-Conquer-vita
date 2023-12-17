@@ -196,7 +196,7 @@ TechnoClass* CellClass::Cell_Techno(int x, int y) const
     ObjectClass* object;
     COORDINATE click; // Coordinate of click relative to cell corner.
     TechnoClass* close = NULL;
-    long distance = 0; // Recorded closest distance.
+    int distance = 0; // Recorded closest distance.
 
     /*
     **	Create a coordinate value that represent the pixel location within the cell. This is
@@ -209,9 +209,9 @@ TechnoClass* CellClass::Cell_Techno(int x, int y) const
         while (object && object->IsActive) {
             if (object->Is_Techno()) {
                 COORDINATE coord; // Coordinate relative to cell corner.
-                long dist;
+                int dist;
 
-                coord = object->Center_Coord() & 0x00FF00FFL;
+                coord = Coord_Fraction(object->Center_Coord());
                 dist = Distance(coord, click);
                 if (!close || dist < distance) {
                     close = (TechnoClass*)object;
@@ -1072,7 +1072,7 @@ void CellClass::Draw_It(int x, int y, int draw_type) const
                 */
                 if (IsWaypoint) {
                     for (i = 0; i < 26; i++) {
-                        if (Waypoint[i] == Cell_Number()) {
+                        if (Scen.Waypoint[i] == Cell_Number()) {
                             waypt[0] = 'A' + i;
                             waypt[1] = 0;
                             Fancy_Text_Print(waypt,
@@ -1084,7 +1084,7 @@ void CellClass::Draw_It(int x, int y, int draw_type) const
                             break;
                         }
                     }
-                    if (Waypoint[WAYPT_HOME] == Cell_Number()) {
+                    if (Scen.Waypoint[WAYPT_HOME] == Cell_Number()) {
                         Fancy_Text_Print("Home",
                                          Map.TacPixelX + x,
                                          Map.TacPixelY + y + (CELL_PIXEL_H)-7,
@@ -1092,7 +1092,7 @@ void CellClass::Draw_It(int x, int y, int draw_type) const
                                          TBLACK,
                                          TPF_NOSHADOW | TPF_6POINT);
                     }
-                    if (Waypoint[WAYPT_REINF] == Cell_Number()) {
+                    if (Scen.Waypoint[WAYPT_REINF] == Cell_Number()) {
                         Fancy_Text_Print("Reinf",
                                          Map.TacPixelX + x,
                                          Map.TacPixelY + y + (CELL_PIXEL_H)-7,
@@ -1427,7 +1427,7 @@ void CellClass::Wall_Update(void)
             **	Build the icon number according to walls located in the adjacent
             **	cells.
             */
-            for (unsigned i = 0; i < 4; i++) {
+            for (unsigned i = 0; i < (sizeof(_offsets) / sizeof(_offsets[0]) - 1); i++) {
                 CellClass* adjcell = newcell->Adjacent_Cell(_offsets[i]);
                 if (adjcell && adjcell->Overlay == newcell->Overlay) {
                     icon |= 1 << i;
@@ -1629,7 +1629,7 @@ TriggerClass* CellClass::Get_Trigger(void) const
  *=============================================================================================*/
 int CellClass::Spot_Index(COORDINATE coord)
 {
-    COORDINATE rel = coord & 0x00FF00FFL; // Sub coordinate value within cell.
+    COORDINATE rel = Coord_Fraction(coord); // Sub coordinate value within cell.
 
     /*
     **	If the coordinate is close enough to the center of the cell, then return
@@ -1702,13 +1702,13 @@ COORDINATE CellClass::Closest_Free_Spot(COORDINATE coord, bool any) const
         {3, 4, 1, 2},
         {4, 1, 2, 3},
     };
-    coord &= 0xFF00FF00L;
+    coord &= Coord_Whole(coord);
 
     /*
     **	Cells occupied by buildings or vehicles don't have any free spots.
     */
     if (!any && (Flag.Occupy.Vehicle || Flag.Occupy.Monolith)) {
-        return (NULL);
+        return (0);
     }
 
     /*
@@ -1898,7 +1898,7 @@ void CellClass::Adjust_Threat(HousesType house, int threat_value)
  * HISTORY:                                                                                    *
  *   05/16/1995 JLB : Created.                                                                 *
  *=============================================================================================*/
-long CellClass::Tiberium_Adjust(bool pregame)
+int CellClass::Tiberium_Adjust(bool pregame)
 {
     Validate();
     if (Overlay != OVERLAY_NONE) {

@@ -147,7 +147,7 @@ int const TechnoClass::BodyShape[32] = {0,  31, 30, 29, 28, 27, 26, 25, 24, 23, 
 TechnoTypeClass::TechnoTypeClass(int name,
                                  char const* ininame,
                                  unsigned char level,
-                                 long pre,
+                                 int pre,
                                  bool is_leader,
                                  bool is_scanner,
                                  bool is_nominal,
@@ -758,7 +758,7 @@ bool TechnoClass::Mark(MarkType mark)
  *   10/17/1994 JLB : Created.                                                                 *
  *   06/17/1995 JLB : Handles tether contact messages.                                         *
  *=============================================================================================*/
-RadioMessageType TechnoClass::Receive_Message(RadioClass* from, RadioMessageType message, long& param)
+RadioMessageType TechnoClass::Receive_Message(RadioClass* from, RadioMessageType message, int& param)
 {
     switch (message) {
 
@@ -2449,7 +2449,7 @@ BulletClass* TechnoClass::Fire_At(TARGET target, int which)
         //reveal that unit and a little area around it.
         if (GameToPlay == GAME_NORMAL) {
             if ((!IsOwnedByPlayer && !IsDiscoveredByPlayer)
-                || (!Map[Center_Coord()].IsMapped && (What_Am_I() != RTTI_AIRCRAFT || !IsOwnedByPlayer))) {
+                || (!Map[Coord_Cell(Center_Coord())].IsMapped && (What_Am_I() != RTTI_AIRCRAFT || !IsOwnedByPlayer))) {
                 Map.Sight_From(PlayerPtr, Coord_Cell(Center_Coord()), 1, false);
             }
         }

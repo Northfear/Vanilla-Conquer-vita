@@ -66,7 +66,7 @@ extern WinsockInterfaceClass* PacketTransport; // The object for interfacing wit
 /*
 ** Define events for Winsock callbacks
 */
-#if !defined _WIN32 && !defined SDL2_BUILD
+#if defined _WIN32 && !defined SDL_BUILD
 #define WM_IPXASYNCEVENT (WM_USER + 115) // IPX socket Async event
 #define WM_UDPASYNCEVENT (WM_USER + 116) // UDP socket Async event
 #else
@@ -128,13 +128,13 @@ public:
         return (false);
     };
 
-#if defined _WIN32 && !defined SDL2_BUILD
-    virtual long Message_Handler(HWND, UINT, UINT, LONG)
+#if defined _WIN32 && !defined SDL_BUILD
+    virtual int Message_Handler(HWND, UINT, UINT, LONG)
     {
         return (1);
     }
 #else
-    virtual long Message_Handler()
+    virtual int Message_Handler()
     {
         return (1);
     }
@@ -159,7 +159,7 @@ public:
         return (ConnectStatus);
     }
 
-#if !defined _WIN32 || defined SDL2_BUILD
+#if !defined _WIN32 || defined SDL_BUILD
     fd_set* Get_Readset(void)
     {
         memcpy(&ReadyReadSockets, &ReadSockets, sizeof(ReadSockets));
@@ -205,7 +205,7 @@ protected:
     /*
     ** Async object required for callbacks to our message handler.
     */
-#if defined _WIN32 && !defined SDL2_BUILD
+#if defined _WIN32 && !defined SDL_BUILD
     HANDLE ASync;
 #else
     /*

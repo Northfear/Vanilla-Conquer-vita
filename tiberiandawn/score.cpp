@@ -49,6 +49,7 @@
 #include "common/irandom.h"
 #include "common/framelimit.h"
 #include "common/settings.h"
+#include "endianness.h"
 
 #define SCORETEXT_X 184
 #define SCORETEXT_Y 8
@@ -655,7 +656,7 @@ void ScoreClass::Presentation(void)
     */
     anim = Open_Animation(ScreenNames[house], NULL, 0L, (WSAOpenType)(WSA_OPEN_FROM_MEM | WSA_OPEN_TO_PAGE), Palette);
 
-    unsigned minutes = (unsigned)((ElapsedTime / (long)TIMER_MINUTE)) + 1;
+    unsigned minutes = (unsigned)((ElapsedTime / TIMER_MINUTE)) + 1;
 
     /*
     **	Determine leadership rating.
@@ -713,7 +714,7 @@ void ScoreClass::Presentation(void)
     /*
     ** Calculate total score
     */
-    long total = ((leadership * 40) + (4600) + (efficiency * 14)) / 100;
+    int total = ((leadership * 40) + (4600) + (efficiency * 14)) / 100;
     if (!total)
         total++;
     total *= (BuildLevel + 1);
@@ -790,7 +791,7 @@ void ScoreClass::Presentation(void)
     Play_Sample(sfx4, 255, Options.Normalize_Sound(120));
     Call_Back_Delay(13);
 
-    max = MAX((long)leadership, (long)efficiency);
+    max = MAX((int)leadership, (int)efficiency);
     int scorecounter = 0;
     int factor = Get_Resolution_Factor() + 1;
     Keyboard->Clear();
@@ -914,6 +915,8 @@ void ScoreClass::Presentation(void)
     file.Open(READ);
     for (i = 0; i < NUMFAMENAMES; i++) {
         file.Read(&hallfame[i], sizeof(struct Fame));
+        hallfame[i].score = le32toh(hallfame[i].score);
+        hallfame[i].level = le32toh(hallfame[i].level);
     }
     file.Close();
 
@@ -930,7 +933,7 @@ void ScoreClass::Presentation(void)
                 for (i = (NUMFAMENAMES - 1); i > index; i--)
                     hallfame[i] = hallfame[i - 1];
             hallfame[index].score = total;
-            hallfame[index].level = Scenario;
+            hallfame[index].level = Scen.Scenario;
             //			hallfame[index].level = BuildLevel;
             // hallfame[index].name[0] = 0;	// blank out the name
             memset(hallfame[index].name, ' ', sizeof(hallfame[index].name) - 1);
@@ -973,6 +976,8 @@ void ScoreClass::Presentation(void)
 
         file.Open(WRITE);
         for (i = 0; i < NUMFAMENAMES; i++) {
+            hallfame[i].score = htole32(hallfame[i].score);
+            hallfame[i].level = htole32(hallfame[i].level);
             file.Write(&hallfame[i], sizeof(struct Fame));
         }
         file.Close();
@@ -1027,7 +1032,7 @@ void Cycle_Wait_Click(void)
 {
     int counter = 0;
     int minclicks = 20;
-    unsigned long timingtime = WinTickCount.Time();
+    unsigned int timingtime = WinTickCount.Time();
     // SerialPacketType sendpacket;
     // SerialPacketType receivepacket;
     // int packetlen;
@@ -1358,7 +1363,7 @@ void ScoreClass::Do_Nod_Casualties_Graph(void)
         InfantryMan[i + r].remap = RemapCiv;
         InfantryMan[i + 0].anim = InfantryMan[i + q].anim = InfantryMan[i + r].anim = 0;
         InfantryMan[i + 0].stage = InfantryMan[i + q].stage = InfantryMan[i + r].stage = 0;
-        InfantryMan[i + 0].delay = InfantryMan[i + q].delay = InfantryMan[i + r].delay = Random() & 0x1F;
+        InfantryMan[i + 0].delay = InfantryMan[i + q].delay = InfantryMan[i + r].delay = NonCriticalRandomNumber & 0x1F;
         InfantryMan[i + 0].Class = InfantryMan[i + q].Class = &InfantryTypeClass::As_Reference(INFANTRY_E1);
         InfantryMan[i + r].Class = &InfantryTypeClass::As_Reference(INFANTRY_C1);
     }
@@ -1829,7 +1834,7 @@ void New_Infantry_Anim(int index, int anim)
     if (anim >= DO_GUN_DEATH) {
         InfantryMan[index].delay = 1; // start right away
     } else {
-        InfantryMan[index].delay = Random() & 15;
+        InfantryMan[index].delay = NonCriticalRandomNumber & 15;
     }
 }
 
@@ -1859,7 +1864,7 @@ void Draw_Bar_Graphs(int i, int gkilled, int nkilled, int ckilled)
             int anim = InfantryMan[i / 11].anim;
             if (anim != -1 && anim < DO_GUN_DEATH) {
                 if (i / 11) {
-                    New_Infantry_Anim(i / 11, DO_GUN_DEATH + (Random() & 3));
+                    New_Infantry_Anim(i / 11, DO_GUN_DEATH + (NonCriticalRandomNumber & 3));
                 } else {
                     New_Infantry_Anim(i / 11, DO_GUN_DEATH);
                 }
@@ -1875,7 +1880,7 @@ void Draw_Bar_Graphs(int i, int gkilled, int nkilled, int ckilled)
             int anim = InfantryMan[(NUMINFANTRYMEN / 3) + (i / 11)].anim;
             if (anim != -1 && anim < DO_GUN_DEATH) {
                 if (i / 11) {
-                    New_Infantry_Anim((NUMINFANTRYMEN / 3) + (i / 11), DO_GUN_DEATH + (Random() & 3));
+                    New_Infantry_Anim((NUMINFANTRYMEN / 3) + (i / 11), DO_GUN_DEATH + (NonCriticalRandomNumber & 3));
                 } else {
                     New_Infantry_Anim((NUMINFANTRYMEN / 3) + (i / 11), DO_GUN_DEATH);
                 }
@@ -1892,7 +1897,8 @@ void Draw_Bar_Graphs(int i, int gkilled, int nkilled, int ckilled)
             int anim = InfantryMan[((NUMINFANTRYMEN * 2) / 3) + (i / 11)].anim;
             if (anim != -1 && anim < DO_GUN_DEATH) {
                 if (i / 11) {
-                    New_Infantry_Anim(((NUMINFANTRYMEN * 2) / 3) + (i / 11), DO_GUN_DEATH + (Random() & 3));
+                    New_Infantry_Anim(((NUMINFANTRYMEN * 2) / 3) + (i / 11),
+                                      DO_GUN_DEATH + (NonCriticalRandomNumber & 3));
                 } else {
                     New_Infantry_Anim(((NUMINFANTRYMEN * 2) / 3) + (i / 11), DO_GUN_DEATH);
                 }

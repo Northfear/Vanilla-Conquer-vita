@@ -50,7 +50,7 @@ public:
     /*-------------------------------------------------------------------
     **	Constructors and destructors.
     */
-    static void* operator new(size_t size);
+    static void* operator new(size_t size) noexcept;
     static void* operator new(size_t, void* ptr)
     {
         return (ptr);
@@ -121,7 +121,6 @@ private:
     ** Some additional padding in case we need to add data to the class and maintain backwards compatibility for
     *save/load
     */
-    unsigned char SaveLoadPadding[8];
 };
 
 #endif

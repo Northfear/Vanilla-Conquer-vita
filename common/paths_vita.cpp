@@ -93,6 +93,11 @@ bool PathsClass::Is_Absolute(const char* path)
     return path != nullptr && path[0] == 'u' && path[1] == 'x' && path[2] == '0';
 }
 
+std::string PathsClass::Concatenate_Paths(const char* path1, const char* path2)
+{
+    return std::string(path1) + SEP + path2;
+}
+
 std::string PathsClass::Argv_Path(const char* cmd_arg)
 {
     vitaGamePath = cmd_arg;

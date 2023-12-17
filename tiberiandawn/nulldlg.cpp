@@ -216,15 +216,15 @@ int Com_Scenario_Dialog(void)
     int recsignedoff = false;
     int i;
     char txt[80];
-    unsigned long timingtime;
-    unsigned long lastmsgtime;
-    unsigned long lastredrawtime;
-    unsigned long transmittime = 0;
-    unsigned long theirresponsetime;
+    unsigned int timingtime;
+    unsigned int lastmsgtime;
+    unsigned int lastredrawtime;
+    unsigned int transmittime = 0;
+    unsigned int theirresponsetime;
     static bool first_time = true;
     bool oppscorescreen = false;
     bool gameoptions = GameToPlay == GAME_SKIRMISH;
-    unsigned long msg_timeout = 1200; // init to 20 seconds
+    unsigned int msg_timeout = 1200; // init to 20 seconds
 
     bool ready_to_go = false;
     CountDownTimerClass ready_time;
@@ -354,11 +354,14 @@ int Com_Scenario_Dialog(void)
     Init scenario values, only the first time through
     ........................................................................*/
     if (first_time) {
-        MPlayerCredits = 3000; // init credits & credit buffer
-        MPlayerBases = 1;      // init scenario parameters
-        MPlayerTiberium = 0;
+        // GB 2022 set defaults for skirmish also:
+        BuildLevel = 7;
+
+        MPlayerCredits = 10000; // init credits & credit buffer
+        MPlayerBases = 1;       // init scenario parameters
+        MPlayerTiberium = 1;
         MPlayerGoodies = 0;
-        MPlayerGhosts = 0;
+        MPlayerGhosts = 1;
         Special.IsCaptureTheFlag = 0;
         MPlayerUnitCount = (MPlayerCountMax[MPlayerBases] + MPlayerCountMin[MPlayerBases]) / 2;
         first_time = false;
@@ -843,7 +846,7 @@ int Com_Scenario_Dialog(void)
                     transmittime = 0;
 
                 } else {
-                    WWMessageBox().Process(TXT_ONLY_ONE, TXT_OOPS, NULL);
+                    WWMessageBox().Process(TXT_ONLY_ONE, TXT_OOPS);
                     display = REDRAW_ALL;
                 }
             }
@@ -901,33 +904,33 @@ int Com_Scenario_Dialog(void)
         /*.....................................................................
         Get the scenario filename
         .....................................................................*/
-        Scenario = MPlayerFilenum[ScenarioIdx];
+        Scen.Scenario = MPlayerFilenum[ScenarioIdx];
 
         int diff = difficulty.Get_Value() * (Rule.IsFineDifficulty ? 1 : 2);
         switch (diff) {
         case 0:
-            ScenCDifficulty = DIFF_HARD;
-            ScenDifficulty = DIFF_EASY;
+            Scen.CDifficulty = DIFF_HARD;
+            Scen.Difficulty = DIFF_EASY;
             break;
 
         case 1:
-            ScenCDifficulty = DIFF_HARD;
-            ScenDifficulty = DIFF_NORMAL;
+            Scen.CDifficulty = DIFF_HARD;
+            Scen.Difficulty = DIFF_NORMAL;
             break;
 
         case 2:
-            ScenCDifficulty = DIFF_NORMAL;
-            ScenDifficulty = DIFF_NORMAL;
+            Scen.CDifficulty = DIFF_NORMAL;
+            Scen.Difficulty = DIFF_NORMAL;
             break;
 
         case 3:
-            ScenCDifficulty = DIFF_EASY;
-            ScenDifficulty = DIFF_NORMAL;
+            Scen.CDifficulty = DIFF_EASY;
+            Scen.Difficulty = DIFF_NORMAL;
             break;
 
         case 4:
-            ScenCDifficulty = DIFF_EASY;
-            ScenDifficulty = DIFF_HARD;
+            Scen.CDifficulty = DIFF_EASY;
+            Scen.Difficulty = DIFF_HARD;
             break;
         }
     }

@@ -84,9 +84,11 @@
  *=============================================================================================*/
 bool CellClass::Should_Save(void) const
 {
+    void* _null_array[ARRAY_SIZE(Overlapper)] = {};
+
     return ((Smudge != SMUDGE_NONE) || (TType != TEMPLATE_NONE) || (Overlay != OVERLAY_NONE) || IsMapped || IsVisible
             || IsMappedByPlayerMask || IsVisibleByPlayerMask || IsTrigger || Flag.Composite || OccupierPtr
-            || Overlapper[0] || Overlapper[1] || Overlapper[2]);
+            || memcmp(Overlapper, _null_array, sizeof(Overlapper)) != 0);
 }
 
 /***********************************************************************************************
@@ -175,12 +177,12 @@ bool CellClass::Save(FileClass& file)
 void CellClass::Code_Pointers(void)
 {
     if (Cell_Occupier()) {
-        OccupierPtr = (ObjectClass*)OccupierPtr->As_Target();
+        OccupierPtr = (ObjectClass*)(intptr_t)OccupierPtr->As_Target();
     }
 
     for (int index = 0; index < ARRAY_SIZE(Overlapper); index++) {
         if (Overlapper[index] != NULL && Overlapper[index]->IsActive) {
-            Overlapper[index] = (ObjectClass*)Overlapper[index]->As_Target();
+            Overlapper[index] = (ObjectClass*)(intptr_t)Overlapper[index]->As_Target();
         } else {
             Overlapper[index] = NULL;
         }
@@ -190,7 +192,7 @@ void CellClass::Code_Pointers(void)
     ------------------------ Convert trigger pointer -------------------------
     */
     if (IsTrigger) {
-        CellTriggers[Cell_Number()] = (TriggerClass*)CellTriggers[Cell_Number()]->As_Target();
+        CellTriggers[Cell_Number()] = (TriggerClass*)(intptr_t)CellTriggers[Cell_Number()]->As_Target();
     }
 
     /*
@@ -221,8 +223,8 @@ void CellClass::Decode_Pointers(void)
 {
     char bad[128];
 
-    if (OccupierPtr) {
-        OccupierPtr = As_Object(Target_Ptr(OccupierPtr), false);
+    if (OccupierPtr != NULL) {
+        OccupierPtr = As_Object(TARGET_SAFE_CAST(OccupierPtr), false);
         Check_Ptr((void*)OccupierPtr, __FILE__, __LINE__);
 
         /*
@@ -238,25 +240,17 @@ void CellClass::Decode_Pointers(void)
         }
     }
 
-    if (Overlapper[0]) {
-        Overlapper[0] = As_Object(Target_Ptr(Overlapper[0]), false);
-        Check_Ptr((void*)Overlapper[0], __FILE__, __LINE__);
-    }
-
-    if (Overlapper[1]) {
-        Overlapper[1] = As_Object(Target_Ptr(Overlapper[1]), false);
-        Check_Ptr((void*)Overlapper[1], __FILE__, __LINE__);
-    }
-
-    if (Overlapper[2]) {
-        Overlapper[2] = As_Object(Target_Ptr(Overlapper[2]), false);
-        Check_Ptr((void*)Overlapper[2], __FILE__, __LINE__);
+    for (int index = 0; index < ARRAY_SIZE(Overlapper); index++) {
+        if (Overlapper[index] != NULL) {
+            Overlapper[index] = As_Object(TARGET_SAFE_CAST(Overlapper[index]), false);
+            Check_Ptr((void*)Overlapper[index], __FILE__, __LINE__);
+        }
     }
 
     /*
     ** Check for bad overlappers that were saved. ST - 10/3/2019 11:50AM
     */
-    for (int i = 0; i <= 2; i++) {
+    for (int i = 0; i < ARRAY_SIZE(Overlapper); i++) {
         if (Overlapper[i]) {
             ObjectClass* optr = Overlapper[i];
             if (optr->IsActive == false) {
@@ -273,7 +267,7 @@ void CellClass::Decode_Pointers(void)
     **	Convert trigger pointer.
     */
     if (IsTrigger) {
-        CellTriggers[Cell_Number()] = As_Trigger(Target_Ptr(CellTriggers[Cell_Number()]), false);
+        CellTriggers[Cell_Number()] = As_Trigger(TARGET_SAFE_CAST(CellTriggers[Cell_Number()]), false);
         Check_Ptr((void*)CellTriggers[Cell_Number()], __FILE__, __LINE__);
     }
 
@@ -410,7 +404,7 @@ bool MouseClass::Load(FileClass& file)
 bool MouseClass::Save(FileClass& file)
 {
     unsigned count;
-    long pos;
+    int pos;
 
     /*
     -------------------------- Save Theater >first< --------------------------
@@ -882,7 +876,7 @@ void DisplayClass::Code_Pointers(void)
     **	Code PendingObjectPtr.
     */
     if (PendingObjectPtr) {
-        PendingObjectPtr = (ObjectClass*)PendingObjectPtr->As_Target();
+        PendingObjectPtr = (ObjectClass*)(intptr_t)PendingObjectPtr->As_Target();
     }
 
     /*
@@ -936,7 +930,7 @@ void DisplayClass::Decode_Pointers(void)
     **	either.  These have to be done as last-minute fixups.
     */
     if (PendingObjectPtr) {
-        PendingObjectPtr = As_Object(Target_Ptr(PendingObjectPtr), false);
+        PendingObjectPtr = As_Object(TARGET_SAFE_CAST(PendingObjectPtr), false);
         Check_Ptr((void*)PendingObjectPtr, __FILE__, __LINE__);
     }
 

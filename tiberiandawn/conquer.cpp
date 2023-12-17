@@ -60,14 +60,15 @@
 
 #include "function.h"
 #include "common/irandom.h"
-#include "common/tcpip.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "common/framelimit.h"
+#include "common/paths.h"
 #include "common/vqatask.h"
 #include "common/vqaloader.h"
 #include "common/settings.h"
+#include "common/winasm.h"
 
 #define SHAPE_TRANS 0x40
 
@@ -340,7 +341,9 @@ void Main_Game(int argc, char* argv[])
                 break;
 
             case GAME_IPX:
+#ifdef NETWORKING
                 Shutdown_Network();
+#endif
                 break;
 
             case GAME_INTERNET:
@@ -871,7 +874,7 @@ static void Message_Input(KeyNumType& input)
                 Map.Flag_To_Redraw(false);
             }
         } else {
-
+#ifdef NETWORKING
             /*
             **	For a network game:
             **	F1-F3 = "To <name> (house):" (only allowed if we're not in ObiWan mode)
@@ -907,6 +910,7 @@ static void Message_Input(KeyNumType& input)
                     }
                 }
             }
+#endif
         }
     }
 
@@ -958,7 +962,7 @@ static void Message_Input(KeyNumType& input)
 
         message_length = strlen(Messages.Get_Edit_Buf());
 
-        long actual_message_size;
+        int actual_message_size;
         char* the_string;
 
         /*
@@ -1118,8 +1122,8 @@ static void Message_Input(KeyNumType& input)
  *=============================================================================================*/
 bool Color_Cycle(void)
 {
-    static CountDownTimerClass _timer(BT_SYSTEM, 0L);
-    static CountDownTimerClass _ftimer(BT_SYSTEM, 0L);
+    static CountDownTimerClass _timer(BT_SYSTEM, 0);
+    static CountDownTimerClass _ftimer(BT_SYSTEM, 0);
     static bool _up = false;
     bool changed = false;
 
@@ -1220,7 +1224,7 @@ void Call_Back(void)
         Speak_AI();
     }
 
-#ifndef DEMO
+#ifdef NETWORKING
     /*
     **	Network maintenance
     */
@@ -1745,7 +1749,7 @@ bool Main_Loop()
     /*
     ** Very rarely, the human players will get a message from the computer.
     */
-    if (GameToPlay != GAME_NORMAL && MPlayerGhosts && IRandom(0, 10000) == 1) {
+    if (GameToPlay == GAME_SKIRMISH && MPlayerGhosts && Random_Pick(0, 10000) == 1) {
         Computer_Message();
     }
 
@@ -1912,14 +1916,14 @@ void Go_Editor(bool flag)
  * HISTORY:                                                                                    *
  *   07/04/1995 JLB : Created.                                                                 *
  *=============================================================================================*/
-long MixFileHandler(VQAHandle* vqa, long action, void* buffer, long nbytes)
+int MixFileHandler(VQAHandle* vqa, int action, void* buffer, int nbytes)
 {
 #ifdef REMASTER_BUILD
     return 0;
     ;
 #else
     CCFileClass* file;
-    long error;
+    int error;
 
     file = (CCFileClass*)vqa->VQAio;
 
@@ -2034,6 +2038,11 @@ int Load_Interpolated_Palettes(char const* filename, bool add)
     int i;
     int start_palette;
 
+    if (!InterpolationTable) {
+        /* DOSMode should not interpolate anything. Don't allocate memory.  */
+        return 0;
+    }
+
     PalettesRead = false;
     CCFileClass file(filename);
 
@@ -2052,6 +2061,8 @@ int Load_Interpolated_Palettes(char const* filename, bool add)
     if (file.Is_Available()) {
         file.Open(READ);
         file.Read(&num_palettes, 4);
+
+        num_palettes = le32toh(num_palettes);
 
         for (i = 0; i < num_palettes; i++) {
             InterpolatedPalettes[i + start_palette] = (unsigned char*)malloc(65536);
@@ -2073,6 +2084,11 @@ int Load_Interpolated_Palettes(char const* filename, bool add)
 
 void Free_Interpolated_Palettes(void)
 {
+    if (!InterpolationTable) {
+        /* DOSMode should not interpolate anything.  */
+        return;
+    }
+
     for (int i = 0; i < ARRAY_SIZE(InterpolatedPalettes); i++) {
         if (InterpolatedPalettes[i]) {
             free(InterpolatedPalettes[i]);
@@ -2133,7 +2149,8 @@ void Play_Movie(char const* name, ThemeType theme, bool clrscrn)
         return;
     }
 
-    memset(&PaletteInterpolationTable[0][0], 0, 65536);
+    if (InterpolationTable)
+        memset(&InterpolationTable->PaletteInterpolationTable[0][0], 0, 65536);
 
     if (name) {
         char fullname[_MAX_FNAME + _MAX_EXT];
@@ -2915,7 +2932,7 @@ void Trap_Object(void)
  *=============================================================================================*/
 void Check_VQ_Palette_Set(void);
 
-long VQ_Call_Back(unsigned char*, long)
+int VQ_Call_Back(unsigned char*, int)
 {
 #ifndef REMASTER_BUILD
     int key = 0;
@@ -3121,12 +3138,12 @@ void Handle_Team(int team, int action)
  *=============================================================================================*/
 void Handle_View(int view, int action)
 {
-    if ((unsigned)view < sizeof(Views) / sizeof(Views[0])) {
+    if ((unsigned)view < sizeof(Scen.Views) / sizeof(Scen.Views[0])) {
         if (action == 0) {
-            Map.Set_Tactical_Position(Cell_Coord(Views[view]) & 0xFF00FF00L);
+            Map.Set_Tactical_Position(Coord_Whole(Cell_Coord(Scen.Views[view])));
             Map.Flag_To_Redraw(true);
         } else {
-            Views[view] = Coord_Cell(Map.TacticalCoord);
+            Scen.Views[view] = Coord_Cell(Map.TacticalCoord);
         }
     }
 }
@@ -3490,29 +3507,28 @@ static bool Change_Local_Dir(int cd)
 {
     static bool _initialised = false;
     static unsigned _detected = 0;
-#ifdef __vita__
-    static const char* _vol_labels[CD_COUNT] = {
-        "ux0:data/VanillaTD/gdi", "ux0:data/VanillaTD/nod", "ux0:data/VanillaTD/covertops", "ux0:data/VanillaTD"};
-    char vol_buff[64];
-#else
     static const char* _vol_labels[CD_COUNT] = {"gdi", "nod", "covertops", "."};
-    char vol_buff[16];
-#endif
+    std::string paths[3] = {Paths.User_Path(), Paths.Data_Path(), Paths.Program_Path()};
 
     // Detect which if any of the discs have had their data copied to an appropriate local folder.
     if (!_initialised) {
         for (int i = 0; i < CD_COUNT; ++i) {
-            RawFileClass vol(_vol_labels[i]);
+            for (int j = 0; j < 3; ++j) {
+                std::string path = Paths.Concatenate_Paths(paths[j].c_str(), _vol_labels[i]);
+                RawFileClass vol(path.c_str());
 
-            if (vol.Is_Directory()) {
-                CDFileClass::Refresh_Search_Drives();
-                snprintf(vol_buff, sizeof(vol_buff), "%s/", _vol_labels[i]);
-                CDFileClass::Add_Search_Drive(vol_buff);
-                CCFileClass fc("GENERAL.MIX");
+                if (vol.Is_Directory()) {
+                    CDFileClass::Refresh_Search_Drives();
+                    path += PathsClass::SEP;
+                    CDFileClass::Add_Search_Drive(path.c_str());
+                    CCFileClass fc("GENERAL.MIX");
 
-                // Populate _detected as a bitfield for which discs we found a local copy of.
-                if (fc.Is_Available()) {
-                    _detected |= 1 << i;
+                    // Populate _detected as a bitfield for which discs we found a local copy of.
+                    if (fc.Is_Available()) {
+                        _detected |= 1 << i;
+                    }
+
+                    break;
                 }
             }
         }
@@ -3554,23 +3570,25 @@ static bool Change_Local_Dir(int cd)
 
     // If the data from the CD we want was detected, then double check it and set it as though we used the -CD command line.
     if (_detected & (1 << cd)) {
-        RawFileClass vol(_vol_labels[cd]);
+        for (int j = 0; j < 3; ++j) {
+            std::string path = Paths.Concatenate_Paths(paths[j].c_str(), _vol_labels[cd]);
+            RawFileClass vol(path.c_str());
 
-        // Verify that the file is still available and hasn't been deleted out from under us.
-        if (vol.Is_Directory()) {
-            CDFileClass::Refresh_Search_Drives();
-            snprintf(vol_buff, sizeof(vol_buff), "%s/", _vol_labels[cd]);
-            CDFileClass::Add_Search_Drive(vol_buff);
+            if (vol.Is_Directory()) {
+                CDFileClass::Refresh_Search_Drives();
+                path += PathsClass::SEP;
+                CDFileClass::Add_Search_Drive(path.c_str());
 
-            // The file should be available if we reached this point.
-            assert(CCFileClass("GENERAL.MIX").Is_Available());
+                // The file should be available if we reached this point.
+                assert(CCFileClass("GENERAL.MIX").Is_Available());
 
-            LastCD = cd;
-            Theme.Stop();
-            Reinit_Secondary_Mixfiles();
-            ThemeClass::Scan();
+                LastCD = cd;
+                Theme.Stop();
+                Reinit_Secondary_Mixfiles();
+                ThemeClass::Scan();
 
-            return true;
+                return true;
+            }
         }
     }
 
@@ -3713,7 +3731,7 @@ bool Force_CD_Available(int cd)
  * HISTORY:                                                                *
  *   08/11/1995 PWG : Created.                                             *
  *=========================================================================*/
-unsigned long Disk_Space_Available(void)
+unsigned int Disk_Space_Available(void)
 {
 
     return 0x7fffffff;
@@ -3781,9 +3799,9 @@ static void Do_Record_Playback(void)
     int i;
     COORDINATE coord;
     ObjectClass* obj;
-    unsigned long sum;
-    unsigned long sum2;
-    unsigned long ltgt;
+    unsigned int sum;
+    unsigned int sum2;
+    unsigned int ltgt;
 
     /*------------------------------------------------------------------------
     Record a game
@@ -3814,7 +3832,7 @@ static void Do_Record_Playback(void)
         .....................................................................*/
         sum = 0;
         for (i = 0; i < count; i++) {
-            ltgt = (unsigned long)(CurrentObject[i]->As_Target());
+            ltgt = (unsigned int)(CurrentObject[i]->As_Target());
             sum += ltgt;
         }
         RecordFile.Write(&sum, sizeof(sum));
@@ -3855,7 +3873,7 @@ static void Do_Record_Playback(void)
             ..................................................................*/
             sum = 0;
             for (i = 0; i < CurrentObject.Count(); i++) {
-                ltgt = (unsigned long)(CurrentObject[i]->As_Target());
+                ltgt = (unsigned int)(CurrentObject[i]->As_Target());
                 sum += ltgt;
             }
 
@@ -3970,13 +3988,13 @@ void Shake_The_Screen(int shakes, HousesType house)
         } while (newyoff == oldyoff);
         switch (newyoff) {
         case -1:
-            HidPage.Blit(SeenBuff, 0, 2, 0, 0, 640, 398);
+            HidPage.Blit(SeenBuff, 0, 2, 0, 0, ScreenWidth, ScreenHeight - 2);
             break;
         case 0:
             HidPage.Blit(SeenBuff);
             break;
         case 1:
-            HidPage.Blit(SeenBuff, 0, 0, 0, 2, 640, 398);
+            HidPage.Blit(SeenBuff, 0, 0, 0, 2, ScreenWidth, ScreenHeight - 2);
             break;
         }
         Frame_Limiter();

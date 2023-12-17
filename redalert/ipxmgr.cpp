@@ -77,7 +77,6 @@
 
 #else // WINSOCK_IPX
 
-#include "ipx95.h"
 #ifdef _WIN32
 #include "common/tcpip.h"
 #else
@@ -138,18 +137,7 @@ IPXManagerClass::IPXManagerClass(int glb_maxlen,
     PacketTransport = NULL;
 
 #else  // WINSOCK_IPX
-
-    //------------------------------------------------------------------------
-    //	Initialize data members
-    //------------------------------------------------------------------------
-    //........................................................................
-    //	IPXStatus = 1 if IPX is installed, 0 if not
-    //........................................................................
-    if (IPX_SPX_Installed() == 0) {
-        IPXStatus = 0;
-    } else {
-        IPXStatus = 1;
-    }
+    IPXStatus = 0;
 #endif // WINSOCK_IPX
 
     //........................................................................
@@ -178,17 +166,12 @@ IPXManagerClass::IPXManagerClass(int glb_maxlen,
     //........................................................................
     //	Save our socket ID number
     //........................................................................
-    Socket = (unsigned short)((((unsigned long)socket & 0x00ff) << 8) | (((unsigned long)socket & 0xff00) >> 8));
+    Socket = (unsigned short)((((unsigned int)socket & 0x00ff) << 8) | (((unsigned int)socket & 0xff00) >> 8));
 
     //------------------------------------------------------------------------
     //	Get the user's IPX local connection number
     //------------------------------------------------------------------------
     ConnectionNum = 0;
-#ifndef WINSOCK_IPX
-    if (IPXStatus) {
-        ConnectionNum = IPX_Get_Connection_Number();
-    }
-#endif // WINSOCK_IPX
 
     //------------------------------------------------------------------------
     //	Init connection states
@@ -418,7 +401,7 @@ int IPXManagerClass::Is_IPX(void)
  * HISTORY:                                                                *
  *   07/02/1995 BR : Created.                                              *
  *=========================================================================*/
-void IPXManagerClass::Set_Timing(unsigned long retrydelta, unsigned long maxretries, unsigned long timeout)
+void IPXManagerClass::Set_Timing(unsigned int retrydelta, unsigned int maxretries, unsigned int timeout)
 {
     int i;
 
@@ -1367,30 +1350,6 @@ int IPXManagerClass::Private_Num_Receive(int id)
 } /* end of Private_Num_Receive */
 
 /***************************************************************************
- * IPXManagerClass::Set_Socket -- sets socket ID for all connections			*
- *                                                                         *
- * INPUT:                                                                  *
- *		socket	new socket ID to use														*
- *                                                                         *
- * OUTPUT:                                                                 *
- *		none.																						*
- *                                                                         *
- * WARNINGS:                                                               *
- *		Do not call this function after communications have started; you		*
- *		must call it before calling Init().												*
- *		The socket number is byte-swapped, since IPX requires socket ID's		*
- *		to be stored high/low.																*
- *                                                                         *
- * HISTORY:                                                                *
- *   01/25/1995 BR : Created.                                              *
- *=========================================================================*/
-void IPXManagerClass::Set_Socket(unsigned short socket)
-{
-    Socket = (unsigned short)((((unsigned long)socket & 0x00ff) << 8) | (((unsigned long)socket & 0xff00) >> 8));
-
-} /* end of Set_Socket */
-
-/***************************************************************************
  * IPXManagerClass::Response_Time -- Returns largest Avg Response Time     *
  *                                                                         *
  * INPUT:                                                                  *
@@ -1405,10 +1364,10 @@ void IPXManagerClass::Set_Socket(unsigned short socket)
  * HISTORY:                                                                *
  *   05/04/1995 BRR : Created.                                             *
  *=========================================================================*/
-unsigned long IPXManagerClass::Response_Time(void)
+unsigned int IPXManagerClass::Response_Time(void)
 {
-    unsigned long resp;
-    unsigned long maxresp = 0;
+    unsigned int resp;
+    unsigned int maxresp = 0;
     int i;
 
     for (i = 0; i < NumConnections; i++) {
@@ -1437,7 +1396,7 @@ unsigned long IPXManagerClass::Response_Time(void)
  * HISTORY:                                                                *
  *   05/04/1995 BRR : Created.                                             *
  *=========================================================================*/
-unsigned long IPXManagerClass::Global_Response_Time(void)
+unsigned int IPXManagerClass::Global_Response_Time(void)
 {
     if (GlobalChannel) {
         return (GlobalChannel->Queue->Avg_Response_Time());
@@ -1493,8 +1452,8 @@ void IPXManagerClass::Reset_Response_Time(void)
 void* IPXManagerClass::Oldest_Send(void)
 {
     int i, j;
-    unsigned long time;
-    unsigned long mintime = 0xffffffff;
+    unsigned int time;
+    unsigned int mintime = 0xffffffff;
     SendQueueType* send_entry; // ptr to send entry header
     CommHeaderType* packet;
     void* buf = NULL;
@@ -1529,33 +1488,6 @@ void* IPXManagerClass::Oldest_Send(void)
     return (buf);
 
 } /* end of Oldest_Send */
-
-/***************************************************************************
- * IPXManagerClass::Set_Bridge -- prepares to cross a bridge               *
- *                                                                         *
- * This routine is designed to prevent the connection from having to			*
- * call Get_Local_Target, except the minimum number of times, since that	*
- * routine is buggy & goes away for long periods sometimes.						*
- *                                                                         *
- * INPUT:                                                                  *
- *		bridge		network number of the destination bridge						*
- *                                                                         *
- * OUTPUT:                                                                 *
- *		none																						*
- *                                                                         *
- * WARNINGS:                                                               *
- *		none																						*
- *                                                                         *
- * HISTORY:                                                                *
- *   07/06/1995 BRR : Created.                                             *
- *=========================================================================*/
-void IPXManagerClass::Set_Bridge(NetNumType bridge)
-{
-    if (GlobalChannel) {
-        GlobalChannel->Set_Bridge(bridge);
-    }
-
-} /* end of Set_Bridge */
 
 /***************************************************************************
  * IPXManagerClass::Configure_Debug -- sets up special debug values        *

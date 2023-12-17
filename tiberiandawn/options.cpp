@@ -60,7 +60,7 @@
 #include "options.h"
 #include "common/ini.h"
 
-#ifdef SDL2_BUILD
+#ifdef SDL_BUILD
 char const* const OptionsClass::HotkeyName = "SDLHotkeys";
 #else
 char const* const OptionsClass::HotkeyName = "WinHotkeys";
@@ -277,7 +277,7 @@ void OptionsClass::Set_Sound_Volume(int volume, int feedback)
     volume = Bound(volume, 0, 255);
     Volume = volume;
     if (feedback) {
-        Sound_Effect(VOC_BLEEPY3, NULL);
+        Sound_Effect(VOC_BLEEPY3);
     }
 }
 

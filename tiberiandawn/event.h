@@ -41,7 +41,8 @@
 **	encapsulation is required in order to ensure that each event affects all computers at the
 **	same time (same game frame).
 */
-class EventClass
+#pragma pack(push, 1)
+class BITFIELD_STRUCT EventClass
 {
 public:
     /*
@@ -116,7 +117,6 @@ public:
     /*
     **	This union contains the specific data that the event requires.
     */
-#pragma pack(push, 1)
     union
     {
         struct
@@ -185,7 +185,7 @@ public:
         */
         struct
         {
-            unsigned long CRC;
+            unsigned int CRC;
             unsigned short CommandCount; // # commands sent so far
             unsigned char Delay;         // propogation delay used this frame
                                          // (Frame - Delay = sender's current frame #)
@@ -212,7 +212,6 @@ public:
         } ProcessTime;
 
     } Data;
-#pragma pack(pop)
 
     //-------------- Functions ---------------------
     EventClass(void)
@@ -220,7 +219,7 @@ public:
         Type = EMPTY;
     };
     EventClass(SpecialClass data);
-    EventClass(EventType type, TARGET target);
+    EventClass(EventType type, TargetClass target);
     EventClass(EventType type);
     EventClass(EventType type, int val);
     EventClass(EventType type, TARGET src, TARGET dest);
@@ -242,5 +241,6 @@ public:
     static unsigned char EventLength[LAST_EVENT];
     static const char* EventNames[LAST_EVENT];
 };
+#pragma pack(pop)
 
 #endif

@@ -38,8 +38,8 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
-#include "common/tcpip.h"
 #include "common/packet.h"
+#include "common/gitinfo.h"
 
 #define FIELD_PACKET_TYPE      "TYPE"
 #define FIELD_GAME_ID          "IDNO"
@@ -121,17 +121,17 @@ enum
     COMPLETION_PLAYER_2_WON_BY_DISCONNECTION
 };
 
-extern unsigned long PlanetWestwoodGameID;
+extern unsigned int PlanetWestwoodGameID;
 #ifdef _WIN32
 extern HINSTANCE ProgramInstance;
 #endif
-extern unsigned long PlanetWestwoodStartTime;
+extern unsigned int PlanetWestwoodStartTime;
 
 char CPUType;
 
 bool GameTimerInUse = false;
 TimerClass GameTimer;
-long GameEndTime;
+int GameEndTime;
 void* PacketLater = NULL;
 
 /***********************************************************************************************
@@ -151,10 +151,7 @@ void* PacketLater = NULL;
 
 void Send_Statistics_Packet(void)
 {
-// PG_TO_FIX
-#if (0)
-#ifndef DEMO
-
+#if !defined REMASTER_BUILD && defined NETWORKING
     PacketClass stats;
     HouseClass* player;
     static int packet_size;
@@ -182,7 +179,7 @@ void Send_Statistics_Packet(void)
     static char field_player_crates_found[5] = {"CRA?"};
     static char field_player_harvested[5] = {"HRV?"};
 
-    static char* houses[] = {"GDI", "NOD", "NUT", "JUR", "M01", "M02", "M03", "M04", "M05", "M06"};
+    static const char* houses[] = {"GDI", "NOD", "NUT", "JUR", "M01", "M02", "M03", "M04", "M05", "M06"};
 
     CCDebugString("C&C95 - In Send_Statistics_Packet.\n");
 
@@ -207,7 +204,7 @@ void Send_Statistics_Packet(void)
         /*
         ** Start credits.
         */
-        stats.Add_Field(FIELD_START_CREDITS, (unsigned long)MPlayerCredits);
+        stats.Add_Field(FIELD_START_CREDITS, (unsigned int)MPlayerCredits);
 
         /*
         ** Bases (On/Off)
@@ -233,12 +230,12 @@ void Send_Statistics_Packet(void)
         /*
         ** Start unit count
         */
-        stats.Add_Field(FIELD_START_UNIT_COUNT, (unsigned long)MPlayerUnitCount);
+        stats.Add_Field(FIELD_START_UNIT_COUNT, (unsigned int)MPlayerUnitCount);
 
         /*
         ** Tech level.
         */
-        stats.Add_Field(FIELD_TECH_LEVEL, (unsigned long)BuildLevel);
+        stats.Add_Field(FIELD_TECH_LEVEL, (unsigned int)BuildLevel);
 
         CCDebugString("C&C95 - Adding stats field for scenario.\n");
         /*
@@ -246,14 +243,12 @@ void Send_Statistics_Packet(void)
         */
         char fname[128];
         char namebuffer[40];
-        char* abuffer = (char*)_ShapeBuffer;
-        memset(abuffer, '\0', _ShapeBufferSize);
-        sprintf(fname, "%s.INI", ScenarioName);
+        sprintf(fname, "%s.INI", Scen.ScenarioName);
         CCFileClass fileo;
+        INIClass ini;
         fileo.Set_Name(fname);
-        fileo.Read(abuffer, _ShapeBufferSize - 1);
-        fileo.Close();
-        WWGetPrivateProfileString("Basic", "Name", "Nulls-Ville", namebuffer, 40, abuffer);
+        ini.Load(fileo);
+        ini.Get_String("Basic", "Name", "Nulls-Ville", namebuffer, sizeof(namebuffer));
         stats.Add_Field(FIELD_SCENARIO, namebuffer);
         // stats.Add_Field(FIELD_SCENARIO, MPlayerScenarios[ScenarioIdx]);
 
@@ -334,48 +329,26 @@ void Send_Statistics_Packet(void)
         **
         ** Passed from WChat
         */
-        stats.Add_Field(FIELD_START_TIME, (long)PlanetWestwoodStartTime);
+        stats.Add_Field(FIELD_START_TIME, PlanetWestwoodStartTime);
 
         /*
         ** Game duration (seconds).
         */
-        stats.Add_Field(FIELD_GAME_DURATION, (long)GameEndTime / 60);
+        stats.Add_Field(FIELD_GAME_DURATION, GameEndTime / 60);
 
         /*
         ** Avg. frame rate.
         */
         if (GameEndTime / 60 == 0) {
-            stats.Add_Field(FIELD_FRAME_RATE, 0L);
+            stats.Add_Field(FIELD_FRAME_RATE, 0);
         } else {
-            stats.Add_Field(FIELD_FRAME_RATE, (long)Frame / (GameEndTime / 60));
+            stats.Add_Field(FIELD_FRAME_RATE, Frame / (GameEndTime / 60));
         }
-
-        CCDebugString("C&C95 - Adding hardware info stats.\n");
-        /*
-        ** CPU type
-        */
-        stats.Add_Field(FIELD_CPU_TYPE, (char)CPUType);
 
         /*
         ** Memory
         */
-        stats.Add_Field(FIELD_MEMORY, (long)-1);
-
-        /*
-        ** Video memory
-        */
-        DDCAPS video_capabilities;
-        long video_memory;
-
-        if (DirectDrawObject) {
-            video_capabilities.dwSize = sizeof(video_capabilities);
-            if (DD_OK == DirectDrawObject->GetCaps(&video_capabilities, NULL)) {
-                video_memory = video_capabilities.dwVidMemTotal;
-                video_memory += 1024 * 1024 - 1;
-                video_memory &= 0xfff00000;
-                stats.Add_Field(FIELD_VIDEO_MEMORY, (long)video_memory);
-            }
-        }
+        stats.Add_Field(FIELD_MEMORY, -1);
 
         CCDebugString("C&C95 - Adding game info stats.\n");
         /*
@@ -390,22 +363,9 @@ void Send_Statistics_Packet(void)
         sprintf(version, "%d%s", Version_Number(), VersionText);
         stats.Add_Field(FIELD_GAME_VERSION, version);
 
-        char path_to_exe[280];
-        FILETIME write_time; // File time is 64 bits
-
-        GetModuleFileName(ProgramInstance, path_to_exe, 280);
-        RawFileClass file;
-        file.Set_Name(path_to_exe);
-        file.Open();
-        HANDLE handle = file.Get_File_Handle();
-
-        if (handle != INVALID_HANDLE_VALUE) {
-            if (GetFileTime(handle, NULL, NULL, &write_time)) {
-                write_time.dwLowDateTime = hton32(write_time.dwLowDateTime);
-                write_time.dwHighDateTime = hton32(write_time.dwHighDateTime);
-                stats.Add_Field(FIELD_GAME_BUILD_DATE, (void*)&write_time, sizeof(write_time));
-            }
-        }
+        int64_t build_time = GitCommitTimeStamp;
+        build_time = hton64(build_time);
+        stats.Add_Field(FIELD_GAME_BUILD_DATE, (void*)&build_time, sizeof(build_time));
 
         /*
         ** Covert installed? (Yes/No)
@@ -562,7 +522,7 @@ void Send_Statistics_Packet(void)
                                 player->DestroyedAircraft.Get_Unit_Count() * 4);
                 stats.Add_Field(field_player_buildings_killed,
                                 (void*)player->DestroyedBuildings.Get_All_Totals(),
-                                player->DestroyedBuildings->Get_Unit_Count() * 4);
+                                player->DestroyedBuildings.Get_Unit_Count() * 4);
 
                 /*
                 ** Number and type of enemy buildings captured
@@ -586,7 +546,7 @@ void Send_Statistics_Packet(void)
                 ** Amount of tiberium turned into credits
                 */
                 field_player_harvested[3] = '1' + (char)house;
-                stats.Add_Field(field_player_harvested, (unsigned long)player->HarvestedCredits);
+                stats.Add_Field(field_player_harvested, (unsigned int)player->HarvestedCredits);
             }
         }
 
@@ -621,24 +581,14 @@ void Send_Statistics_Packet(void)
     /*
     ** Send it.....
     */
-    int times = 100; // 100 times max
-    CountDownTimerClass send_timer;
-
-    CCDebugString("C&C95 - About to send stats packet to DDE server.\n");
-    while (!Send_Data_To_DDE_Server((char*)packet, packet_size, DDEServerClass::DDE_PACKET_GAME_RESULTS)) {
-        CCDebugString("C&C95 - Stats packet send failed.\n");
-        send_timer.Set(60, true);
-        while (send_timer.Time()) {
-        };
-    }
+    // TODO
 
     /*
     ** Save it to disk as well so I can see it
     */
-#if (0)
-    RawFileClass anotherfile("packet.net");
+    CDFileClass anotherfile("packet.net");
     anotherfile.Write(packet, packet_size);
-#endif //(0)
+
     /*
     ** Tidy up
     */
@@ -647,7 +597,6 @@ void Send_Statistics_Packet(void)
 
     GameStatisticsPacketSent = true;
     CCDebugString("C&C95 - Returning from Send_Statistics_Packet.\n");
-#endif // DEMO
 #endif
 }
 

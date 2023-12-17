@@ -167,8 +167,7 @@ public:
     .....................................................................*/
     int Init(void);
     int Is_IPX(void);
-    virtual void Set_Timing(unsigned long retrydelta, unsigned long maxretries, unsigned long timeout);
-    void Set_Bridge(NetNumType bridge);
+    virtual void Set_Timing(unsigned int retrydelta, unsigned int maxretries, unsigned int timeout);
 
     /*.....................................................................
     These routines control creation of the "Connections" (data queues) for
@@ -212,19 +211,11 @@ public:
     virtual int Private_Num_Receive(int id = CONNECTION_NONE);
 
     /*.....................................................................
-    This routine changes the socket ID assigned the IPX Manager when it
-    was constructed.  Do not call this function after calling Init()!
-    The Socket ID should be known by both ends of the communications before
-    any packets are sent.
-    .....................................................................*/
-    void Set_Socket(unsigned short socket);
-
-    /*.....................................................................
     Routines to return the largest average queue response time, and to
     reset the response time for all queues.
     .....................................................................*/
-    virtual unsigned long Response_Time(void);
-    unsigned long Global_Response_Time(void);
+    virtual unsigned int Response_Time(void);
+    unsigned int Global_Response_Time(void);
     virtual void Reset_Response_Time(void);
 
     /*.....................................................................
@@ -291,9 +282,9 @@ private:
     /*.....................................................................
     Timing parameters for all connections
     .....................................................................*/
-    unsigned long RetryDelta;
-    unsigned long MaxRetries;
-    unsigned long Timeout;
+    unsigned int RetryDelta;
+    unsigned int MaxRetries;
+    unsigned int Timeout;
 
     /*---------------------------------------------------------------------
     Real-mode memory pointers and such
@@ -345,7 +336,7 @@ private:
     This is a real-mode pointer to the address of the real-mode assembly
     entry point.
     .....................................................................*/
-    long Handler;
+    int Handler;
 
     /*.....................................................................
     Event Control Block for listening; contained within the real-mode

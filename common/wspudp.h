@@ -48,10 +48,10 @@ public:
     UDPInterfaceClass(void);
     virtual ~UDPInterfaceClass(void);
 
-#if defined _WIN32 && !defined SDL2_BUILD
-    virtual long Message_Handler(HWND window, UINT message, UINT wParam, LONG lParam);
+#if defined _WIN32 && !defined SDL_BUILD
+    virtual int Message_Handler(HWND window, UINT message, UINT wParam, LONG lParam);
 #else
-    virtual long Message_Handler();
+    virtual int Message_Handler();
 #endif
     virtual bool Open_Socket(SOCKET socketnum);
     virtual void Set_Broadcast_Address(void* address);

@@ -75,6 +75,7 @@
 
 #include "ramfile.h"
 #include "common/vqaconfig.h"
+#include "common/winasm.h"
 #include "intro.h"
 
 RemapControlType SidebarScheme;
@@ -103,7 +104,7 @@ static void Init_Keys(void);
 
 extern int UnitBuildPenalty;
 
-extern unsigned long RandNumb;
+extern unsigned int RandNumb;
 
 // extern int SimRandIndex;
 void Init_Random(void);
@@ -138,8 +139,9 @@ extern bool Is_Mission_Counterstrike(char* file_name);
  *=============================================================================================*/
 static void Load_Prolog_Page(void)
 {
+    const char* pict = (RESFACTOR == 1) ? "PROLOG.CPS" : "PROLOG.PCX";
     Hide_Mouse();
-    Load_Title_Screen("PROLOG.PCX", &HidPage, (unsigned char*)CCPalette.Get_Data());
+    Load_Title_Screen(pict, &HidPage, (unsigned char*)CCPalette.Get_Data());
     HidPage.Blit(SeenPage);
     CCPalette.Set();
     Show_Mouse();
@@ -165,6 +167,7 @@ static void Load_Prolog_Page(void)
 //#include    <locale.h>
 bool Init_Game(int, char*[])
 {
+    bool dosmode = (RESFACTOR == 1);
 /*
 **	Allocate the benchmark tracking objects only if the machine and
 **	compile flags indicate.
@@ -304,6 +307,13 @@ bool Init_Game(int, char*[])
     **	Initialize the animation system.
     */
     Anim_Init();
+
+    /*
+    **>-Initialize the interpolation table
+    */
+    if (!dosmode) {
+        InterpolationTable = new struct InterpolationTable();
+    }
 
 #ifdef MPEGMOVIE // Denzil 6/15/98
     if (Using_DVD()) {
@@ -967,7 +977,6 @@ bool Select_Game(bool fade)
 
                     PacketTransport = new UDPInterfaceClass;
                     assert(PacketTransport != NULL);
-#endif
 
                     WWDebugString("RA95 - About to call Init_Network.\n");
                     if (Session.Type == GAME_IPX && Init_Network() && Remote_Connect()) {
@@ -979,14 +988,15 @@ bool Select_Game(bool fade)
                         process = false;
                         Theme.Fade_Out();
                     } else { // user hit cancel, or init failed
+#endif
                         Session.Type = GAME_NORMAL;
                         display = true;
                         selection = SEL_NONE;
 #ifdef NETWORKING
                         delete PacketTransport;
                         PacketTransport = NULL;
-#endif
                     }
+#endif
                     break;
                 }
                 break;
@@ -1339,7 +1349,7 @@ bool Parse_Command_Line(int argc, char* argv[])
 
     for (int index = 1; index < argc; index++) {
         char* string; // Pointer to argument.
-        long code = 0;
+        int code = 0;
 
         char arg_string[512];
         int str_len = strlen(argv[index]);
@@ -1372,12 +1382,12 @@ bool Parse_Command_Line(int argc, char* argv[])
         }
 
         bool processed = true;
-        long ob = Obfuscate(string);
+        unsigned ob = unsigned(Obfuscate(string));
 
         /*
         **	Check to see if the parameter is a cheat enabling one.
         */
-        long const* optr = (const long*)&CheatCodes[0];
+        unsigned const* optr = &CheatCodes[0];
         while (*optr) {
             if (*optr++ == ob) {
                 Debug_Playtest = true;
@@ -1389,7 +1399,7 @@ bool Parse_Command_Line(int argc, char* argv[])
         /*
         **	Check to see if the parameter is a cheat enabling one.
         */
-        optr = (const long*)&PlayCodes[0];
+        optr = &PlayCodes[0];
         while (*optr) {
             if (*optr++ == ob) {
                 Debug_Playtest = true;
@@ -1402,7 +1412,7 @@ bool Parse_Command_Line(int argc, char* argv[])
         **	Check to see if the parameter is a scenario editor
         **	enabling one.
         */
-        optr = (const long*)&EditorCodes[0];
+        optr = &EditorCodes[0];
         while (*optr) {
             if (*optr++ == ob) {
                 Debug_Map = true;
@@ -1466,57 +1476,6 @@ bool Parse_Command_Line(int argc, char* argv[])
             UnitBuildPenalty = unit_rate;
         }
 #endif //(0)
-
-        /*
-        **	Specify destination connection for network play
-        */
-        if (strstr(string, "-DESTNET")) {
-            NetNumType net;
-            NetNodeType node;
-
-            /*
-            ** Scan the command-line string, pulling off each address piece
-            */
-            int i = 0;
-            char* p = strtok(string + 8, ".");
-            while (p) {
-                int x;
-
-                sscanf(p, "%x", &x); // convert from hex string to int
-                if (i < 4) {
-                    net[i] = (char)x; // fill NetNum
-                } else {
-                    node[i - 4] = (char)x; // fill NetNode
-                }
-                i++;
-                p = strtok(NULL, ".");
-            }
-
-            /*
-            ** If all the address components were successfully read, fill in the
-            ** BridgeNet with a broadcast address to the network across the bridge.
-            */
-            if (i >= 4) {
-                Session.IsBridge = 1;
-                memset(node, 0xff, 6);
-                Session.BridgeNet = IPXAddressClass(net, node);
-            }
-            continue;
-        }
-
-        /*
-        **	Specify socket ID, as an offset from 0x4000.
-        */
-        if (strstr(string, "-SOCKET")) {
-            unsigned short socket;
-
-            socket = (unsigned short)(atoi(string + strlen("SOCKET")));
-            socket += 0x4000;
-            if (socket >= 0x4000 && socket < 0x8000) {
-                Ipx.Set_Socket(socket);
-            }
-            continue;
-        }
 
         /*
         **	Set the Net Stealth option
@@ -1668,7 +1627,7 @@ bool Parse_Command_Line(int argc, char* argv[])
  * HISTORY:                                                                                    *
  *   08/19/1995 JLB : Created.                                                                 *
  *=============================================================================================*/
-long Obfuscate(char const* string)
+int Obfuscate(char const* string)
 {
     char buffer[1024];
 
@@ -1723,13 +1682,13 @@ long Obfuscate(char const* string)
     **	Transform the buffer into a number. This transformation is character
     **	order dependant.
     */
-    long code = Calculate_CRC(buffer, length);
+    int code = Calculate_CRC(buffer, length);
 
     /*
     **	Record a copy of this initial transformation to be used in a later
     **	self referential transformation.
     */
-    long copy = code;
+    int copy = code;
 
     /*
     **	Reverse the character string and combine with the previous transformation.
@@ -1756,7 +1715,7 @@ long Obfuscate(char const* string)
         unsigned char temp = (unsigned char)code;
         buffer[index] ^= temp;
         code >>= 8;
-        code |= (((long)temp) << 24);
+        code |= (((int)temp) << 24);
     }
 
     /*
@@ -2580,7 +2539,7 @@ static void Init_Mouse(void)
     ** Since there is no mouse shape currently available we need
     ** to set one of our own.
     */
-#if defined(_WIN32) && !defined(SDL2_BUILD)
+#if defined(_WIN32) && !defined(SDL_BUILD)
     ShowCursor(false);
 #endif
     if (MouseInstalled) {
@@ -2968,5 +2927,11 @@ void Free_Heaps(void)
     if (TheaterBuffer) {
         delete TheaterBuffer;
         TheaterBuffer = NULL;
+    }
+
+    /* Deallocate the interpolation table.  */
+    if (InterpolationTable) {
+        delete InterpolationTable;
+        InterpolationTable = NULL;
     }
 }

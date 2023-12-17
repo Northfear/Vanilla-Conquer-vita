@@ -53,7 +53,6 @@
 #include "lcwstraw.h"
 #include "vortex.h"
 #include "carry.h"
-#include "common/tcpip.h"
 
 #ifdef __vita__
 #include "common/paths.h"
@@ -379,7 +378,7 @@ bool Save_Game(const char* file_name, const char* descr)
     /*
     **	Open the file
     */
-    BufferIOFileClass file(file_name);
+    CDFileClass file(file_name);
 
     FilePipe fpipe(&file);
 #ifdef REMASTER_BUILD
@@ -412,7 +411,7 @@ bool Save_Game(const char* file_name, const char* descr)
     /*
     **	Save the save-game version, for loading verification
     */
-    unsigned long version = SAVEGAME_VERSION;
+    unsigned int version = SAVEGAME_VERSION;
 #ifdef FIXIT_CSII //	checked - ajw 9/28/98
     version++;
 #endif
@@ -537,7 +536,7 @@ bool Load_Game(const char* file_name)
     /*
     **	Open the file
     */
-    RawFileClass file(file_name);
+    CDFileClass file(file_name);
     if (!file.Is_Available()) {
         return (false);
     }
@@ -571,7 +570,7 @@ bool Load_Game(const char* file_name)
     /*
     **	Read in & verify the save-game ID code
     */
-    unsigned long version;
+    unsigned int version;
     if (fstraw.Get(&version, sizeof(version)) != sizeof(version)) {
         return (false);
     }
@@ -595,7 +594,7 @@ bool Load_Game(const char* file_name)
     **	Remember the file position since we must seek back here to
     **	perform the real saved game read.
     */
-    long pos = file.Seek(0, SEEK_CUR);
+    int pos = file.Seek(0, SEEK_CUR);
 
     /*
     **	Pass the rest of the file through the hash straw so that
@@ -1310,7 +1309,7 @@ void Code_All_Pointers(void)
     for (i = 0; i < SelectedObjectsType::COUNT; i++) {
         DynamicVectorClass<ObjectClass*>& selection = CurrentObject.Raw(i);
         for (j = 0; j < selection.Count(); j++) {
-            selection[j] = (ObjectClass*)selection[j]->As_Target();
+            selection[j] = (ObjectClass*)(intptr_t)selection[j]->As_Target();
         }
     }
 #ifdef REMASTER_BUILD
@@ -1450,21 +1449,14 @@ void Decode_All_Pointers(void)
 bool Get_Savefile_Info(int id, char* buf, unsigned* scenp, HousesType* housep)
 {
     char name[_MAX_FNAME + _MAX_EXT];
-    unsigned long version;
+    unsigned int version;
     char descr_buf[DESCRIP_MAX];
 
     /*
     **	Generate the filename to load
     */
-#ifdef __vita__
-    std::string savePath;
-    savePath = Paths.User_Path();
-    savePath.append("/SAVEGAME.%03d");
-    sprintf(name, savePath.c_str(), id);
-#else
     sprintf(name, "SAVEGAME.%03d", id);
-#endif
-    BufferIOFileClass file(name);
+    CDFileClass file(name);
 
     FileStraw straw(file);
 

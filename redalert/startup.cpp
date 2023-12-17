@@ -40,15 +40,13 @@
 #include "common/paths.h"
 #include "common/utfargs.h"
 
-#include "ipx95.h"
-
 extern char RedAlertINI[_MAX_PATH];
 
 bool Read_Private_Config_Struct(FileClass& file, NewConfigType* config);
 void Print_Error_End_Exit(char* string);
 void Print_Error_Exit(char* string);
 
-#ifdef SDL2_BUILD
+#ifdef SDL_BUILD
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 #endif
@@ -56,12 +54,10 @@ void Print_Error_Exit(char* string);
 #ifdef _WIN32
 #include <direct.h>
 #include "common/utf.h"
-#define vc_chdir(x) _wchdir(UTF8To16(x))
 extern void Create_Main_Window(HANDLE instance, int command_show, int width, int height);
 HINSTANCE ProgramInstance;
 #else
 #include <unistd.h>
-#define vc_chdir(x) chdir(x)
 #endif
 
 #ifdef __vita__
@@ -294,6 +290,8 @@ int main(int argc, char* argv[])
     //scePowerSetGpuClockFrequency(222);
     scePowerSetBusClockFrequency(222);
     scePowerSetGpuXbarClockFrequency(166);
+
+    chdir("ux0:data/VanillaRA");
 #endif
 
     UtfArgs args(argc, argv);
@@ -313,7 +311,6 @@ int main(int argc, char* argv[])
 #else
     Paths.Init("vanillara", CONFIG_FILE_NAME, "REDALERT.MIX", args.ArgV[0]);
 #endif
-    vc_chdir(Paths.Data_Path());
     CDFileClass::Refresh_Search_Drives();
 
     if (Parse_Command_Line(args.ArgC, args.ArgV)) {
@@ -361,7 +358,7 @@ int main(int argc, char* argv[])
 #endif
         Set_Resfactor_Globals(RESFACTOR);
 
-#if defined(_WIN32) && !defined(SDL2_BUILD)
+#if defined(_WIN32) && !defined(SDL_BUILD)
         /* WinMain seems to pass command_show to Create_Main_Window, but since we
         ** are not using WinMain anymore, we simply pass 0 to it. */
         Create_Main_Window(ProgramInstance, 0, ScreenWidth, ScreenHeight);
@@ -511,9 +508,11 @@ int main(int argc, char* argv[])
         HiddenPage.Clear();
         Memory_Error_Exit = Print_Error_Exit;
 
-#ifdef SDL2_BUILD
+#ifdef SDL_BUILD
         Reset_Video_Mode();
 #endif
+
+        Sound_End();
 
         /*
         ** Flag that this is a clean shutdown (not killed with Ctrl-Alt-Del)
@@ -523,7 +522,7 @@ int main(int argc, char* argv[])
         /*
         ** Post a message to our message handler to tell it to clean up.
         */
-#if defined(_WIN32) && !defined(SDL2_BUILD)
+#if defined(_WIN32) && !defined(SDL_BUILD)
         PostMessage(MainWindow, WM_DESTROY, 0, 0);
 
         /*
@@ -715,7 +714,7 @@ void Emergency_Exit(int code)
     /*
     ** Post a message to our message handler to tell it to clean up.
     */
-#ifdef SDL2_BUILD
+#ifdef SDL_BUILD
     SDL_Event sdlevent;
     sdlevent.type = SDL_QUIT;
     SDL_PushEvent(&sdlevent);
@@ -764,57 +763,6 @@ void Read_Setup_Options(RawFileClass* config_file)
     */
     VideoBackBufferAllowed = ini.Get_Bool("Options", "VideoBackBuffer", true);
     AllowHardwareBlitFills = ini.Get_Bool("Options", "HardwareFills", true);
-
-    /*
-    ** See if an alternative socket number has been specified
-    */
-    int socket = ini.Get_Int("Options", "Socket", 0);
-    if (socket > 0) {
-        socket += 0x4000;
-        if (socket >= 0x4000 && socket < 0x8000) {
-            Ipx.Set_Socket(socket);
-        }
-    }
-
-    /*
-    ** See if a destination network has been specified
-    */
-    char netbuf[512];
-    memset(netbuf, 0, sizeof(netbuf));
-    char* netptr = netbuf;
-    bool found = ini.Get_String("Options", "DestNet", NULL, netbuf, sizeof(netbuf));
-
-    if (found && netptr != NULL && strlen(netbuf)) {
-        NetNumType net;
-        NetNodeType node;
-
-        /*
-        ** Scan the string, pulling off each address piece
-        */
-        int i = 0;
-        char* p = strtok(netbuf, ".");
-        int x;
-        while (p != NULL) {
-            sscanf(p, "%x", &x); // convert from hex string to int
-            if (i < 4) {
-                net[i] = (char)x; // fill NetNum
-            } else {
-                node[i - 4] = (char)x; // fill NetNode
-            }
-            i++;
-            p = strtok(NULL, ".");
-        }
-
-        /*
-        ** If all the address components were successfully read, fill in the
-        ** BridgeNet with a broadcast address to the network across the bridge.
-        */
-        if (i >= 4) {
-            Session.IsBridge = 1;
-            memset(node, 0xff, 6);
-            Session.BridgeNet = IPXAddressClass(net, node);
-        }
-    }
 }
 
 void Get_OS_Version(void)

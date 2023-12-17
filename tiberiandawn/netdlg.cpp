@@ -91,7 +91,6 @@
 
 #include "function.h"
 #include <time.h>
-#include "common/tcpip.h"
 #include "framelimit.h"
 #define SHOW_MONO 0
 
@@ -176,16 +175,6 @@ bool Init_Network(void)
     ------------------------------------------------------------------------*/
     if (!MetaPacket) {
         MetaPacket = new char[sizeof(EventClass) * MAX_EVENTS];
-    }
-
-    /*------------------------------------------------------------------------
-    Set up the IPX manager to cross a bridge
-    ------------------------------------------------------------------------*/
-    if (!(GameToPlay == GAME_INTERNET)) {
-        if (IsBridge) {
-            BridgeNet.Get_Address(net, node);
-            Ipx.Set_Bridge(net);
-        }
     }
 
     return (true);
@@ -866,7 +855,7 @@ static int Net_Join_Dialog(void)
     unsigned char min_id;              // for sorting player ID's
     unsigned char id;                  // connection ID
     char* item;
-    unsigned long starttime;
+    unsigned int starttime;
 
     NodeNameType* who;
 
@@ -1476,11 +1465,6 @@ static int Net_Join_Dialog(void)
             Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, NULL);
             Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, NULL);
 
-            if (IsBridge) {
-                Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, &BridgeNet);
-                Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, &BridgeNet);
-            }
-
             while (Ipx.Global_Num_Send() > 0 && Ipx.Service() != 0)
                 ;
 
@@ -1569,8 +1553,8 @@ static int Net_Join_Dialog(void)
                 work properly.
                 ...............................................................*/
                 if (input == (BUTTON_SEND | KN_BUTTON)) {
-                input = KN_RETURN;
-            }
+                    input = KN_RETURN;
+                }
 
             /*...............................................................
             Manage the message system (get rid of old messages)
@@ -1602,7 +1586,7 @@ static int Net_Join_Dialog(void)
                     If 'input' returned 3, it means send the current message.
                     ...............................................................*/
                     if (i == 3) {
-                        long actual_message_size;
+                        int actual_message_size;
                         char* the_string;
 
                         sent_so_far = 0;
@@ -1760,27 +1744,27 @@ static int Net_Join_Dialog(void)
             automatically send out a player query for that game.
             .....................................................................*/
             if (event == EV_NEW_GAME && gamelist.Count() == 1) {
-            gamelist.Set_Selected_Index(0);
-            game_index = gamelist.Current_Index();
-            Send_Join_Queries(game_index, 0, 1);
-        } else
+                gamelist.Set_Selected_Index(0);
+                game_index = gamelist.Current_Index();
+                Send_Join_Queries(game_index, 0, 1);
+            } else
 
-            /*.....................................................................
+                /*.....................................................................
             If the game options have changed, print them.
             .....................................................................*/
-            if (event == EV_GAME_OPTIONS) {
-            parms_received = 1;
-            display = REDRAW_MESSAGE;
-        } else
+                if (event == EV_GAME_OPTIONS) {
+                    parms_received = 1;
+                    display = REDRAW_MESSAGE;
+                } else
 
-            /*.....................................................................
+                    /*.....................................................................
             Draw an incoming message
             .....................................................................*/
-            if (event == EV_MESSAGE) {
-            display = REDRAW_MESSAGE;
-        } else
+                    if (event == EV_MESSAGE) {
+                        display = REDRAW_MESSAGE;
+                    } else
 
-            /*.....................................................................
+                        /*.....................................................................
             A game before the one I've selected is gone, so we have a new index now.
             'game_index' must be kept set to the currently-selected list item, so
             we send out queries for the currently-selected game.  It's therefore
@@ -1788,18 +1772,18 @@ static int Net_Join_Dialog(void)
             If we're joined in a game, we must decrement our game_index to keep
             it aligned with the game we're joined to.
             .....................................................................*/
-            if (event == EV_GAME_SIGNOFF) {
-            if (joinstate == JOIN_CONFIRMED) {
-                game_index--;
-                join_index--;
-                gamelist.Set_Selected_Index(join_index);
-            } else {
-                gamelist.Flag_To_Redraw();
-                Clear_Player_List(&playerlist);
-                game_index = gamelist.Current_Index();
-                Send_Join_Queries(game_index, 0, 1);
-            }
-        }
+                        if (event == EV_GAME_SIGNOFF) {
+                            if (joinstate == JOIN_CONFIRMED) {
+                                game_index--;
+                                join_index--;
+                                gamelist.Set_Selected_Index(join_index);
+                            } else {
+                                gamelist.Flag_To_Redraw();
+                                Clear_Player_List(&playerlist);
+                                game_index = gamelist.Current_Index();
+                                Send_Join_Queries(game_index, 0, 1);
+                            }
+                        }
 
         /*---------------------------------------------------------------------
         Service the Ipx connections
@@ -1878,11 +1862,6 @@ static int Net_Join_Dialog(void)
             Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, NULL);
             Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, NULL);
 
-            if (IsBridge) {
-                Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, &BridgeNet);
-                Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, &BridgeNet);
-            }
-
             while (Ipx.Global_Num_Send() > 0 && Ipx.Service() != 0)
                 ;
 
@@ -1899,7 +1878,7 @@ static int Net_Join_Dialog(void)
             /*..................................................................
             Get the scenario number
             ..................................................................*/
-            Scenario = MPlayerFilenum[ScenarioIdx];
+            Scen.Scenario = MPlayerFilenum[ScenarioIdx];
 
             /*..................................................................
             Form connections with all other players.  Form the IPX Connection ID
@@ -1956,7 +1935,7 @@ static int Net_Join_Dialog(void)
         a chance to get to the other system.  If he doesn't get our ACK, he'll
         be waiting the whole time we load MIX files.
         ---------------------------------------------------------------------*/
-        i = MAX(Ipx.Global_Response_Time() * 2, (unsigned long)60);
+        i = MAX(Ipx.Global_Response_Time() * 2, (unsigned int)60);
         starttime = WinTickCount.Time();
         while (WinTickCount.Time() - starttime < (unsigned)i) {
             Ipx.Service();
@@ -2217,13 +2196,6 @@ static void Send_Join_Queries(int curgame, int gamenow, int playernow)
         GPacket.Command = NET_QUERY_GAME;
 
         Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, NULL);
-
-        /*.....................................................................
-        If the user specified a remote server address, broadcast over that
-        network, too.
-        .....................................................................*/
-        if (IsBridge)
-            Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, &BridgeNet);
     }
 
     /*------------------------------------------------------------------------
@@ -2240,13 +2212,6 @@ static void Send_Join_Queries(int curgame, int gamenow, int playernow)
         strcpy(GPacket.Name, Games[curgame]->Name);
 
         Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, NULL);
-
-        /*.....................................................................
-        If the user specified a remote server address, broadcast over that
-        network, too.
-        .....................................................................*/
-        if (IsBridge)
-            Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, &BridgeNet);
     }
 
 } /* end of Send_Join_Queries */
@@ -2483,11 +2448,6 @@ Get_Join_Responses(JoinStateType* joinstate, ListClass* gamelist, ColorListClass
             Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, NULL);
             Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, NULL);
 
-            if (IsBridge) {
-                Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, &BridgeNet);
-                Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, &BridgeNet);
-            }
-
             while (Ipx.Global_Num_Send() > 0 && Ipx.Service() != 0)
                 ;
 
@@ -2523,15 +2483,10 @@ Get_Join_Responses(JoinStateType* joinstate, ListClass* gamelist, ColorListClass
                 Special.IsTSpread = 0;
             }
 
-            if (Winsock.Get_Connected()) {
-                ScenarioIdx = GPacket.ScenarioInfo.Scenario;
-            } else {
-
-                ScenarioIdx = -1;
-                for (i = 0; i < MPlayerFilenum.Count(); i++) {
-                    if (GPacket.ScenarioInfo.Scenario == MPlayerFilenum[i])
-                        ScenarioIdx = i;
-                }
+            ScenarioIdx = -1;
+            for (i = 0; i < MPlayerFilenum.Count(); i++) {
+                if (GPacket.ScenarioInfo.Scenario == MPlayerFilenum[i])
+                    ScenarioIdx = i;
             }
 
             retcode = EV_GAME_OPTIONS;
@@ -2854,14 +2809,14 @@ static int Net_New_Dialog(void)
     int old_cred;                 // old value in credits buffer
     int transmit;                 // 1 = re-transmit new game options
 
-    long ok_timer = 0; // for timing OK button
-    int index;         // index for rejecting a player
+    int ok_timer = 0; // for timing OK button
+    int index;        // index for rejecting a player
     int rc;
     int i, j;
     char* item;
     int tabs[] = {77 * factor}; // tabs for player list box
 
-    long ping_timer = 0; // for sending Ping packets
+    int ping_timer = 0; // for sending Ping packets
 
     unsigned char tmp_id[MAX_PLAYERS]; // temp storage for sorting player ID's
     int min_index;                     // for sorting player ID's
@@ -3094,9 +3049,8 @@ static int Net_New_Dialog(void)
     Init random-number generator, & create a seed to be used for all random
     numbers from here on out
     ........................................................................*/
-    // ST - 12/18/2018 11:37AM
-    // randomize();
-    // Seed = rand();
+    srand(time(NULL));
+    Seed = rand();
 
     /*........................................................................
     Init the message display system
@@ -3478,7 +3432,7 @@ static int Net_New_Dialog(void)
             an OK; force a wait longer than 1 second (to give all players
             a chance to know about this new guy)
             ...............................................................*/
-            i = MAX(Ipx.Global_Response_Time() * 2, (unsigned long)60);
+            i = MAX(Ipx.Global_Response_Time() * 2, (unsigned int)60);
             while (WinTickCount.Time() - ok_timer < i)
                 Ipx.Service();
 
@@ -3489,7 +3443,7 @@ static int Net_New_Dialog(void)
                 rc = true;
                 process = false;
             } else {
-                WWMessageBox().Process(TXT_ONLY_ONE, TXT_OOPS, NULL);
+                WWMessageBox().Process(TXT_ONLY_ONE, TXT_OOPS);
                 display = REDRAW_ALL;
             }
             break;
@@ -3515,16 +3469,6 @@ static int Net_New_Dialog(void)
             ...............................................................*/
             Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, NULL);
             Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, NULL);
-            while (Ipx.Global_Num_Send() > 0 && Ipx.Service() != 0)
-                ;
-
-            /*...............................................................
-            Broadcast my sign-off over a bridged network if there is one
-            ...............................................................*/
-            if (IsBridge) {
-                Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, &BridgeNet);
-                Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, &BridgeNet);
-            }
             while (Ipx.Global_Num_Send() > 0 && Ipx.Service() != 0)
                 ;
 
@@ -3617,7 +3561,7 @@ static int Net_New_Dialog(void)
             If 'input' returned 3, it means send the current message.
             ...............................................................*/
             else if (i == 3) {
-                long actual_message_size;
+                int actual_message_size;
                 char* the_string;
 
                 sent_so_far = 0;
@@ -3774,14 +3718,14 @@ static int Net_New_Dialog(void)
         /*.....................................................................
         Get the scenario filename
         .....................................................................*/
-        Scenario = MPlayerFilenum[ScenarioIdx];
+        Scen.Scenario = MPlayerFilenum[ScenarioIdx];
 
         /*.....................................................................
         Compute frame delay value for packet transmissions:
         - Divide global channel's response time by 8 (2 to convert to 1-way
           value, 4 more to convert from ticks to frames)
         .....................................................................*/
-        MPlayerMaxAhead = MAX((Ipx.Global_Response_Time() / 8), (unsigned long)2);
+        MPlayerMaxAhead = MAX((Ipx.Global_Response_Time() / 8), (unsigned int)2);
 
         /*.....................................................................
         Send all players the NET_GO packet.  Wait until all ACK's have been
@@ -3921,7 +3865,7 @@ static JoinEventType Get_NewGame_Responses(ColorListClass* playerlist)
         NET_QUERY_JOIN:
         ------------------------------------------------------------------------*/
         if (GPacket.Command == NET_QUERY_JOIN) {
-        /*.....................................................................
+            /*.....................................................................
         See if this name is unique:
         - If the name matches, but the address is different, reject this player
         - If the name & address match, this packet must be a re-send of a
@@ -3929,133 +3873,133 @@ static JoinEventType Get_NewGame_Responses(ColorListClass* playerlist)
           received my CONFIRM_JOIN packet (since it was sent with an ACK
           required), so we can ignore this resend.
         .....................................................................*/
-        found = 0;
-        resend = 0;
-        for (i = 0; i < Players.Count(); i++) {
-            if (!strcmp(Players[i]->Name, GPacket.Name)) {
-                if (Players[i]->Address != GAddress) {
-                    found = 1;
-                } else {
-                    resend = 1;
+            found = 0;
+            resend = 0;
+            for (i = 0; i < Players.Count(); i++) {
+                if (!strcmp(Players[i]->Name, GPacket.Name)) {
+                    if (Players[i]->Address != GAddress) {
+                        found = 1;
+                    } else {
+                        resend = 1;
+                    }
+                    break;
                 }
-                break;
             }
-        }
-        if (!strcmp(MPlayerName, GPacket.Name)) {
-            found = 1;
-        }
+            if (!strcmp(MPlayerName, GPacket.Name)) {
+                found = 1;
+            }
 
-        /*.....................................................................
+            /*.....................................................................
         Reject if name is a duplicate, or if there are too many players:
         .....................................................................*/
-        if (found || (Players.Count() >= (MPlayerMax - 1) && !resend)) {
-            memset(&GPacket, 0, sizeof(GlobalPacketType));
+            if (found || (Players.Count() >= (MPlayerMax - 1) && !resend)) {
+                memset(&GPacket, 0, sizeof(GlobalPacketType));
 
-            GPacket.Command = NET_REJECT_JOIN;
+                GPacket.Command = NET_REJECT_JOIN;
 
-            Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 1, &GAddress);
-        }
+                Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 1, &GAddress);
+            }
 
-        /*.....................................................................
+            /*.....................................................................
         If this packet is NOT a resend, accept the player.  Grant him the
         requested color if possible.
         .....................................................................*/
-        else if (!resend) {
-            /*..................................................................
+            else if (!resend) {
+                /*..................................................................
             Add node to the Vector list
             ..................................................................*/
-            who = new NodeNameType;
-            strcpy(who->Name, GPacket.Name);
-            who->Address = GAddress;
-            who->Player.House = GPacket.PlayerInfo.House;
-            Players.Add(who);
+                who = new NodeNameType;
+                strcpy(who->Name, GPacket.Name);
+                who->Address = GAddress;
+                who->Player.House = GPacket.PlayerInfo.House;
+                Players.Add(who);
 
-            /*..................................................................
+                /*..................................................................
             Set player's color; if requested color isn't used, give it to him;
             otherwise, give him the 1st available color.  Mark the color we
             give him as used.
             ..................................................................*/
-            if (ColorUsed[GPacket.PlayerInfo.Color] == 0) {
-                who->Player.Color = GPacket.PlayerInfo.Color;
-            } else {
-                for (i = 0; i < MAX_MPLAYER_COLORS; i++) {
-                    if (ColorUsed[i] == 0) {
-                        who->Player.Color = i;
-                        break;
+                if (ColorUsed[GPacket.PlayerInfo.Color] == 0) {
+                    who->Player.Color = GPacket.PlayerInfo.Color;
+                } else {
+                    for (i = 0; i < MAX_MPLAYER_COLORS; i++) {
+                        if (ColorUsed[i] == 0) {
+                            who->Player.Color = i;
+                            break;
+                        }
                     }
                 }
-            }
-            ColorUsed[who->Player.Color] = 1;
+                ColorUsed[who->Player.Color] = 1;
 
-            /*..................................................................
+                /*..................................................................
             Add player name to the list box
             ..................................................................*/
-            item = new char[MPLAYER_NAME_MAX + 4];
-            if (GPacket.PlayerInfo.House == HOUSE_GOOD) {
-                sprintf(item, "%s\t%s", GPacket.Name, Text_String(TXT_G_D_I));
-            } else {
-                sprintf(item, "%s\t%s", GPacket.Name, Text_String(TXT_N_O_D));
-            }
-            playerlist->Add_Item(item, MPlayerTColors[who->Player.Color]);
+                item = new char[MPLAYER_NAME_MAX + 4];
+                if (GPacket.PlayerInfo.House == HOUSE_GOOD) {
+                    sprintf(item, "%s\t%s", GPacket.Name, Text_String(TXT_G_D_I));
+                } else {
+                    sprintf(item, "%s\t%s", GPacket.Name, Text_String(TXT_N_O_D));
+                }
+                playerlist->Add_Item(item, MPlayerTColors[who->Player.Color]);
 
-            /*..................................................................
+                /*..................................................................
             Send a confirmation packet
             ..................................................................*/
-            memset(&GPacket, 0, sizeof(GlobalPacketType));
+                memset(&GPacket, 0, sizeof(GlobalPacketType));
 
-            GPacket.Command = NET_CONFIRM_JOIN;
-            strcpy(GPacket.Name, MPlayerName);
-            GPacket.PlayerInfo.House = who->Player.House;
-            GPacket.PlayerInfo.Color = who->Player.Color;
+                GPacket.Command = NET_CONFIRM_JOIN;
+                strcpy(GPacket.Name, MPlayerName);
+                GPacket.PlayerInfo.House = who->Player.House;
+                GPacket.PlayerInfo.Color = who->Player.Color;
 
-            Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 1, &GAddress);
+                Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 1, &GAddress);
 
-            retval = EV_NEW_PLAYER;
+                retval = EV_NEW_PLAYER;
+            }
         }
-    }
 
-    /*------------------------------------------------------------------------
+        /*------------------------------------------------------------------------
     NET_SIGN_OFF: Another system is signing off: search for that system in
     the player list, & remove it if found
     ------------------------------------------------------------------------*/
-    else if (GPacket.Command == NET_SIGN_OFF) {
-        for (i = 0; i < Players.Count(); i++) {
-            /*
+        else if (GPacket.Command == NET_SIGN_OFF) {
+            for (i = 0; i < Players.Count(); i++) {
+                /*
             ....................... Name found; remove it ......................
             */
-            if (!strcmp(Players[i]->Name, GPacket.Name) && Players[i]->Address == GAddress) {
-                /*...............................................................
+                if (!strcmp(Players[i]->Name, GPacket.Name) && Players[i]->Address == GAddress) {
+                    /*...............................................................
                 Remove from the list box
                 ...............................................................*/
-                item = (char*)(playerlist->Get_Item(i + 1));
-                playerlist->Remove_Item(item);
-                playerlist->Flag_To_Redraw();
-                delete[] item;
-                /*...............................................................
+                    item = (char*)(playerlist->Get_Item(i + 1));
+                    playerlist->Remove_Item(item);
+                    playerlist->Flag_To_Redraw();
+                    delete[] item;
+                    /*...............................................................
                 Mark his color as available
                 ...............................................................*/
-                ColorUsed[Players[i]->Player.Color] = 0;
-                /*...............................................................
+                    ColorUsed[Players[i]->Player.Color] = 0;
+                    /*...............................................................
                 Delete from the Vector list
                 ...............................................................*/
-                Players.Delete(Players[i]);
-                break;
+                    Players.Delete(Players[i]);
+                    break;
+                }
             }
         }
-    }
 
-    /*------------------------------------------------------------------------
+        /*------------------------------------------------------------------------
     NET_MESSAGE: Someone is sending us a message
     ------------------------------------------------------------------------*/
-    else if (GPacket.Command == NET_MESSAGE) {
-        sprintf(txt, Text_String(TXT_FROM), GPacket.Name, GPacket.Message.Buf);
-        magic_number = *((unsigned short*)(GPacket.Message.Buf + COMPAT_MESSAGE_LENGTH - 4));
-        crc = *((unsigned short*)(GPacket.Message.Buf + COMPAT_MESSAGE_LENGTH - 2));
-        color = MPlayerID_To_ColorIndex(GPacket.Message.ID);
-        Messages.Add_Message(
-            txt, MPlayerTColors[color], TPF_6PT_GRAD | TPF_USE_GRAD_PAL | TPF_FULLSHADOW, 1200, magic_number, crc);
-        retval = EV_MESSAGE;
-    }
+        else if (GPacket.Command == NET_MESSAGE) {
+            sprintf(txt, Text_String(TXT_FROM), GPacket.Name, GPacket.Message.Buf);
+            magic_number = *((unsigned short*)(GPacket.Message.Buf + COMPAT_MESSAGE_LENGTH - 4));
+            crc = *((unsigned short*)(GPacket.Message.Buf + COMPAT_MESSAGE_LENGTH - 2));
+            color = MPlayerID_To_ColorIndex(GPacket.Message.ID);
+            Messages.Add_Message(
+                txt, MPlayerTColors[color], TPF_6PT_GRAD | TPF_USE_GRAD_PAL | TPF_FULLSHADOW, 1200, magic_number, crc);
+            retval = EV_MESSAGE;
+        }
 
     return (retval);
 }
@@ -4110,7 +4054,7 @@ uint32_t Compute_Name_CRC(char* name)
  * HISTORY:                                                                *
  *   07/08/1995 BRR : Created.                                             *
  *=========================================================================*/
-void Net_Reconnect_Dialog(int reconn, int fresh, int oldest_index, unsigned long timeval)
+void Net_Reconnect_Dialog(int reconn, int fresh, int oldest_index, unsigned int timeval)
 {
     static int x, y, w, h;
     int id;
@@ -4334,13 +4278,13 @@ static int Net_Fake_New_Dialog(void)
     int old_cred;                 // old value in credits buffer
     int transmit;                 // 1 = re-transmit new game options
 
-    long ok_timer = 0; // for timing OK button
+    int ok_timer = 0; // for timing OK button
     int rc;
     int i, j;
     char* item;
     int tabs[] = {77 * factor}; // tabs for player list box
 
-    long ping_timer = 0; // for sending Ping packets
+    int ping_timer = 0; // for sending Ping packets
 
     unsigned char tmp_id[MAX_PLAYERS]; // temp storage for sorting player ID's
     int min_index;                     // for sorting player ID's
@@ -4614,7 +4558,7 @@ static int Net_Fake_New_Dialog(void)
                 an OK; force a wait longer than 2 seconds (to give all players
                 a chance to know about this new guy)
                 ...............................................................*/
-                i = MAX(Ipx.Global_Response_Time() * 2, (unsigned long)120);
+                i = MAX(Ipx.Global_Response_Time() * 2, (unsigned int)120);
                 while (WinTickCount.Time() - ok_timer < i)
                     Ipx.Service();
 
@@ -4625,7 +4569,7 @@ static int Net_Fake_New_Dialog(void)
                     rc = true;
                     process = false;
                 } else {
-                    WWMessageBox().Process(TXT_ONLY_ONE, TXT_OOPS, NULL);
+                    WWMessageBox().Process(TXT_ONLY_ONE, TXT_OOPS);
                     display = REDRAW_ALL;
                 }
             }
@@ -4712,15 +4656,16 @@ static int Net_Fake_New_Dialog(void)
         /*.....................................................................
         Get the scenario filename
         .....................................................................*/
-        Scenario = ScenarioIdx; // PlayerFilenum[ScenarioIdx]; We are passed actual number now from wchat not index from
-        // Scenario = MPlayerFilenum[ScenarioIdx];
+        Scen.Scenario =
+            ScenarioIdx; // PlayerFilenum[ScenarioIdx]; We are passed actual number now from wchat not index from
+        // Scen.Scenario = MPlayerFilenum[ScenarioIdx];
 
         /*.....................................................................
         Compute frame delay value for packet transmissions:
         - Divide global channel's response time by 8 (2 to convert to 1-way
           value, 4 more to convert from ticks to frames)
         .....................................................................*/
-        MPlayerMaxAhead = MAX((Ipx.Global_Response_Time() / 8), (unsigned long)2);
+        MPlayerMaxAhead = MAX((Ipx.Global_Response_Time() / 8), (unsigned int)2);
 
         /*.....................................................................
         Send all players the NET_GO packet.  Wait until all ACK's have been
@@ -4946,7 +4891,7 @@ static int Net_Fake_Join_Dialog(void)
     unsigned char min_id;              // for sorting player ID's
     unsigned char id;                  // connection ID
     char* item;
-    unsigned long starttime;
+    unsigned int starttime;
 
     NodeNameType* who;
 
@@ -5155,11 +5100,6 @@ static int Net_Fake_Join_Dialog(void)
             Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, NULL);
             Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, NULL);
 
-            if (IsBridge) {
-                Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, &BridgeNet);
-                Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, &BridgeNet);
-            }
-
             while (Ipx.Global_Num_Send() > 0 && Ipx.Service() != 0)
                 ;
 
@@ -5276,27 +5216,27 @@ static int Net_Fake_Join_Dialog(void)
             automatically send out a player query for that game.
             .....................................................................*/
             if (event == EV_NEW_GAME && gamelist.Count() == 1) {
-            gamelist.Set_Selected_Index(0);
-            game_index = gamelist.Current_Index();
-            Send_Join_Queries(game_index, 0, 1);
-        } else
+                gamelist.Set_Selected_Index(0);
+                game_index = gamelist.Current_Index();
+                Send_Join_Queries(game_index, 0, 1);
+            } else
 
-            /*.....................................................................
+                /*.....................................................................
             If the game options have changed, print them.
             .....................................................................*/
-            if (event == EV_GAME_OPTIONS) {
-            parms_received = 1;
-            display = REDRAW_MESSAGE;
-        } else
+                if (event == EV_GAME_OPTIONS) {
+                    parms_received = 1;
+                    display = REDRAW_MESSAGE;
+                } else
 
-            /*.....................................................................
+                    /*.....................................................................
             Draw an incoming message
             .....................................................................*/
-            if (event == EV_MESSAGE) {
-            display = REDRAW_MESSAGE;
-        } else
+                    if (event == EV_MESSAGE) {
+                        display = REDRAW_MESSAGE;
+                    } else
 
-            /*.....................................................................
+                        /*.....................................................................
             A game before the one I've selected is gone, so we have a new index now.
             'game_index' must be kept set to the currently-selected list item, so
             we send out queries for the currently-selected game.  It's therefore
@@ -5304,18 +5244,18 @@ static int Net_Fake_Join_Dialog(void)
             If we're joined in a game, we must decrement our game_index to keep
             it aligned with the game we're joined to.
             .....................................................................*/
-            if (event == EV_GAME_SIGNOFF) {
-            if (joinstate == JOIN_CONFIRMED) {
-                game_index--;
-                join_index--;
-                gamelist.Set_Selected_Index(join_index);
-            } else {
-                gamelist.Flag_To_Redraw();
-                Clear_Player_List(&playerlist);
-                game_index = gamelist.Current_Index();
-                Send_Join_Queries(game_index, 0, 1);
-            }
-        }
+                        if (event == EV_GAME_SIGNOFF) {
+                            if (joinstate == JOIN_CONFIRMED) {
+                                game_index--;
+                                join_index--;
+                                gamelist.Set_Selected_Index(join_index);
+                            } else {
+                                gamelist.Flag_To_Redraw();
+                                Clear_Player_List(&playerlist);
+                                game_index = gamelist.Current_Index();
+                                Send_Join_Queries(game_index, 0, 1);
+                            }
+                        }
 
         /*---------------------------------------------------------------------
         Service the Ipx connections
@@ -5402,11 +5342,6 @@ static int Net_Fake_Join_Dialog(void)
             Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, NULL);
             Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, NULL);
 
-            if (IsBridge) {
-                Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, &BridgeNet);
-                Ipx.Send_Global_Message(&GPacket, sizeof(GlobalPacketType), 0, &BridgeNet);
-            }
-
             while (Ipx.Global_Num_Send() > 0 && Ipx.Service() != 0)
                 ;
 
@@ -5423,7 +5358,7 @@ static int Net_Fake_Join_Dialog(void)
             /*..................................................................
             Get the scenario number
             ..................................................................*/
-            Scenario =
+            Scen.Scenario =
                 ScenarioIdx; // PlayerFilenum[ScenarioIdx]; We are passed actual number now from wchat not index from
 
             /*..................................................................
@@ -5496,7 +5431,7 @@ static int Net_Fake_Join_Dialog(void)
         a chance to get to the other system.  If he doesn't get our ACK, he'll
         be waiting the whole time we load MIX files.
         ---------------------------------------------------------------------*/
-        i = MAX(Ipx.Global_Response_Time() * 2, (unsigned long)120);
+        i = MAX(Ipx.Global_Response_Time() * 2, (unsigned int)120);
         starttime = WinTickCount.Time();
         while (WinTickCount.Time() - starttime < (unsigned)i) {
             Ipx.Service();

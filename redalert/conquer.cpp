@@ -70,11 +70,9 @@
 #include "keyframe.h"
 #include "language.h"
 
-#ifdef WINSOCK_IPX
+#ifdef NETWORKING
 #include "wsproto.h"
-#else // WINSOCK_IPX
-#include "common/tcpip.h"
-#endif // WINSOCK_IPX
+#endif // NETWORKING
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -82,9 +80,11 @@
 #include "interpal.h"
 #include "vortex.h"
 #include "common/framelimit.h"
+#include "common/paths.h"
 #include "common/vqatask.h"
 #include "common/vqaloader.h"
 #include "common/settings.h"
+#include "common/winasm.h"
 
 #ifdef MPEGMOVIE
 #ifdef MCIMPEG
@@ -939,8 +939,8 @@ void Toggle_Formation(void)
             obj->Mark(MARK_CHANGE);
             if (setform) {
                 TeamFormDataStruct& team_form_data = TeamFormData[obj->Owner()];
-                long xc = Cell_X(Coord_Cell(obj->Center_Coord()));
-                long yc = Cell_Y(Coord_Cell(obj->Center_Coord()));
+                int xc = Cell_X(Coord_Cell(obj->Center_Coord()));
+                int yc = Cell_Y(Coord_Cell(obj->Center_Coord()));
                 if (xc < minx)
                     minx = xc;
                 if (xc > maxx)
@@ -965,8 +965,8 @@ void Toggle_Formation(void)
             obj->Mark(MARK_CHANGE);
             if (setform) {
                 TeamFormDataStruct& team_form_data = TeamFormData[obj->Owner()];
-                long xc = Cell_X(Coord_Cell(obj->Center_Coord()));
-                long yc = Cell_Y(Coord_Cell(obj->Center_Coord()));
+                int xc = Cell_X(Coord_Cell(obj->Center_Coord()));
+                int yc = Cell_Y(Coord_Cell(obj->Center_Coord()));
                 if (xc < minx)
                     minx = xc;
                 if (xc > maxx)
@@ -990,8 +990,8 @@ void Toggle_Formation(void)
             obj->Mark(MARK_CHANGE);
             if (setform) {
                 TeamFormDataStruct& team_form_data = TeamFormData[obj->Owner()];
-                long xc = Cell_X(Coord_Cell(obj->Center_Coord()));
-                long yc = Cell_Y(Coord_Cell(obj->Center_Coord()));
+                int xc = Cell_X(Coord_Cell(obj->Center_Coord()));
+                int yc = Cell_Y(Coord_Cell(obj->Center_Coord()));
                 if (xc < minx)
                     minx = xc;
                 if (xc > maxx)
@@ -1021,8 +1021,8 @@ void Toggle_Formation(void)
         for (index = 0; index < Units.Count(); index++) {
             UnitClass* obj = Units.Ptr(index);
             if (obj && !obj->IsInLimbo && obj->House == PlayerPtr && obj->Group == team) {
-                long xc = Cell_X(Coord_Cell(obj->Center_Coord()));
-                long yc = Cell_Y(Coord_Cell(obj->Center_Coord()));
+                int xc = Cell_X(Coord_Cell(obj->Center_Coord()));
+                int yc = Cell_Y(Coord_Cell(obj->Center_Coord()));
 
                 obj->XFormOffset = xc - centerx;
                 obj->YFormOffset = yc - centery;
@@ -1032,8 +1032,8 @@ void Toggle_Formation(void)
         for (index = 0; index < Infantry.Count(); index++) {
             InfantryClass* obj = Infantry.Ptr(index);
             if (obj && !obj->IsInLimbo && obj->House == PlayerPtr && obj->Group == team) {
-                long xc = Cell_X(Coord_Cell(obj->Center_Coord()));
-                long yc = Cell_Y(Coord_Cell(obj->Center_Coord()));
+                int xc = Cell_X(Coord_Cell(obj->Center_Coord()));
+                int yc = Cell_Y(Coord_Cell(obj->Center_Coord()));
 
                 obj->XFormOffset = xc - centerx;
                 obj->YFormOffset = yc - centery;
@@ -1043,8 +1043,8 @@ void Toggle_Formation(void)
         for (index = 0; index < Vessels.Count(); index++) {
             VesselClass* obj = Vessels.Ptr(index);
             if (obj && !obj->IsInLimbo && obj->House == PlayerPtr && obj->Group == team) {
-                long xc = Cell_X(Coord_Cell(obj->Center_Coord()));
-                long yc = Cell_Y(Coord_Cell(obj->Center_Coord()));
+                int xc = Cell_X(Coord_Cell(obj->Center_Coord()));
+                int yc = Cell_Y(Coord_Cell(obj->Center_Coord()));
 
                 obj->XFormOffset = xc - centerx;
                 obj->YFormOffset = yc - centery;
@@ -1107,6 +1107,7 @@ static void Message_Input(KeyNumType& input)
                 Map.Flag_To_Redraw(false);
             }
         } else if ((Session.Type == GAME_IPX || Session.Type == GAME_INTERNET) && !Session.Messages.Is_Edit()) {
+#ifdef NETWORKING
             /*
             **	For a network game:
             **	F1-F7 = "To <name> (house):" (only allowed if we're not in ObiWan mode)
@@ -1132,6 +1133,7 @@ static void Message_Input(KeyNumType& input)
 
                 Map.Flag_To_Redraw(false);
             }
+#endif
         }
     }
 
@@ -1167,7 +1169,7 @@ static void Message_Input(KeyNumType& input)
     **	Send a message
     */
     if ((rc == 3 || rc == 4) && Session.Type != GAME_NORMAL && Session.Type != GAME_SKIRMISH) {
-#ifndef REMASTER_BUILD
+#ifdef NETWORKING
         /*
         **	Serial game: fill in a SerialPacketType & send it.
         **	(Note: The size of the SerialPacketType.Command must be the same as
@@ -1388,7 +1390,7 @@ void Call_Back(void)
 
 void IPX_Call_Back(void)
 {
-#ifndef REMASTER_BUILD // PG
+#ifdef NETWORKING // PG
     Ipx.Service();
 
     /*
@@ -2133,10 +2135,10 @@ void Go_Editor(bool flag)
  * HISTORY:                                                                                    *
  *   07/04/1995 JLB : Created.                                                                 *
  *=============================================================================================*/
-long MixFileHandler(VQAHandle* vqa, long action, void* buffer, long nbytes)
+int MixFileHandler(VQAHandle* vqa, int action, void* buffer, int nbytes)
 {
     CCFileClass* file;
-    long error;
+    int error;
 
     file = (CCFileClass*)vqa->VQAio;
 
@@ -2268,6 +2270,11 @@ int Load_Interpolated_Palettes(char const* filename, bool add)
     int i;
     int start_palette;
 
+    if (!InterpolationTable) {
+        /* DOSMode should not interpolate anything. Don't allocate memory.  */
+        return 0;
+    }
+
     PalettesRead = false;
     CCFileClass file(filename);
 
@@ -2295,6 +2302,7 @@ int Load_Interpolated_Palettes(char const* filename, bool add)
 
         file.Open(READ);
         file.Read(&num_palettes, 4);
+        num_palettes = le32toh(num_palettes);
 
         for (i = 0; i < num_palettes; i++) {
             InterpolatedPalettes[i + start_palette] = (unsigned char*)malloc(65536);
@@ -2315,6 +2323,11 @@ int Load_Interpolated_Palettes(char const* filename, bool add)
 
 void Free_Interpolated_Palettes(void)
 {
+    if (!InterpolationTable) {
+        /* DOSMode should not interpolate anything.  */
+        return;
+    }
+
     for (int i = 0; i < ARRAY_SIZE(InterpolatedPalettes); i++) {
         if (InterpolatedPalettes[i]) {
             free(InterpolatedPalettes[i]);
@@ -3341,7 +3354,7 @@ void Check_VQ_Palette_Set(void);
 
 extern GraphicBufferClass VQ640;
 extern bool IsVQ640;
-long VQ_Call_Back(unsigned char*, long)
+int VQ_Call_Back(unsigned char*, int)
 {
 #ifdef REMASTER_BUILD
     return 0;
@@ -3863,32 +3876,28 @@ static bool Change_Local_Dir(int cd)
 {
     static bool _initialised = false;
     static unsigned _detected = 0;
-#ifdef __vita__
-    static const char* _vol_labels[CD_COUNT] = {"ux0:data/VanillaRA/allied",
-                                                "ux0:data/VanillaRA/soviet",
-                                                "ux0:data/VanillaRA/counterstrike",
-                                                "ux0:data/VanillaRA/aftermath",
-                                                "ux0:data/VanillaRA"};
-    char vol_buff[64];
-#else
     static const char* _vol_labels[CD_COUNT] = {"allied", "soviet", "counterstrike", "aftermath", "."};
-    char vol_buff[16];
-#endif
+    std::string paths[3] = {Paths.User_Path(), Paths.Data_Path(), Paths.Program_Path()};
 
     // Detect which if any of the discs have had their data copied to an appropriate local folder.
     if (!_initialised) {
         for (int i = 0; i < CD_COUNT; ++i) {
-            RawFileClass vol(_vol_labels[i]);
+            for (int j = 0; j < 3; ++j) {
+                std::string path = Paths.Concatenate_Paths(paths[j].c_str(), _vol_labels[i]);
+                RawFileClass vol(path.c_str());
 
-            if (vol.Is_Directory()) {
-                CDFileClass::Refresh_Search_Drives();
-                snprintf(vol_buff, sizeof(vol_buff), "%s/", _vol_labels[i]);
-                CDFileClass::Add_Search_Drive(vol_buff);
-                CCFileClass fc("MAIN.MIX");
+                if (vol.Is_Directory()) {
+                    CDFileClass::Refresh_Search_Drives();
+                    path += PathsClass::SEP;
+                    CDFileClass::Add_Search_Drive(path.c_str());
+                    CCFileClass fc("MAIN.MIX");
 
-                // Populate _detected as a bitfield for which discs we found a local copy of.
-                if (fc.Is_Available()) {
-                    _detected |= 1 << i;
+                    // Populate _detected as a bitfield for which discs we found a local copy of.
+                    if (fc.Is_Available()) {
+                        _detected |= 1 << i;
+                    }
+
+                    break;
                 }
             }
         }
@@ -3940,24 +3949,26 @@ static bool Change_Local_Dir(int cd)
 
     // If the data from the CD we want was detected, then double check it and set it as though we used the -CD command line.
     if (_detected & (1 << cd)) {
-        RawFileClass vol(_vol_labels[cd]);
+        for (int j = 0; j < 3; ++j) {
+            std::string path = Paths.Concatenate_Paths(paths[j].c_str(), _vol_labels[cd]);
+            RawFileClass vol(path.c_str());
 
-        // Verify that the file is still available and hasn't been deleted out from under us.
-        if (vol.Is_Directory()) {
-            CDFileClass::Refresh_Search_Drives();
-            snprintf(vol_buff, sizeof(vol_buff), "%s/", _vol_labels[cd]);
-            CDFileClass::Add_Search_Drive(vol_buff);
+            if (vol.Is_Directory()) {
+                CDFileClass::Refresh_Search_Drives();
+                path += PathsClass::SEP;
+                CDFileClass::Add_Search_Drive(path.c_str());
 
-            // The file should be available if we reached this point.
-            assert(CCFileClass("MAIN.MIX").Is_Available());
+                // The file should be available if we reached this point.
+                assert(CCFileClass("MAIN.MIX").Is_Available());
 
-            CurrentCD = cd;
-            LastCD = cd;
-            Theme.Stop();
-            Reinit_Secondary_Mixfiles();
-            ThemeClass::Scan();
+                CurrentCD = cd;
+                LastCD = cd;
+                Theme.Stop();
+                Reinit_Secondary_Mixfiles();
+                ThemeClass::Scan();
 
-            return true;
+                return true;
+            }
         }
     }
 
@@ -4372,7 +4383,7 @@ bool Force_CD_Available(int cd)
  * HISTORY:                                                                *
  *   08/11/1995 PWG : Created.                                             *
  *=========================================================================*/
-unsigned long Disk_Space_Available(void)
+unsigned int Disk_Space_Available(void)
 {
     return 0x7fffffff; // ST - 5/8/2019
 #if (0)
@@ -4408,9 +4419,9 @@ static void Do_Record_Playback(void)
     int i;
     COORDINATE coord;
     ObjectClass* obj;
-    unsigned long sum;
-    unsigned long sum2;
-    unsigned long ltgt;
+    unsigned int sum;
+    unsigned int sum2;
+    unsigned int ltgt;
 
     /*
     **	Record a game
@@ -4433,7 +4444,7 @@ static void Do_Record_Playback(void)
         */
         sum = 0;
         for (i = 0; i < count; i++) {
-            ltgt = (unsigned long)(CurrentObject[i]->As_Target());
+            ltgt = (unsigned int)(CurrentObject[i]->As_Target());
             sum += ltgt;
         }
         Session.RecordFile.Write(&sum, sizeof(sum));
@@ -4481,7 +4492,7 @@ static void Do_Record_Playback(void)
             */
             sum = 0;
             for (i = 0; i < CurrentObject.Count(); i++) {
-                ltgt = (unsigned long)(CurrentObject[i]->As_Target());
+                ltgt = (unsigned int)(CurrentObject[i]->As_Target());
                 sum += ltgt;
             }
 

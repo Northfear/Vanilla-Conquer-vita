@@ -105,7 +105,7 @@ FootClass::FootClass(void)
     NavCom = TARGET_NONE;
     SuspendedNavCom = TARGET_NONE;
     Path[0] = FACING_NONE;
-    HeadToCoord = NULL;
+    HeadToCoord = 0;
     Member = 0;
     Team = 0;
     PathDelay = 0;
@@ -634,7 +634,7 @@ int FootClass::Mission_Guard(void)
     if (!Target_Something_Nearby(THREAT_RANGE)) {
         Random_Animate();
     }
-    return (TICKS_PER_SECOND + Random_Picky((int)0, (int)4, (char*)NULL, (int)0));
+    return (TICKS_PER_SECOND + Random_Pick(0, 4));
 }
 
 /***********************************************************************************************
@@ -712,7 +712,7 @@ int FootClass::Mission_Timed_Hunt(void)
             rndmax = 1000;
         }
 
-        if (IRandom(0, rndmax) == 1) {
+        if (Random_Pick(0, rndmax) == 1) {
             Assign_Mission(MISSION_HUNT);
             changed = 1;
         }
@@ -748,7 +748,7 @@ int FootClass::Mission_Timed_Hunt(void)
 bool FootClass::Stop_Driver(void)
 {
     if (HeadToCoord) {
-        HeadToCoord = NULL;
+        HeadToCoord = 0;
         Set_Speed(0);
         IsDriving = false;
         return (true);
@@ -787,7 +787,7 @@ bool FootClass::Start_Driver(COORDINATE& headto)
             return (true);
         }
 
-        HeadToCoord = NULL;
+        HeadToCoord = 0;
         IsDriving = false;
     }
     return (false);
@@ -1022,7 +1022,7 @@ int FootClass::Mission_Guard_Area(void)
     } else {
         Approach_Target();
     }
-    return (TICKS_PER_SECOND + Random_Picky((int)0, (int)4, (char*)NULL, (int)0));
+    return (TICKS_PER_SECOND + Random_Pick(0, 4));
 }
 
 /***********************************************************************************************
@@ -1499,7 +1499,7 @@ bool FootClass::Restore_Mission(void)
  * HISTORY:                                                                                    *
  *   05/14/1995 JLB : Created.                                                                 *
  *=============================================================================================*/
-RadioMessageType FootClass::Receive_Message(RadioClass* from, RadioMessageType message, long& param)
+RadioMessageType FootClass::Receive_Message(RadioClass* from, RadioMessageType message, int& param)
 {
     switch (message) {
 

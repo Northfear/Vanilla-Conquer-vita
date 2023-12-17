@@ -101,7 +101,7 @@ public:
     /*
     ** Track when movement last stopped.
     */
-    long StopDriverFrame;
+    int StopDriverFrame;
 
     /*
     **	The fear rating of this infantry unit. The more afraid the infantry, the more
@@ -112,7 +112,7 @@ public:
     /*---------------------------------------------------------------------
     **	Constructors, Destructors, and overloaded operators.
     */
-    static void* operator new(size_t size);
+    static void* operator new(size_t size) noexcept;
     static void* operator new(size_t, void* ptr)
     {
         return (ptr);
@@ -186,7 +186,7 @@ public:
     virtual TARGET As_Target(void) const;
     virtual FireErrorType Can_Fire(TARGET target, int which) const;
     virtual void Assign_Target(TARGET);
-    virtual RadioMessageType Receive_Message(RadioClass* from, RadioMessageType message, long& param);
+    virtual RadioMessageType Receive_Message(RadioClass* from, RadioMessageType message, int& param);
     virtual int Rearm_Delay(bool second) const;
     void Set_Occupy_Bit(COORDINATE coord)
     {
@@ -261,7 +261,6 @@ private:
     ** Some additional padding in case we need to add data to the class and maintain backwards compatibility for
     *save/load
     */
-    unsigned char SaveLoadPadding[32];
 };
 
 #endif

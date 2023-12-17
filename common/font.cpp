@@ -37,6 +37,7 @@
 #include "gbuffer.h"
 #include "file.h"
 #include "memflag.h"
+#include "endianness.h"
 
 #include <errno.h>
 #include <string.h>
@@ -97,9 +98,17 @@ void* Set_Font(void const* fontptr)
         /*
         **	Inform the system about the new font.
         */
+        unsigned short fontwidthblock;
+        unsigned short fontinfoblock;
 
-        FontWidthBlockPtr = (char*)fontptr + *(unsigned short*)((char*)fontptr + FONTWIDTHBLOCK);
-        char const* blockptr = (char*)fontptr + *(unsigned short*)((char*)fontptr + FONTINFOBLOCK);
+        memcpy(&fontwidthblock, (char*)fontptr + FONTWIDTHBLOCK, sizeof(short));
+        memcpy(&fontinfoblock, (char*)fontptr + FONTINFOBLOCK, sizeof(short));
+
+        fontwidthblock = le16toh(fontwidthblock);
+        fontinfoblock = le16toh(fontinfoblock);
+
+        FontWidthBlockPtr = (char*)fontptr + fontwidthblock;
+        char const* blockptr = (char*)fontptr + fontinfoblock;
         FontHeight = *(blockptr + FONTINFOMAXHEIGHT);
         FontWidth = *(blockptr + FONTINFOMAXWIDTH);
     }
@@ -172,7 +181,7 @@ unsigned int String_Pixel_Width(char const* string)
  *                                                                         *
  *                                                                         *
  * INPUT:   VVPC& vp - viewport that was printed to.                       *
- *          unsigned long offset - offset that Text_Print returned.        *
+ *          unsigned int offset - offset that Text_Print returned.        *
  *          INT *x - x return value.                                       *
  *          INT *y - y return value.                                       *
  *                                                                         *
@@ -183,7 +192,7 @@ unsigned int String_Pixel_Width(char const* string)
  * HISTORY:                                                                *
  *   07/20/1994 SKB : Created.                                             *
  *=========================================================================*/
-void Get_Next_Text_Print_XY(GraphicViewPortClass& gp, unsigned long offset, int* x, int* y)
+void Get_Next_Text_Print_XY(GraphicViewPortClass& gp, unsigned int offset, int* x, int* y)
 {
     if (offset) {
         int buffwidth = gp.Get_Width() + gp.Get_XAdd();
@@ -248,7 +257,7 @@ void* Load_Font(char const* name)
         Read_File(fh, ptr + 2, size - 2);
         Close_File(fh);
     } else {
-        return ((void*)errno);
+        return ((void*)(intptr_t)errno);
     }
 
 #ifdef cuts
@@ -319,7 +328,7 @@ struct FontHeader
  *   01/17/1995 PWG : Created.                                             *
  *   18/08/2020 OmniBlade : Translation to C++ added.                      *
  *=========================================================================*/
-long Buffer_Print(void* thisptr, const char* string, int x, int y, int fground, int bground)
+int Buffer_Print(void* thisptr, const char* string, int x, int y, int fground, int bground)
 {
     GraphicViewPortClass& vp = *static_cast<GraphicViewPortClass*>(thisptr);
     const FontHeader* fntheader = reinterpret_cast<const FontHeader*>(FontPtr);
@@ -330,11 +339,12 @@ long Buffer_Print(void* thisptr, const char* string, int x, int y, int fground, 
     int base_x = x;
 
     if (FontPtr != nullptr) {
-        const unsigned short* datalist = reinterpret_cast<const unsigned short*>(reinterpret_cast<const char*>(FontPtr)
-                                                                                 + fntheader->OffsetBlockOffset);
-        const unsigned char* widthlist = reinterpret_cast<const unsigned char*>(FontPtr) + fntheader->WidthBlockOffset;
-        const unsigned short* linelist =
-            reinterpret_cast<const unsigned short*>(reinterpret_cast<const char*>(FontPtr) + fntheader->HeightOffset);
+        const unsigned short* datalist = reinterpret_cast<const unsigned short*>(
+            reinterpret_cast<const char*>(FontPtr) + le16toh(fntheader->OffsetBlockOffset));
+        const unsigned char* widthlist =
+            reinterpret_cast<const unsigned char*>(FontPtr) + le16toh(fntheader->WidthBlockOffset);
+        const unsigned short* linelist = reinterpret_cast<const unsigned short*>(reinterpret_cast<const char*>(FontPtr)
+                                                                                 + le16toh(fntheader->HeightOffset));
 
         int fntheight = fntheader->MaxHeight;
         int ydisplace = FontYSpacing + fntheight;
@@ -404,8 +414,13 @@ long Buffer_Print(void* thisptr, const char* string, int x, int y, int fground, 
                 // Prepare variables for drawing
                 x += FontXSpacing + char_width;
                 int next_line = pitch - char_width;
-                const unsigned char* char_data = reinterpret_cast<const unsigned char*>(FontPtr) + datalist[char_num];
-                int char_lle = linelist[char_num];
+                unsigned short dlist;
+                memcpy(&dlist, datalist + char_num, sizeof(unsigned short));
+                dlist = le16toh(dlist);
+                const unsigned char* char_data = reinterpret_cast<const unsigned char*>(FontPtr) + dlist;
+                short char_lle;
+                memcpy(&char_lle, linelist + char_num, sizeof(short));
+                char_lle = le16toh(char_lle);
                 int char_ypos = char_lle & 0xFF;
                 int char_lines = char_lle >> 8;
                 int char_height = fntheight - (char_ypos + char_lines);

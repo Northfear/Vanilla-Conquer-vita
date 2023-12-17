@@ -64,7 +64,7 @@ extern bool DLLLoad(FileClass& file);
         + sizeof(TeamClass) + sizeof(TeamTypeClass) + sizeof(TemplateClass) + sizeof(TemplateTypeClass)                \
         + sizeof(TerrainClass) + sizeof(TerrainTypeClass) + sizeof(UnitClass) + sizeof(UnitTypeClass)                  \
         + sizeof(MouseClass) + sizeof(CellClass) + sizeof(FactoryClass) + sizeof(BaseClass) + sizeof(LayerClass)       \
-        + sizeof(BriefingText) + sizeof(Waypoint)))
+        + sizeof(Scen.BriefingText) + sizeof(Scen.Waypoint)))
 
 /***************************************************************************
  * Save_Game -- saves a game to disk                                       *
@@ -128,14 +128,14 @@ bool Save_Game(int id, char* descr)
 */
 bool Save_Game(const char* file_name, const char* descr)
 {
-    RawFileClass file;
+    CDFileClass file;
     int i;
-    unsigned long version;
+    unsigned int version;
     unsigned scenario;
     HousesType house;
     char descr_buf[DESCRIP_MAX];
 
-    scenario = Scenario;             // get current scenario #
+    scenario = Scen.Scenario;        // get current scenario #
     house = PlayerPtr->Class->House; // get current house
 
     /*
@@ -340,9 +340,9 @@ bool Load_Game(int id)
 */
 bool Load_Game(const char* file_name)
 {
-    RawFileClass file;
+    CDFileClass file;
     int i;
-    unsigned long version;
+    unsigned int version;
     unsigned scenario;
     HousesType house;
     char descr_buf[DESCRIP_MAX];
@@ -537,7 +537,7 @@ bool Load_Game(const char* file_name)
     }
 
 #ifdef DEMO
-    if (Scenario != 10 && Scenario != 1 && Scenario != 6) {
+    if (Scen.Scenario != 10 && Scen.Scenario != 1 && Scen.Scenario != 6) {
         Clear_Scenario();
         return (false);
     }
@@ -578,21 +578,21 @@ bool Save_Misc_Values(FileClass& file)
     /*
     **	Save this scenario number.
     */
-    if (file.Write(&Scenario, sizeof(Scenario)) != sizeof(Scenario)) {
+    if (file.Write(&Scen.Scenario, sizeof(Scen.Scenario)) != sizeof(Scen.Scenario)) {
         return (false);
     }
 
     /*
     **	Save difficulty.
     */
-    if (file.Write(&ScenDifficulty, sizeof(ScenDifficulty)) != sizeof(ScenDifficulty)) {
+    if (file.Write(&Scen.Difficulty, sizeof(Scen.Difficulty)) != sizeof(Scen.Difficulty)) {
         return (false);
     }
 
     /*
     **	Save AI difficulty.
     */
-    if (file.Write(&ScenCDifficulty, sizeof(ScenCDifficulty)) != sizeof(ScenCDifficulty)) {
+    if (file.Write(&Scen.CDifficulty, sizeof(Scen.CDifficulty)) != sizeof(Scen.CDifficulty)) {
         return (false);
     }
     /*
@@ -638,22 +638,23 @@ bool Save_Misc_Values(FileClass& file)
     /*
     **	Save the list of waypoints.
     */
-    if (file.Write(Waypoint, sizeof(Waypoint)) != sizeof(Waypoint)) {
+    if (file.Write(Scen.Waypoint, sizeof(Scen.Waypoint)) != sizeof(Scen.Waypoint)) {
         return (false);
     }
 
     file.Write(&ScenDir, sizeof(ScenDir));
     file.Write(&ScenVar, sizeof(ScenVar));
-    file.Write(&CarryOverMoney, sizeof(CarryOverMoney));
-    file.Write(&CarryOverPercent, sizeof(CarryOverPercent));
+    file.Write(&Scen.CarryOverMoney, sizeof(Scen.CarryOverMoney));
+    file.Write(&Scen.CarryOverPercent, sizeof(Scen.CarryOverPercent));
     file.Write(&BuildLevel, sizeof(BuildLevel));
     file.Write(BriefMovie, sizeof(BriefMovie));
-    file.Write(Views, sizeof(Views));
+    file.Write(Scen.Views, sizeof(Scen.Views));
     file.Write(&EndCountDown, sizeof(EndCountDown));
-    file.Write(BriefingText, sizeof(BriefingText));
+    file.Write(Scen.BriefingText, sizeof(Scen.BriefingText));
 
     // This is new...
     file.Write(ActionMovie, sizeof(ActionMovie));
+    file.Write(&TempleIoned, sizeof(TempleIoned));
 
     return (true);
 }
@@ -686,21 +687,21 @@ bool Load_Misc_Values(FileClass& file)
     /*
     **	Read this scenario number.
     */
-    if (file.Read(&Scenario, sizeof(Scenario)) != sizeof(Scenario)) {
+    if (file.Read(&Scen.Scenario, sizeof(Scen.Scenario)) != sizeof(Scen.Scenario)) {
         return (false);
     }
 
     /*
     **	Read difficulty.
     */
-    if (file.Read(&ScenDifficulty, sizeof(ScenDifficulty)) != sizeof(ScenDifficulty)) {
+    if (file.Read(&Scen.Difficulty, sizeof(Scen.Difficulty)) != sizeof(Scen.Difficulty)) {
         return (false);
     }
 
     /*
     **	Read AI difficulty.
     */
-    if (file.Read(&ScenCDifficulty, sizeof(ScenCDifficulty)) != sizeof(ScenCDifficulty)) {
+    if (file.Read(&Scen.CDifficulty, sizeof(Scen.CDifficulty)) != sizeof(Scen.CDifficulty)) {
         return (false);
     }
 
@@ -746,22 +747,26 @@ bool Load_Misc_Values(FileClass& file)
     /*
     **	Save the list of waypoints.
     */
-    if (file.Read(Waypoint, sizeof(Waypoint)) != sizeof(Waypoint)) {
+    if (file.Read(Scen.Waypoint, sizeof(Scen.Waypoint)) != sizeof(Scen.Waypoint)) {
         return (false);
     }
 
     file.Read(&ScenDir, sizeof(ScenDir));
     file.Read(&ScenVar, sizeof(ScenVar));
-    file.Read(&CarryOverMoney, sizeof(CarryOverMoney));
-    file.Read(&CarryOverPercent, sizeof(CarryOverPercent));
+    file.Read(&Scen.CarryOverMoney, sizeof(Scen.CarryOverMoney));
+    file.Read(&Scen.CarryOverPercent, sizeof(Scen.CarryOverPercent));
     file.Read(&BuildLevel, sizeof(BuildLevel));
     file.Read(BriefMovie, sizeof(BriefMovie));
-    file.Read(Views, sizeof(Views));
+    file.Read(Scen.Views, sizeof(Scen.Views));
     file.Read(&EndCountDown, sizeof(EndCountDown));
-    file.Read(BriefingText, sizeof(BriefingText));
+    file.Read(Scen.BriefingText, sizeof(Scen.BriefingText));
 
     if (file.Seek(0, SEEK_CUR) < file.Size()) {
         file.Read(ActionMovie, sizeof(ActionMovie));
+    }
+
+    if (file.Seek(0, SEEK_CUR) < file.Size()) {
+        file.Read(&TempleIoned, sizeof(TempleIoned));
     }
 
     return (true);
@@ -841,7 +846,7 @@ void Code_All_Pointers(void)
     for (i = 0; i < SelectedObjectsType::COUNT; i++) {
         DynamicVectorClass<ObjectClass*>& selection = CurrentObject.Raw(i);
         for (j = 0; j < selection.Count(); j++) {
-            selection[j] = (ObjectClass*)selection[j]->As_Target();
+            selection[j] = (ObjectClass*)(intptr_t)selection[j]->As_Target();
         }
     }
 #ifdef REMASTER_BUILD
@@ -929,7 +934,7 @@ void Decode_All_Pointers(void)
     /*
     **	PlayerPtr.
     */
-    PlayerPtr = HouseClass::As_Pointer(*((HousesType*)&PlayerPtr));
+    PlayerPtr = HouseClass::As_Pointer((HousesType)(intptr_t)PlayerPtr);
     Whom = PlayerPtr->Class->House;
     switch (PlayerPtr->Class->House) {
     case HOUSE_GOOD:
@@ -949,7 +954,7 @@ void Decode_All_Pointers(void)
     if (PlayerPtr->ActLike == HOUSE_JP) {
         ScenPlayer = SCEN_PLAYER_JP;
     }
-    Set_Scenario_Name(ScenarioName, Scenario, ScenPlayer, ScenDir, ScenVar);
+    Set_Scenario_Name(Scen.ScenarioName, Scen.Scenario, ScenPlayer, ScenDir, ScenVar);
 
     /*
     **	Currently-selected objects.
@@ -957,7 +962,7 @@ void Decode_All_Pointers(void)
     for (i = 0; i < SelectedObjectsType::COUNT; i++) {
         DynamicVectorClass<ObjectClass*>& selection = CurrentObject.Raw(i);
         for (j = 0; j < selection.Count(); j++) {
-            unsigned long target_as_object_ptr = reinterpret_cast<unsigned long>(selection[j]);
+            uintptr_t target_as_object_ptr = reinterpret_cast<uintptr_t>(selection[j]);
             TARGET target = (TARGET)target_as_object_ptr;
             selection[j] = As_Object(target);
             Check_Ptr(selection[j], __FILE__, __LINE__);
@@ -998,22 +1003,15 @@ void Decode_All_Pointers(void)
  *=========================================================================*/
 bool Get_Savefile_Info(int id, char* buf, unsigned* scenp, HousesType* housep)
 {
-    RawFileClass file;
+    CDFileClass file;
     char name[_MAX_FNAME + _MAX_EXT];
-    unsigned long version;
+    unsigned int version;
     char descr_buf[DESCRIP_MAX];
 
     /*
     **	Generate the filename to load
     */
-#ifdef __vita__
-    std::string savePath;
-    savePath = Paths.User_Path();
-    savePath.append("/SAVEGAME.%03d");
-    sprintf(name, savePath.c_str(), id);
-#else
     sprintf(name, "SAVEGAME.%03d", id);
-#endif
 
     /*
     **	If the file opens OK, read the file

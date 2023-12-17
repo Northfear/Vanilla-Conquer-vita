@@ -187,7 +187,7 @@ int BuildingClass::Validate(void) const
  *   06/26/1995 JLB : Forces refinery load anim to start immediately.                          *
  *   08/13/1995 JLB : Uses ScenarioInit for special loose "CAN_LOAD" check.                    *
  *=============================================================================================*/
-RadioMessageType BuildingClass::Receive_Message(RadioClass* from, RadioMessageType message, long& param)
+RadioMessageType BuildingClass::Receive_Message(RadioClass* from, RadioMessageType message, int& param)
 {
     Validate();
     switch (message) {
@@ -334,7 +334,7 @@ RadioMessageType BuildingClass::Receive_Message(RadioClass* from, RadioMessageTy
                 */
                 Transmit_Message(RADIO_TETHER);
                 if (*this == STRUCT_REFINERY && Transmit_Message(RADIO_BACKUP_NOW, from) != RADIO_ROGER) {
-                    from->Scatter(NULL, true);
+                    from->Scatter(0, true);
                 }
             }
         }
@@ -1163,16 +1163,21 @@ void BuildingClass::AI(void)
         **	Possibly start repair process if the building is below half strength.
         */
         int ratio = 0x0040;
-        if (Scenario > 6)
+        if (Scen.Scenario > 6)
             ratio = 0x0080;
-        if (Scenario > 10)
+        if (Scen.Scenario > 10)
             ratio = 0x00C0;
         if (Class->IsRepairable && Health_Ratio() <= (unsigned)ratio) {
             if (House->Available_Money() >= REPAIR_THRESHHOLD) {
                 Repair(1);
             } else {
-                if (IsTickedOff && (int)Scenario > 2 && Random_Pick(0, 50) < (int)Scenario && !Trigger) {
-                    if (GameToPlay != GAME_NORMAL || Scenario != 15 || PlayerPtr->ActLike != HOUSE_GOOD
+
+                // GB 2022 improvement by TobiasKarnat, This on top would improve
+                // skirmish by randomizing building choice, prioritizing power and
+                // sell off later [TD].
+                if (IsTickedOff && (int)Scen.Scenario > 2 && Random_Pick(0, 50) < (int)Scen.Scenario && !Trigger
+                    && *this != STRUCT_CONST && Health_Ratio() < (unsigned)(0x0040)) {
+                    if (GameToPlay != GAME_NORMAL || Scen.Scenario != 15 || PlayerPtr->ActLike != HOUSE_GOOD
                         || *this != STRUCT_TEMPLE) {
                         Sell_Back(1);
                     }
@@ -1517,6 +1522,9 @@ ResultType BuildingClass::Take_Damage(int& damage, int distance, WarheadType war
 
             Sound_Effect(VOC_XPLOBIG4, Coord);
             while (*offset != REFRESH_EOL) {
+                COORDINATE scatter_coord;
+                int delay;
+                int loop;
                 CELL cell = Coord_Cell(Coord) + *offset++;
 
                 /*
@@ -1524,18 +1532,21 @@ ResultType BuildingClass::Take_Damage(int& damage, int distance, WarheadType war
                 **	explosions occur.
                 */
                 new SmudgeClass(Random_Pick(SMUDGE_CRATER1, SMUDGE_CRATER6), Cell_Coord(cell));
-                if (Random_Pick(0, 1) == 0) {
-                    new AnimClass(
-                        ANIM_FIRE_SMALL, Coord_Scatter(Cell_Coord(cell), 0x0080), Random_Pick(0, 7), Random_Pick(1, 3));
-                    if (Random_Pick(0, 1) == 0) {
-                        new AnimClass(ANIM_FIRE_MED,
-                                      Coord_Scatter(Cell_Coord(cell), 0x0040),
-                                      Random_Pick(0, 7),
-                                      Random_Pick(1, 3));
+                if (Percent_Chance(50)) {
+                    scatter_coord = Coord_Scatter(Cell_Coord(cell), 0x0080);
+                    delay = Random_Pick(0, 7);
+                    loop = Random_Pick(1, 3);
+                    new AnimClass(ANIM_FIRE_SMALL, scatter_coord, delay, loop);
+                    if (Percent_Chance(50)) {
+                        scatter_coord = Coord_Scatter(Cell_Coord(cell), 0x0040);
+                        delay = Random_Pick(0, 7);
+                        loop = Random_Pick(1, 3);
+                        new AnimClass(ANIM_FIRE_MED, scatter_coord, delay, loop);
                     }
                 }
-                // Start_Profiler();
-                new AnimClass(ANIM_FBALL1, Coord_Scatter(Cell_Coord(cell), 0x0040), Random_Pick(0, 3));
+                scatter_coord = Coord_Scatter(Cell_Coord(cell), 0x0040);
+                delay = Random_Pick(0, 3);
+                new AnimClass(ANIM_FBALL1, scatter_coord, delay);
             }
 
             shakes = Class->Cost_Of() / 400;
@@ -1558,22 +1569,24 @@ ResultType BuildingClass::Take_Damage(int& damage, int distance, WarheadType war
             **	remembering of this fact. The finale uses this information to
             **	play the correct movie.
             */
-            if (*this == STRUCT_TEMPLE && warhead == WARHEAD_PB) {
-                TempleIoned = true;
+            if (GameToPlay == GAME_NORMAL && *this == STRUCT_TEMPLE) {
+                if (warhead == WARHEAD_PB) {
+                    TempleIoned = true;
 #ifdef REMASTER_BUILD
-                /*
-                ** Maybe trigger an achivement if the structure is owned by an AI house in campaign mode. ST -
-                *11/14/2019 1:53PM
-                */
-                if (GameToPlay == GAME_NORMAL && !House->IsHuman && source && source->House && source->House->IsHuman) {
-                    TechnoTypeClass const* object_type = Techno_Type_Class();
-                    if (object_type) {
-                        On_Achievement_Event(source->House, "ION_DESTROYS_TEMPLE", object_type->IniName);
+                    /*
+                    ** Maybe trigger an achivement if the structure is owned by an AI house in campaign mode. ST -
+                    ** 11/14/2019 1:53PM
+                    */
+                    if (!House->IsHuman && source && source->House && source->House->IsHuman) {
+                        TechnoTypeClass const* object_type = Techno_Type_Class();
+                        if (object_type) {
+                            On_Achievement_Event(source->House, "ION_DESTROYS_TEMPLE", object_type->IniName);
+                        }
                     }
-                }
 #endif
-            } else {
-                TempleIoned = false;
+                } else {
+                    TempleIoned = false;
+                }
             }
 
             if (House) {
@@ -1606,17 +1619,21 @@ ResultType BuildingClass::Take_Damage(int& damage, int distance, WarheadType war
                     case 1:
                     case 2:
                     case 3:
-                    case 4:
-                        anim = new AnimClass(
-                            ANIM_ON_FIRE_SMALL, Coord_Scatter(Cell_Coord(cell), 0x0060), 0, Random_Pick(1, 3));
+                    case 4: {
+                        COORDINATE scatter_coord = Coord_Scatter(Cell_Coord(cell), 0x0060);
+                        int loop = Random_Pick(1, 3);
+                        anim = new AnimClass(ANIM_ON_FIRE_SMALL, scatter_coord, 0, loop);
                         break;
+                    }
 
                     case 5:
                     case 6:
-                    case 7:
-                        anim = new AnimClass(
-                            ANIM_ON_FIRE_MED, Coord_Scatter(Cell_Coord(cell), 0x0060), 0, Random_Pick(1, 3));
+                    case 7: {
+                        COORDINATE scatter_coord = Coord_Scatter(Cell_Coord(cell), 0x0060);
+                        int loop = Random_Pick(1, 3);
+                        anim = new AnimClass(ANIM_ON_FIRE_MED, scatter_coord, 0, loop);
                         break;
+                    }
 
                     case 8:
                         anim = new AnimClass(ANIM_ON_FIRE_BIG, Coord_Scatter(Cell_Coord(cell), 0x0060), 0, 1);
@@ -1630,11 +1647,11 @@ ResultType BuildingClass::Take_Damage(int& damage, int distance, WarheadType war
                         break;
                     }
                 } else {
-                    if (Random_Pick(0, 1) == 0) {
-                        anim = new AnimClass(ANIM_FIRE_SMALL,
-                                             Coord_Scatter(Cell_Coord(cell), 0x0060),
-                                             Random_Pick(0, 7),
-                                             Random_Pick(1, 3));
+                    if (Percent_Chance(50)) {
+                        COORDINATE scatter_coord = Coord_Scatter(Cell_Coord(cell), 0x0060);
+                        int delay = Random_Pick(0, 7);
+                        int loop = Random_Pick(1, 3);
+                        anim = new AnimClass(ANIM_FIRE_SMALL, scatter_coord, delay, loop);
                     }
                 }
 
@@ -1767,7 +1784,7 @@ void BuildingClass::Look(bool)
  *   05/17/1994 JLB : Revamped allocation scheme                                               *
  *   07/29/1994 JLB : Simplified.                                                              *
  *=============================================================================================*/
-void* BuildingClass::operator new(size_t)
+void* BuildingClass::operator new(size_t) noexcept
 {
     void* ptr = Buildings.Allocate();
     if (ptr) {
@@ -1937,7 +1954,8 @@ void BuildingClass::Drop_Debris(TARGET source)
     **	Special case for Chan to run from destroyed technology
     **	building.
     */
-    if (GameToPlay == GAME_NORMAL && *this == STRUCT_MISSION && PlayerPtr->ActLike == HOUSE_BAD && Scenario == 10) {
+    if (GameToPlay == GAME_NORMAL && *this == STRUCT_MISSION && PlayerPtr->ActLike == HOUSE_BAD
+        && Scen.Scenario == 10) {
         InfantryClass* i = new InfantryClass(INFANTRY_CHAN, House->Class->House);
 
         ScenarioInit++;
@@ -2009,10 +2027,13 @@ void BuildingClass::Drop_Debris(TARGET source)
         switch (Random_Pick(0, 5)) {
         case 0:
         case 1:
-        case 2:
-            new AnimClass(
-                ANIM_SMOKE_M, Coord_Scatter(Cell_Coord(newcell), 0x0050, false), Random_Pick(0, 5), Random_Pick(1, 2));
+        case 2: {
+            COORDINATE scatter_coord = Coord_Scatter(Cell_Coord(newcell), 0x0050, false);
+            int delay = Random_Pick(0, 5);
+            int loop = Random_Pick(1, 2);
+            new AnimClass(ANIM_SMOKE_M, scatter_coord, delay, loop);
             break;
+        }
 
         default:
             break;
@@ -2021,11 +2042,12 @@ void BuildingClass::Drop_Debris(TARGET source)
         /*
         **	The building always scars the ground in some fashion.
         */
-        if (Random_Pick(0, 3) == 0) {
+        if (Percent_Chance(25)) {
             new SmudgeClass(Random_Pick(SMUDGE_SCORCH1, SMUDGE_SCORCH6), Cell_Coord(newcell));
         } else {
-            new SmudgeClass(Random_Pick(SMUDGE_CRATER1, SMUDGE_CRATER6),
-                            Coord_Scatter(Cell_Coord(newcell), 0x0080, false));
+            SmudgeType type = Random_Pick(SMUDGE_CRATER1, SMUDGE_CRATER6);
+            COORDINATE scatter_coord = Coord_Scatter(Cell_Coord(newcell), 0x0080, false);
+            new SmudgeClass(type, scatter_coord);
         }
     }
 }
@@ -4108,7 +4130,7 @@ int BuildingClass::Mission_Deconstruction(void)
                         /* extra check to prevent building crew for Obelisk or AGT spawning
                            one cell above building foundation */
                         if (*this == STRUCT_ATOWER || *this == STRUCT_OBELISK) {
-                            coord = Map[coord].Adjacent_Cell(FACING_S)->Cell_Coord();
+                            coord = Map[Coord_Cell(coord)].Adjacent_Cell(FACING_S)->Cell_Coord();
                         }
                         coord = Map[Coord_Cell(coord)].Closest_Free_Spot(coord, false);
 
@@ -4630,7 +4652,7 @@ int BuildingClass::Mission_Repair(void)
             }
             if (IsReadyToCommence && Transmit_Message(RADIO_NEED_TO_MOVE) == RADIO_ROGER) {
                 IsReadyToCommence = false;
-                long param = Health_Ratio();
+                int param = Health_Ratio();
                 if (Transmit_Message(RADIO_REPAIR, param) != RADIO_ROGER) {
 #ifdef OBSOLETE
                     if (House->Available_Money() < 10) {

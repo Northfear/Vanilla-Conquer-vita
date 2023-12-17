@@ -504,7 +504,7 @@ public:
     **	multi-player or special events.
     */
     unsigned char Level;
-    long Pre;
+    int Pre;
 
     /*
     **	The risk and reward values are used to determine targets and paths
@@ -555,7 +555,7 @@ public:
     TechnoTypeClass(int name,
                     char const* ininame,
                     unsigned char level,
-                    long pre,
+                    int pre,
                     bool is_leader,
                     bool is_scanner,
                     bool is_nominal,
@@ -709,7 +709,7 @@ public:
     **	left by the unit type ID. If the corresponding bit is set, then that
     **	unit type can enter this building.
     */
-    unsigned long CanEnter;
+    unsigned int CanEnter;
 
     /*
     **	This is the starting facing to give this building when it first
@@ -758,7 +758,7 @@ public:
     **	This is a mask flag used to determine if all the necessary prerequisite
     **	buildings have been built.
     */
-    //		long Prerequisite;
+    //		int Prerequisite;
 
     /*---------------------------------------------------------------------------
     **	This is the building type explicit constructor.
@@ -772,7 +772,7 @@ public:
                       char const* ininame,
                       COORDINATE exitpoint,
                       unsigned char level,
-                      long pre,
+                      int pre,
                       bool is_scanner,
                       bool is_regulated,
                       bool is_bibbed,
@@ -806,7 +806,7 @@ public:
                       WeaponType primary,
                       WeaponType secondary,
                       ArmorType armor,
-                      unsigned long canenter,
+                      unsigned int canenter,
                       unsigned capacity,
                       int power,
                       int drain,
@@ -835,10 +835,7 @@ public:
 
     virtual int Cost_Of(void) const;
     virtual int Full_Name(void) const;
-    virtual COORDINATE Coord_Fixup(COORDINATE coord) const
-    {
-        return coord & 0xFF00FF00L;
-    }
+    virtual COORDINATE Coord_Fixup(COORDINATE coord) const;
     virtual int Max_Pips(void) const;
     virtual void Dimensions(int& width, int& height) const;
     virtual int Legal_Placement(CELL pos) const;
@@ -1032,7 +1029,7 @@ public:
                   char const* ininame,
                   AnimType exp,
                   unsigned char level,
-                  long pre,
+                  int pre,
                   bool is_goodie,
                   bool is_leader,
                   bool is_eight,
@@ -1189,7 +1186,7 @@ public:
                       int name,
                       char const* ininame,
                       unsigned char level,
-                      long pre,
+                      int pre,
                       bool is_female,
                       bool is_leader,
                       bool is_crawling,
@@ -1506,10 +1503,7 @@ public:
     static void One_Time(void){};
     static void Prep_For_Add(void);
 
-    virtual COORDINATE Coord_Fixup(COORDINATE coord) const
-    {
-        return coord & 0xFF00FF00L;
-    }
+    virtual COORDINATE Coord_Fixup(COORDINATE coord) const;
     virtual bool Create_And_Place(CELL cell, HousesType house) const;
     virtual ObjectClass* Create_One_Of(HouseClass*) const;
     virtual short const* Occupy_List(bool placement = false) const;
@@ -1592,10 +1586,7 @@ public:
     static void One_Time(void);
     static void Prep_For_Add(void);
 
-    virtual COORDINATE Coord_Fixup(COORDINATE coord) const
-    {
-        return coord & 0xFF00FF00L;
-    }
+    virtual COORDINATE Coord_Fixup(COORDINATE coord) const;
     virtual bool Create_And_Place(CELL cell, HousesType house = HOUSE_NONE) const;
     virtual ObjectClass* Create_One_Of(HouseClass*) const;
     virtual short const* Occupy_List(bool placement = false) const;
@@ -1863,7 +1854,7 @@ public:
                       int name,
                       char const* ininame,
                       unsigned char level,
-                      long pre,
+                      int pre,
                       bool is_leader,
                       bool is_twoshooter,
                       bool is_transporter,
@@ -2041,10 +2032,7 @@ public:
     static void One_Time(void);
     static void Prep_For_Add(void);
 
-    virtual COORDINATE Coord_Fixup(COORDINATE coord) const
-    {
-        return coord & 0xFF00FF00L;
-    }
+    virtual COORDINATE Coord_Fixup(COORDINATE coord) const;
     virtual bool Create_And_Place(CELL cell, HousesType house = HOUSE_NONE) const;
     virtual ObjectClass* Create_One_Of(HouseClass*) const;
     virtual short const* Occupy_List(bool placement = false) const;

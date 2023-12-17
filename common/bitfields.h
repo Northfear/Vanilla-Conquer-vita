@@ -1,6 +1,3 @@
-//
-// Copyright 2020 Electronic Arts Inc.
-//
 // TiberianDawn.DLL and RedAlert.dll and corresponding source code is free
 // software: you can redistribute it and/or modify it under the terms of
 // the GNU General Public License as published by the Free Software Foundation,
@@ -13,21 +10,16 @@
 // GNU General Public License along with permitted additional restrictions
 // with this program. If not, see https://github.com/electronicarts/CnC_Remastered_Collection
 
-#if 0
+#ifndef COMMON_BITFIELDS_H
+#define COMMON_BITFIELDS_H
 
-#define debugprogress
-#define _ASSERTE(x)
-
+/*
+ * Use this macro to mark a structure to be packed in an MSVC compatible way.
+ */
+#if defined __clang__ || defined __GNUC__
+#define BITFIELD_STRUCT __attribute__((ms_struct))
 #else
-
-#define debugprint OutputDebugString
-
-#define _DEBUG
-#include "w95trace.h"
-
-#define debugprogress debugprint("...%s: %i\n", __FILE__, __LINE__)
-#define _ASSERTE(x)                                                                                                    \
-    if (!(x))                                                                                                          \
-        debugprint("ASSERT FALSE!\n");
-
+#define BITFIELD_STRUCT
 #endif
+
+#endif /* COMMON_BITFIELDS_H */

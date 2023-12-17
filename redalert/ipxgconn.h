@@ -141,11 +141,6 @@ public:
     virtual int Get_Packet(void* buf, int* buflen, IPXAddressClass* address, unsigned short* product_id);
 
     //.....................................................................
-    // This is for telling the connection it can cross a bridge.
-    //.....................................................................
-    void Set_Bridge(NetNumType bridge);
-
-    //.....................................................................
     // The Product ID for this product.
     //.....................................................................
     unsigned short ProductID;
@@ -188,7 +183,7 @@ private:
     // app to receive the same packet twice!
     //.....................................................................
     IPXAddressClass LastAddress[4]; // array of last 4 addresses
-    unsigned long LastPacketID[4];  // array of last 4 packet ID's
+    unsigned int LastPacketID[4];   // array of last 4 packet ID's
     int LastRXIndex;                // index of next avail pos
 };
 

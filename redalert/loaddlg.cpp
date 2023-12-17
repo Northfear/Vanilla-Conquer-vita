@@ -47,6 +47,7 @@
 #include "loaddlg.h"
 #include "common/file.h"
 #include "common/framelimit.h"
+#include "common/paths.h"
 
 #ifdef __vita__
 #include "common/paths.h"
@@ -645,10 +646,12 @@ void LoadOptionsClass::Fill_List(ListClass* list)
 {
     FileEntryClass* fdata; // for adding entries to 'Files'
     char descr[DESCRIP_MAX + 32];
+    char scan_path[_MAX_PATH];
     unsigned scenario; // scenario #
     HousesType house;  // house
     Find_File_Data* ff = nullptr;
     int id;
+    bool found;
 
     /*
     ** Make sure the list is empty
@@ -668,19 +671,11 @@ void LoadOptionsClass::Fill_List(ListClass* list)
     /*
     ** Find all savegame files
     */
-#ifdef __vita__
-    std::string savePath;
-    savePath = Paths.User_Path();
-    savePath.append("/SAVEGAME.*");
-    bool rc = Find_First(savePath.c_str(), 0, &ff);
-#else
-    bool rc = Find_First("SAVEGAME.*", 0, &ff);
-#endif
+    snprintf(scan_path, sizeof(scan_path), "%s", Paths.Concatenate_Paths(Paths.User_Path(), "SAVEGAME.*").c_str());
 
-    while (rc) {
-
+    found = Find_First(scan_path, 0, &ff);
+    while (found) {
         if (stricmp(ff->GetName(), NET_SAVE_FILE_NAME) != 0) {
-
             /*
             ** Extract the game ID from the filename
             */
@@ -715,9 +710,12 @@ void LoadOptionsClass::Fill_List(ListClass* list)
         /*
         ** Find the next file
         */
-        rc = Find_Next(ff);
+        found = Find_Next(ff);
     }
-    Find_Close(ff);
+
+    if (ff) {
+        Find_Close(ff);
+    }
 
     /*
     ** If saving a game, determine a unique file ID for the empty slot
@@ -775,9 +773,9 @@ void LoadOptionsClass::Fill_List(ListClass* list)
  *=============================================================================================*/
 int LoadOptionsClass::Num_From_Ext(const char* fname)
 {
-    char ext[_MAX_EXT];
+    const char* ext;
 
-    _splitpath(fname, NULL, NULL, NULL, ext);
+    ext = strrchr(fname, '.');
     int num = atoi(ext + 1); // skip the '.'
     return (num);
 }

@@ -125,7 +125,6 @@ public:
     ** Some additional padding in case we need to add data to the class and maintain backwards compatibility for
     *save/load
     */
-    unsigned char SaveLoadPadding[16];
 
     /*-----------------------------------------------------------------------------------
     **	Constructor & destructors.
@@ -242,7 +241,7 @@ public:
     **	AI.
     */
     virtual BuildingClass* Who_Can_Build_Me(bool intheory, bool legal) const;
-    virtual RadioMessageType Receive_Message(RadioClass* from, RadioMessageType message, long& param);
+    virtual RadioMessageType Receive_Message(RadioClass* from, RadioMessageType message, int& param);
     virtual bool Revealed(HouseClass* house);
     virtual void Repair(int);
     virtual void Sell_Back(int);

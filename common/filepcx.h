@@ -29,7 +29,7 @@
 ;*                                                                         *
 ;*-------------------------------------------------------------------------*
 ;* Functions:                                                              *
-;* GraphicBufferClass* Read_PCX_File (char* name, BYTE* palette,void *buff, long size);
+;* GraphicBufferClass* Read_PCX_File (char* name, BYTE* palette,void *buff, int size);
 ;* GraphicBufferClass* Read_PCX_File (char* name, BYTE* palette, BufferClass& Buff);
 ;* int Write_PCX_File (char* name, GraphicViewPortClass& pic, BYTE* palette );*
 ;*= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =*/
@@ -40,6 +40,8 @@
 
 #ifndef PCX_H
 #define PCX_H
+
+#pragma pack(push, 1)
 
 typedef struct
 {
@@ -68,9 +70,11 @@ typedef struct
     char filler[58];
 } PCX_HEADER;
 
+#pragma pack(pop)
+
 class GraphicBufferClass;
 
-GraphicBufferClass* Read_PCX_File(const char* name, char* palette = NULL, void* buff = NULL, long size = 0);
+GraphicBufferClass* Read_PCX_File(const char* name, char* palette = NULL, void* buff = NULL, int size = 0);
 int Write_PCX_File(char* name, GraphicViewPortClass& pic, unsigned char* palette);
 
 #endif

@@ -35,6 +35,8 @@
 #ifndef TEAMTYPE_H
 #define TEAMTYPE_H
 
+#include "endianness.h"
+
 /*
 **	TeamMissionType: the various missions that a team can have.
 */
@@ -86,10 +88,21 @@ public:
     TeamMissionType Mission; // Mission type.
     union
     {
-        FormationType Formation; // Formation to use.
-        QuarryType Quarry;       // Combat quarry type.
-        MissionType Mission;     // General mission orders.
-        int Value;               // Usually a waypoint number.
+        struct
+        {
+#ifdef __BIG_ENDIAN__
+            unsigned char __padding_1[3];
+#endif
+
+            union
+            {
+                FormationType Formation; // Formation to use.
+                QuarryType Quarry;       // Combat quarry type.
+                MissionType Mission;     // General mission orders.
+            };
+        };
+
+        int Value; // Usually a waypoint number.
     } Data;
 };
 
@@ -125,7 +138,7 @@ public:
         , Trigger(x){};
     virtual ~TeamTypeClass(void){};
 
-    static void* operator new(size_t);
+    static void* operator new(size_t) noexcept;
     static void* operator new(size_t, void* ptr)
     {
         return (ptr);
@@ -170,7 +183,7 @@ public:
     static char const* Name_From_Mission(TeamMissionType order);
     static TeamMissionType Mission_From_Name(char const* name);
     static TeamTypeClass const*
-    Suggested_New_Team(HouseClass* house, long atypes, long utypes, long itypes, long vtypes, bool alerted);
+    Suggested_New_Team(HouseClass* house, int atypes, int utypes, int itypes, int vtypes, bool alerted);
     static TeamTypeClass* From_Name(char const* name);
     bool Edit(void);
 #if defined(CHEAT_KEYS) || defined(SCENARIO_EDITOR)
@@ -286,7 +299,6 @@ public:
     ** Some additional padding in case we need to add data to the class and maintain backwards compatibility for
     *save/load
     */
-    unsigned char SaveLoadPadding[32];
 
     static char const* TMissions[TMISSION_COUNT];
 };

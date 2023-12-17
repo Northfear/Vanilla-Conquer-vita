@@ -33,6 +33,8 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
+#include "endianness.h"
+
 /**********************************************************************
 **	Language control: define the desired language for this build.
 */
@@ -503,28 +505,22 @@ typedef union
 } COORD_COMPOSITE;
 
 typedef signed short CELL;
-#ifdef __BIG_ENDIAN__
-#warning "FIXME"
-//#define SLUFF_BITS (sizeof(CELL) * CHAR_BIT) - (14)
-#endif
 typedef union
 {
     CELL Cell;
     struct
     {
 #ifdef __BIG_ENDIAN__
-#if SLUFF_BITS
         /*
         **	Unused upper bits will cause problems on a big-endian machine unless they
         **	are deliberately accounted for.
         */
-        unsigned sluff : SLUF_BITS;
-#endif
-        unsigned Y : 7;
-        unsigned X : 7;
+        unsigned short sluff : 2;
+        unsigned short Y : 7;
+        unsigned short X : 7;
 #else
-        unsigned X : 7;
-        unsigned Y : 7;
+        unsigned short X : 7;
+        unsigned short Y : 7;
 #endif
     } Sub;
 } CELL_COMPOSITE;
@@ -543,10 +539,11 @@ typedef int TARGET;
 
 #define TARGET_MANTISSA 24 // Bits of value precision.
 #define TARGET_EXPONENT 8
+#pragma pack(push, 1)
 typedef union
 {
     TARGET Target;
-    struct
+    struct BITFIELD_STRUCT
     {
 #ifdef __BIG_ENDIAN__
         unsigned Exponent : TARGET_EXPONENT;
@@ -557,7 +554,7 @@ typedef union
 #endif
     } Sub;
 } TARGET_COMPOSITE;
-
+#pragma pack(pop)
 inline TARGET Build_Target(RTTIType kind, int value)
 {
     TARGET_COMPOSITE target;
@@ -3512,13 +3509,13 @@ typedef struct
 */
 typedef struct
 {
-    CELL Start;             // Starting cell number.
-    int Cost;               // Accumulated terrain cost.
-    int Length;             // Command string length.
-    FacingType* Command;    // Pointer to command string.
-    unsigned long* Overlap; // Pointer to overlap list
-    CELL LastOverlap;       // stores position of last overlap
-    CELL LastFixup;         // stores position of last overlap
+    CELL Start;            // Starting cell number.
+    int Cost;              // Accumulated terrain cost.
+    int Length;            // Command string length.
+    FacingType* Command;   // Pointer to command string.
+    unsigned int* Overlap; // Pointer to overlap list
+    CELL LastOverlap;      // stores position of last overlap
+    CELL LastFixup;        // stores position of last overlap
 } PathType;
 
 /**********************************************************************

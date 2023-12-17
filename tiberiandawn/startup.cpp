@@ -46,12 +46,10 @@ void Print_Error_Exit(char* string);
 #ifdef _WIN32
 #include <direct.h>
 #include "common/utf.h"
-#define vc_chdir(x) _wchdir(UTF8To16(x))
 extern void Create_Main_Window(HANDLE instance, int width, int height);
 HINSTANCE ProgramInstance;
 #else
 #include <unistd.h>
-#define vc_chdir(x) chdir(x)
 #endif
 
 #ifdef __vita__
@@ -214,6 +212,8 @@ int main(int argc, char** argv)
     //scePowerSetGpuClockFrequency(222);
     scePowerSetBusClockFrequency(222);
     scePowerSetGpuXbarClockFrequency(166);
+
+    chdir("ux0:data/VanillaTD");
 #endif
 
     UtfArgs args(argc, argv);
@@ -244,7 +244,6 @@ int main(int argc, char** argv)
 #else
     Paths.Init("vanillatd", "CONQUER.INI", "CONQUER.MIX", args.ArgV[0]);
 #endif
-    vc_chdir(Paths.Data_Path());
     CDFileClass::Refresh_Search_Drives();
 
     if (Parse_Command_Line(args.ArgC, args.ArgV)) {
@@ -318,7 +317,7 @@ int main(int argc, char** argv)
         }
 #endif
 
-#if defined(_WIN32) && !defined(SDL2_BUILD)
+#if defined(_WIN32) && !defined(SDL_BUILD)
         Create_Main_Window(ProgramInstance, ScreenWidth, ScreenHeight);
 #endif
 
@@ -391,7 +390,7 @@ int main(int argc, char** argv)
         ** Use a system memory page if the user has specified it via the ccsetup program.
         */
         CCDebugString("C&C95 - Allocating back buffer ");
-        long video_memory = Get_Free_Video_Memory();
+        int video_memory = Get_Free_Video_Memory();
         unsigned video_capabilities = Get_Video_Hardware_Capabilities();
         if (video_memory < ScreenWidth * ScreenHeight || (!(video_capabilities & VIDEO_BLITTER))
             || (video_capabilities & VIDEO_NO_HARDWARE_ASSIST) || !VideoBackBufferAllowed) {
@@ -490,9 +489,13 @@ int main(int argc, char** argv)
         CCDebugString("C&C95 - About to exit.\n");
         ReadyToQuit = 1;
 
-#if defined(SDL2_BUILD)
+#if defined(SDL_BUILD)
         Reset_Video_Mode();
-#elif defined(_WIN32)
+#endif
+
+        Sound_End();
+
+#if defined(_WIN32)
         PostMessageA(MainWindow, WM_DESTROY, 0, 0);
         do {
             Keyboard->Check();
@@ -615,55 +618,4 @@ void Read_Setup_Options(RawFileClass* config_file)
     */
     VideoBackBufferAllowed = ini.Get_Bool("Options", "VideoBackBuffer", true);
     AllowHardwareBlitFills = ini.Get_Bool("Options", "HardwareFills", true);
-
-    /*
-    ** See if an alternative socket number has been specified
-    */
-    int socket = ini.Get_Int("Options", "Socket", 0);
-    if (socket > 0) {
-        socket += 0x4000;
-        if (socket >= 0x4000 && socket < 0x8000) {
-            Ipx.Set_Socket(socket);
-        }
-    }
-
-    /*
-    ** See if a destination network has been specified
-    */
-    char netbuf[512];
-    memset(netbuf, 0, sizeof(netbuf));
-    char* netptr = netbuf;
-    bool found = ini.Get_String("Options", "DestNet", NULL, netbuf, sizeof(netbuf));
-
-    if (found && netptr != NULL && strlen(netbuf)) {
-        NetNumType net;
-        NetNodeType node;
-
-        /*
-        ** Scan the string, pulling off each address piece
-        */
-        int i = 0;
-        char* p = strtok(netbuf, ".");
-        int x;
-        while (p != NULL) {
-            sscanf(p, "%x", &x); // convert from hex string to int
-            if (i < 4) {
-                net[i] = (char)x; // fill NetNum
-            } else {
-                node[i - 4] = (char)x; // fill NetNode
-            }
-            i++;
-            p = strtok(NULL, ".");
-        }
-
-        /*
-        ** If all the address components were successfully read, fill in the
-        ** BridgeNet with a broadcast address to the network across the bridge.
-        */
-        if (i >= 4) {
-            IsBridge = 1;
-            memset(node, 0xff, 6);
-            BridgeNet = IPXAddressClass(net, node);
-        }
-    }
 }

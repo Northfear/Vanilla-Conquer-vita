@@ -72,7 +72,6 @@ set(COMMON_SRC
     pkstraw.cpp
     ramfile.cpp
     random.cpp
-    rand.cpp
     rawfile.cpp
     readline.cpp
     rect.cpp
@@ -113,9 +112,7 @@ set(COMMONR_SRC
     framelimit.cpp
     gbuffer.cpp
     interpal.cpp
-    ipxaddr.cpp
     soundio_null.cpp
-    tcpip_null.cpp
     video_null.cpp
     wwkeyboard.cpp
     wwmouse.cpp
@@ -125,9 +122,6 @@ set(COMMONV_SRC
     framelimit.cpp
     gbuffer.cpp
     interpal.cpp
-    ipxaddr.cpp
-    tcpip.cpp
-    tcpip_null.cpp
     unvqbuff.cpp
     vqaconfig.cpp
     vqadrawer.cpp
@@ -135,8 +129,6 @@ set(COMMONV_SRC
     vqapalette.cpp
     vqatask.cpp
     vqaver.cpp
-    wsproto.cpp
-    wspudp.cpp
     wwkeyboard.cpp
     wwmouse.cpp
 )
@@ -155,12 +147,22 @@ if(DDRAW)
     list(APPEND VANILLA_LIBS ddraw)
 elseif(SDL2)
     list(APPEND COMMONV_SRC video_sdl2.cpp)
+elseif(SDL1)
+    list(APPEND COMMONV_SRC video_sdl1.cpp)
 else()
     list(APPEND COMMONV_SRC video_null.cpp)
 endif()
 
 if(DSOUND OR DDRAW)
     list(APPEND VANILLA_LIBS dxguid)
+endif()
+
+if(NETWORKING)
+    list(APPEND COMMONV_SRC
+        ipxaddr.cpp
+        wsproto.cpp
+        wspudp.cpp
+    )
 endif()
 
 file(GLOB_RECURSE COMMON_HEADERS "*.h")
@@ -171,6 +173,14 @@ target_include_directories(common PUBLIC .)
 target_compile_definitions(common PRIVATE FIXIT_FAST_LOAD $<$<CONFIG:Debug>:_DEBUG>)
 # Make build check state of git to check for uncommitted changes.
 add_dependencies(common check_git)
+
+if(WIN32)
+    if(WIN9X)
+        target_compile_definitions(common PUBLIC _WIN32_WINNT=0x400)
+    else()
+        target_compile_definitions(common PUBLIC UNICODE _UNICODE _WIN32_WINNT=0x501)
+    endif()
+endif()
 
 if(BUILD_REMASTERTD OR BUILD_REMASTERRA)
     add_library(commonr STATIC ${COMMONR_SRC})
@@ -190,7 +200,10 @@ if(BUILD_VANILLATD OR BUILD_VANILLARA)
         target_compile_definitions(commonv PUBLIC OPENAL_BUILD)
     endif()
     if(SDL2)
-        target_compile_definitions(commonv PUBLIC SDL2_BUILD)
+        target_compile_definitions(commonv PUBLIC SDL_BUILD SDL2_BUILD)
+    endif()
+    if(SDL1)
+        target_compile_definitions(commonv PUBLIC SDL_BUILD SDL1_BUILD)
     endif()
     if(NETWORKING)
         target_compile_definitions(commonv PUBLIC WINSOCK_IPX NETWORKING)

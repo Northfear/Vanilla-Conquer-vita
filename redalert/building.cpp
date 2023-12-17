@@ -161,7 +161,7 @@ COORDINATE const BuildingClass::CenterOffset[BSIZE_COUNT] = {
  *   06/26/1995 JLB : Forces refinery load anim to start immediately.                          *
  *   08/13/1995 JLB : Uses ScenarioInit for special loose "CAN_LOAD" check.                    *
  *=============================================================================================*/
-RadioMessageType BuildingClass::Receive_Message(RadioClass* from, RadioMessageType message, long& param)
+RadioMessageType BuildingClass::Receive_Message(RadioClass* from, RadioMessageType message, int& param)
 {
     assert(Buildings.ID(this) == ID);
     assert(IsActive);
@@ -315,7 +315,7 @@ RadioMessageType BuildingClass::Receive_Message(RadioClass* from, RadioMessageTy
                 */
                 Transmit_Message(RADIO_TETHER);
                 if (*this == STRUCT_REFINERY && Transmit_Message(RADIO_BACKUP_NOW, from) != RADIO_ROGER) {
-                    from->Scatter(NULL, true, true);
+                    from->Scatter(0, true, true);
                 }
             }
         }
@@ -1305,6 +1305,9 @@ ResultType BuildingClass::Take_Damage(int& damage, int distance, WarheadType war
 
             Sound_Effect(VOC_KABOOM22, Coord);
             while (*offset != REFRESH_EOL) {
+                COORDINATE scatter_coord;
+                int delay;
+                int loop;
                 CELL cell = Coord_Cell(Coord) + *offset++;
 
                 /*
@@ -1313,16 +1316,21 @@ ResultType BuildingClass::Take_Damage(int& damage, int distance, WarheadType war
                 */
                 new SmudgeClass(Random_Pick(SMUDGE_CRATER1, SMUDGE_CRATER6), Cell_Coord(cell));
                 if (Percent_Chance(50)) {
-                    new AnimClass(
-                        ANIM_FIRE_SMALL, Coord_Scatter(Cell_Coord(cell), 0x0080), Random_Pick(0, 7), Random_Pick(1, 3));
+                    scatter_coord = Coord_Scatter(Cell_Coord(cell), 0x0080);
+                    delay = Random_Pick(0, 7);
+                    loop = Random_Pick(1, 3);
+                    new AnimClass(ANIM_FIRE_SMALL, scatter_coord, delay, loop);
+
                     if (Percent_Chance(50)) {
-                        new AnimClass(ANIM_FIRE_MED,
-                                      Coord_Scatter(Cell_Coord(cell), 0x0040),
-                                      Random_Pick(0, 7),
-                                      Random_Pick(1, 3));
+                        scatter_coord = Coord_Scatter(Cell_Coord(cell), 0x0040);
+                        delay = Random_Pick(0, 7);
+                        loop = Random_Pick(1, 3);
+                        new AnimClass(ANIM_FIRE_MED, scatter_coord, delay, loop);
                     }
                 }
-                new AnimClass(ANIM_FBALL1, Coord_Scatter(Cell_Coord(cell), 0x0040), Random_Pick(0, 3));
+                scatter_coord = Coord_Scatter(Cell_Coord(cell), 0x0040);
+                delay = Random_Pick(0, 3);
+                new AnimClass(ANIM_FBALL1, scatter_coord, delay);
             }
 
             shakes = Class->Cost_Of() / 400;
@@ -1478,17 +1486,21 @@ ResultType BuildingClass::Take_Damage(int& damage, int distance, WarheadType war
                     case 2:
                     case 3:
                     case 4:
-                    case 5:
-                        anim = new AnimClass(
-                            ANIM_ON_FIRE_SMALL, Coord_Scatter(Cell_Coord(cell), 0x0060), 0, Random_Pick(1, 3));
+                    case 5: {
+                        COORDINATE scatter_coord = Coord_Scatter(Cell_Coord(cell), 0x0060);
+                        int loop = Random_Pick(1, 3);
+                        anim = new AnimClass(ANIM_ON_FIRE_SMALL, scatter_coord, 0, loop);
                         break;
+                    }
 
                     case 6:
                     case 7:
-                    case 8:
-                        anim = new AnimClass(
-                            ANIM_ON_FIRE_MED, Coord_Scatter(Cell_Coord(cell), 0x0060), 0, Random_Pick(1, 3));
+                    case 8: {
+                        COORDINATE scatter_coord = Coord_Scatter(Cell_Coord(cell), 0x0060);
+                        int loop = Random_Pick(1, 3);
+                        anim = new AnimClass(ANIM_ON_FIRE_MED, scatter_coord, 0, loop);
                         break;
+                    }
 
                     case 9:
                         anim = new AnimClass(ANIM_ON_FIRE_BIG, Coord_Scatter(Cell_Coord(cell), 0x0060), 0, 1);
@@ -1505,10 +1517,10 @@ ResultType BuildingClass::Take_Damage(int& damage, int distance, WarheadType war
                         */
                         if (source == NULL || source->What_Am_I() != RTTI_INFANTRY
                             || *(InfantryClass*)source != INFANTRY_RENOVATOR) {
-                            anim = new AnimClass(ANIM_FIRE_SMALL,
-                                                 Coord_Scatter(Cell_Coord(cell), 0x0060),
-                                                 Random_Pick(0, 7),
-                                                 Random_Pick(1, 3));
+                            COORDINATE scatter_coord = Coord_Scatter(Cell_Coord(cell), 0x0060);
+                            int delay = Random_Pick(0, 7);
+                            int loop = Random_Pick(1, 3);
+                            anim = new AnimClass(ANIM_FIRE_SMALL, scatter_coord, delay, loop);
                         }
                     }
                 }
@@ -1589,7 +1601,7 @@ ResultType BuildingClass::Take_Damage(int& damage, int distance, WarheadType war
  *   05/17/1994 JLB : Revamped allocation scheme                                               *
  *   07/29/1994 JLB : Simplified.                                                              *
  *=============================================================================================*/
-void* BuildingClass::operator new(size_t)
+void* BuildingClass::operator new(size_t) noexcept
 {
     void* ptr = Buildings.Allocate();
     if (ptr) {
@@ -1813,12 +1825,13 @@ void BuildingClass::Drop_Debris(TARGET source)
             switch (Random_Pick(0, 5)) {
             case 0:
             case 1:
-            case 2:
-                new AnimClass(ANIM_SMOKE_M,
-                              Coord_Scatter(Cell_Coord(newcell), 0x0050, false),
-                              Random_Pick(0, 5),
-                              Random_Pick(1, 2));
+            case 2: {
+                COORDINATE scatter_coord = Coord_Scatter(Cell_Coord(newcell), 0x0050, false);
+                int delay = Random_Pick(0, 5);
+                int loop = Random_Pick(1, 2);
+                new AnimClass(ANIM_SMOKE_M, scatter_coord, delay, loop);
                 break;
+            }
 
             default:
                 break;
@@ -1830,8 +1843,9 @@ void BuildingClass::Drop_Debris(TARGET source)
             if (Percent_Chance(25)) {
                 new SmudgeClass(Random_Pick(SMUDGE_SCORCH1, SMUDGE_SCORCH6), Cell_Coord(newcell));
             } else {
-                new SmudgeClass(Random_Pick(SMUDGE_CRATER1, SMUDGE_CRATER6),
-                                Coord_Scatter(Cell_Coord(newcell), 0x0080, false));
+                SmudgeType type = Random_Pick(SMUDGE_CRATER1, SMUDGE_CRATER6);
+                COORDINATE scatter_coord = Coord_Scatter(Cell_Coord(newcell), 0x0080, false);
+                new SmudgeClass(type, scatter_coord);
             }
         }
     }

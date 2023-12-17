@@ -902,9 +902,9 @@ void MapClass::Overlap_Up(CELL cell, ObjectClass* object)
  *   02/13/1995 JLB : Returns total tiberium worth.                                            *
  *   02/15/1995 JLB : Optimal scan.                                                            *
  *=============================================================================================*/
-long MapClass::Overpass(void)
+int MapClass::Overpass(void)
 {
-    long value = 0;
+    int value = 0;
 
     /*
     **	Smooth out Tiberium. Cells that are not surrounded by other tiberium
@@ -1041,8 +1041,8 @@ bool MapClass::Read_Binary_Big(char const* fname, uint32_t* crc)
         cellptr->Recalc_Attributes();
 
 #ifndef DEMO
-        Add_CRC(crc, (unsigned long)cellptr->TType);
-        Add_CRC(crc, (unsigned long)cellptr->TIcon);
+        Add_CRC(crc, (unsigned int)cellptr->TType);
+        Add_CRC(crc, (unsigned int)cellptr->TIcon);
 #endif
 
         cellptr++;
@@ -1695,7 +1695,7 @@ int MapClass::Validate(void)
         /*.....................................................................
         Validate Overlappers
         .....................................................................*/
-        for (i = 0; i < 3; i++) {
+        for (i = 0; i < ARRAY_SIZE((*this)[cell].CellClass::Overlapper); i++) {
             obj = (*this)[cell].Overlapper[i];
             if (obj) {
 
@@ -1747,7 +1747,7 @@ void MapClass::Clean(void)
     const char* type_text = NULL;
     const char* ini_name = NULL;
     AbstractClass abstract_object;
-    unsigned long abstract_vtable = *(unsigned long*)&abstract_object;
+    unsigned int abstract_vtable = *(unsigned int*)&abstract_object;
 
     /*------------------------------------------------------------------------
     Check every cell on the map, even those that aren't displayed.
@@ -1762,7 +1762,7 @@ void MapClass::Clean(void)
         /*.....................................................................
         Validate Overlappers
         .....................................................................*/
-        for (i = 0; i < 3; i++) {
+        for (i = 0; i < ARRAY_SIZE((*this)[cell].Overlapper); i++) {
             obj = (*this)[cell].Overlapper[i];
             if (obj) {
 
@@ -1781,7 +1781,7 @@ void MapClass::Clean(void)
                     /*
                     ** This object is likely deleted.
                     */
-                    if (abstract_vtable == *(unsigned long*)obj) {
+                    if (abstract_vtable == *(unsigned int*)obj) {
                         type_text = "Abstract";
                         ini_name = "UNKNOWN";
                     } else {

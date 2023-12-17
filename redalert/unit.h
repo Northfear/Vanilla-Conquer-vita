@@ -91,7 +91,7 @@ public:
     ** This is the area where a mobile gap generator stores the previously-held
     ** shroud values for the cells surrounding itself.
     */
-    unsigned long ShroudBits;
+    unsigned int ShroudBits;
 
     /*
     ** This is the center coordinate for the mobile gap generator, as to
@@ -120,12 +120,11 @@ public:
     ** Some additional padding in case we need to add data to the class and maintain backwards compatibility for
     *save/load
     */
-    unsigned char SaveLoadPadding[28];
 
     /*---------------------------------------------------------------------
     **	Constructors, Destructors, and overloaded operators.
     */
-    static void* operator new(size_t size);
+    static void* operator new(size_t size) noexcept;
     static void* operator new(size_t, void* ptr)
     {
         return (ptr);
@@ -233,7 +232,7 @@ public:
     */
     virtual TARGET Greatest_Threat(ThreatType threat) const;
     virtual DirType Desired_Load_Dir(ObjectClass* passenger, CELL& moveto) const;
-    virtual RadioMessageType Receive_Message(RadioClass* from, RadioMessageType message, long& param);
+    virtual RadioMessageType Receive_Message(RadioClass* from, RadioMessageType message, int& param);
     virtual void AI(void);
     virtual int Mission_Guard_Area(void);
     virtual int Mission_Unload(void);

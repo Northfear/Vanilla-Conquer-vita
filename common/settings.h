@@ -26,6 +26,7 @@ public:
         int WindowHeight;
         bool Windowed;
         bool Boxing;
+        std::string BoxingAspectRatio;
         int Width;
         int Height;
         int FrameLimit;

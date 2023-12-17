@@ -240,7 +240,7 @@ void DriveClass::Overrun_Square(CELL cell, bool threaten)
                 **	Scattering is controlled by the game difficulty level.
                 */
                 if (((GameToPlay == GAME_NORMAL && PlayerPtr->Difficulty == DIFF_HARD) || Special.IsScatter
-                     || Scenario > 8)
+                     || Scen.Scenario > 8)
                     && !(GameToPlay == GAME_NORMAL && PlayerPtr->Difficulty == DIFF_EASY)) {
                     cellptr->Incoming(0, true);
                 }
@@ -724,7 +724,7 @@ bool DriveClass::While_Moving(void)
                 Coord = Head_To_Coord();
                 Stop_Driver();
                 TrackNumber = -1;
-                TrackIndex = NULL;
+                TrackIndex = 0;
 
                 /*
                 **	Perform "per cell" activities.
@@ -1170,7 +1170,7 @@ bool DriveClass::Start_Of_Move(void)
         if (cando != MOVE_OK) {
             Path[0] = FACING_NONE; // Path is blocked!
             TrackNumber = -1;
-            dest = NULL;
+            dest = 0;
         } else {
 
             Overrun_Square(Coord_Cell(dest), true);
@@ -1225,7 +1225,7 @@ bool DriveClass::Start_Of_Move(void)
 
                         Path[0] = FACING_NONE; // Path is blocked!
                         TrackNumber = -1;
-                        dest = NULL;
+                        dest = 0;
                         if (cando == MOVE_DESTROYABLE) {
 
                             if (Map[destcell].Cell_Object()) {

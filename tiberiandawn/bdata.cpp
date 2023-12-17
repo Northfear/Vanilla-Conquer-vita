@@ -33,6 +33,7 @@
  *   BuildingTypeClass::As_Reference -- Fetches reference to the building type specified.      *
  *   BuildingTypeClass::Bib_And_Offset -- Determines the bib and appropriate cell offset.      *
  *   BuildingTypeClass::BuildingTypeClass -- This is the constructor for the building types.   *
+ *   BuildingTypeClass::Coord_Fixup -- Adjusts coordinate to be legal for assignment.          *
  *   BuildingTypeClass::Create_And_Place -- Creates and places a building object onto the map. *
  *   BuildingTypeClass::Create_One_Of -- Creates a building of this type.                      *
  *   BuildingTypeClass::Dimensions -- Fetches the pixel dimensions of the building.            *
@@ -3637,7 +3638,7 @@ BuildingTypeClass::BuildingTypeClass(StructType type,
                                      char const* ininame,
                                      COORDINATE exitpoint,
                                      unsigned char level,
-                                     long pre,
+                                     int pre,
                                      bool is_scanner,
                                      bool is_regulated,
                                      bool is_bibbed,
@@ -3671,7 +3672,7 @@ BuildingTypeClass::BuildingTypeClass(StructType type,
                                      WeaponType primary,
                                      WeaponType secondary,
                                      ArmorType armor,
-                                     unsigned long canenter,
+                                     unsigned int canenter,
                                      unsigned capacity,
                                      int power,
                                      int drain,
@@ -4532,7 +4533,7 @@ int BuildingTypeClass::Max_Pips(void) const
  *=============================================================================================*/
 int BuildingTypeClass::Full_Name(void) const
 {
-    if (::Scenario == 3 && Type == STRUCT_MISSION) {
+    if (Scen.Scenario == 3 && Type == STRUCT_MISSION) {
         return (TXT_PRISON);
     }
     if (!IsNominal || Special.IsNamed || IsWall || Debug_Map || Type == STRUCT_V23 || Type == STRUCT_V30
@@ -4582,4 +4583,26 @@ int BuildingTypeClass::Cost_Of(void) const
 #endif
 
     return (TechnoTypeClass::Cost_Of());
+}
+
+/***********************************************************************************************
+ * BuildingTypeClass::Coord_Fixup -- Adjusts coordinate to be legal for assignment.            *
+ *                                                                                             *
+ *    This routine will adjust the specified coordinate so that it will be legal for assignment*
+ *    to this building. All buildings are given a coordinate that is in the upper left corner  *
+ *    of a cell. This routine will drop the fractional component of the coordinate.            *
+ *                                                                                             *
+ * INPUT:   coord -- The coordinate to fixup into a legal to assign value.                     *
+ *                                                                                             *
+ * OUTPUT:  Returns with a coordinate that can be assigned to the building.                    *
+ *                                                                                             *
+ * WARNINGS:   The coordinate is not examined to see if the cell is legal for placing the      *
+ *             building. It merely adjusts the coordinate so that is legal at first glance.    *
+ *                                                                                             *
+ * HISTORY:                                                                                    *
+ *   08/14/1996 JLB : Created.                                                                 *
+ *=============================================================================================*/
+COORDINATE BuildingTypeClass::Coord_Fixup(COORDINATE coord) const
+{
+    return Coord_Whole(coord);
 }

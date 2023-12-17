@@ -57,7 +57,7 @@ public:
     /*---------------------------------------------------------------------
     **	Constructors, Destructors, and overloaded operators.
     */
-    static void* operator new(size_t size);
+    static void* operator new(size_t size) noexcept;
     static void* operator new(size_t, void* ptr)
     {
         return (ptr);
@@ -162,7 +162,7 @@ public:
     **	AI.
     */
     virtual DirType Desired_Load_Dir(ObjectClass* passenger, CELL& moveto) const;
-    virtual RadioMessageType Receive_Message(RadioClass* from, RadioMessageType message, long& param);
+    virtual RadioMessageType Receive_Message(RadioClass* from, RadioMessageType message, int& param);
     virtual void AI(void);
     virtual int Mission_Attack(void);
     virtual int Mission_Unload(void);
@@ -222,7 +222,6 @@ private:
     ** Some additional padding in case we need to add data to the class and maintain backwards compatibility for
     *save/load
     */
-    unsigned char SaveLoadPadding[28];
 };
 
 #endif

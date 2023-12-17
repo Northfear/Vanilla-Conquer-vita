@@ -34,7 +34,7 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
-//#define PETROGLYPH_EXAMPLE_MOD
+#include "common/bitfields.h"
 
 /**********************************************************************
 **	If defined, then the advanced balancing features will be enabled
@@ -697,11 +697,11 @@ typedef enum PlayerColorType : signed char
     REMAP_NONE = -1,
     REMAP_GOLD,
     REMAP_FIRST = REMAP_GOLD,
-    REMAP_LTBLUE,
+    REMAP_LTBLUE, // Ingame grey color
     REMAP_RED,
     REMAP_GREEN,
     REMAP_ORANGE,
-    REMAP_BLUE,
+    REMAP_BLUE, // Ingame dark green color
     REMAP_LAST = REMAP_BLUE,
 
     REMAP_COUNT
@@ -801,11 +801,6 @@ typedef enum BulletType : signed char
     BULLET_SPREADFIRE,  // Chain gun bullets.
     BULLET_HEADBUTT,    // Stegosaurus, Triceratops head butt
     BULLET_TREXBITE,    // Tyrannosaurus Rex's bite - especially bad for infantry
-
-#ifdef PETROGLYPH_EXAMPLE_MOD
-    BULLET_NUKE_LOB, // Nuke projectile
-#endif               // PETROGLYPH_EXAMPLE_MOD
-
     BULLET_COUNT,
     BULLET_FIRST = 0
 } BulletType;
@@ -1037,11 +1032,6 @@ typedef enum UnitType : signed char
     UNIT_TREX,      //	Tyranosaurus Rex
     UNIT_RAPT,      //	Velociraptor
     UNIT_STEG,      //	Stegasaurus
-
-#ifdef PETROGLYPH_EXAMPLE_MOD
-    UNIT_NUKE_TANK, // Mammoth with a nuke
-#endif
-
     UNIT_COUNT,
     UNIT_FIRST = 0
 } UnitType;
@@ -1654,14 +1644,89 @@ typedef enum RadioMessageType : unsigned char
 **	with cell resolution. The COORD type is used for map coordinates that
 **	have a lepton resolution.
 */
+typedef unsigned short LEPTON;
+typedef union
+{
+    LEPTON Raw;
+    struct
+    {
+#ifdef __BIG_ENDIAN__
+        unsigned char Cell;
+        unsigned char Lepton;
+#else
+        unsigned char Lepton;
+        unsigned char Cell;
+#endif
+    } Sub;
+} LEPTON_COMPOSITE;
+
 typedef unsigned COORDINATE;
+typedef union
+{
+    COORDINATE Coord;
+    struct
+    {
+#ifdef __BIG_ENDIAN__
+        LEPTON_COMPOSITE Y;
+        LEPTON_COMPOSITE X;
+#else
+        LEPTON_COMPOSITE X;
+        LEPTON_COMPOSITE Y;
+#endif
+    } Sub;
+} COORD_COMPOSITE;
+
 typedef signed short CELL;
 
-#ifdef MEGAMAPS
-typedef long TARGET;
+typedef union
+{
+    CELL Cell;
+    struct
+    {
+#ifdef __BIG_ENDIAN__
+        /*
+        **	Unused upper bits will cause problems on a big-endian machine unless they
+        **	are deliberately accounted for.
+        */
+        unsigned short sluff : 16 - (MAP_CELL_MAX_X_BITS + MAP_CELL_MAX_Y_BITS);
+        unsigned short Y : MAP_CELL_MAX_Y_BITS;
+        unsigned short X : MAP_CELL_MAX_X_BITS;
 #else
-typedef unsigned short TARGET;
+        unsigned short X : MAP_CELL_MAX_X_BITS;
+        unsigned short Y : MAP_CELL_MAX_Y_BITS;
 #endif
+    } Sub;
+} CELL_COMPOSITE;
+
+/**********************************************************************
+**	This is the target composit information. Notice that with an RTTI_NONE
+**	and an index value of 0, the target value returned is identical with
+**	TARGET_NONE. This is by design and is necessary.
+*/
+typedef int TARGET;
+
+/* Safe cast to target type */
+#define TARGET_SAFE_CAST(x) (static_cast<TARGET>(reinterpret_cast<intptr_t>((void*)(x))))
+
+#define TARGET_MANTISSA 24 // Bits of value precision.
+#define TARGET_EXPONENT 8
+#pragma pack(push, 1)
+typedef union
+{
+    TARGET Target;
+    struct BITFIELD_STRUCT
+    {
+#ifdef __BIG_ENDIAN__
+        unsigned Exponent : TARGET_EXPONENT;
+        unsigned Mantissa : TARGET_MANTISSA;
+#else
+        unsigned Mantissa : TARGET_MANTISSA;
+        unsigned Exponent : TARGET_EXPONENT;
+#endif
+    } Sub;
+} TARGET_COMPOSITE;
+#pragma pack(pop)
+
 #define TARGET_NONE ((TARGET)0)
 
 /****************************************************************************
@@ -1843,11 +1908,6 @@ typedef enum WeaponType : signed char
     WEAPON_HONEST_JOHN,
     WEAPON_STEG,
     WEAPON_TREX,
-
-#ifdef PETROGLYPH_EXAMPLE_MOD
-    WEAPON_NUKE_LOB,
-#endif PETROGLYPH_EXAMPLE_MOD
-
     WEAPON_COUNT
 } WeaponType;
 
@@ -2332,10 +2392,6 @@ typedef enum VocType : signed char
 
     VOC_BEACON, // Beacon sound.
 
-#ifdef PETROGLYPH_EXAMPLE_MOD
-    VOC_NUKE_LOB, // Modded unit firing sound
-#endif
-
     VOC_COUNT,
     VOC_BUILD_SELECT = VOC_TARGET,
     VOC_FIRST = 0
@@ -2489,13 +2545,13 @@ typedef struct
 */
 typedef struct
 {
-    CELL Start;             // Starting cell number.
-    int Cost;               // Accumulated terrain cost.
-    int Length;             // Command string length.
-    FacingType* Command;    // Pointer to command string.
-    unsigned long* Overlap; // Pointer to overlap list
-    CELL LastOverlap;       // stores position of last overlap
-    CELL LastFixup;         // stores position of last overlap
+    CELL Start;            // Starting cell number.
+    int Cost;              // Accumulated terrain cost.
+    int Length;            // Command string length.
+    FacingType* Command;   // Pointer to command string.
+    unsigned int* Overlap; // Pointer to overlap list
+    CELL LastOverlap;      // stores position of last overlap
+    CELL LastFixup;        // stores position of last overlap
 } PathType;
 
 /**********************************************************************
@@ -2669,7 +2725,8 @@ typedef enum SerialCommandType : unsigned short
 **	These is the structure sent over the network Global Channel.
 **	Also used for the Null-Modem and Modem.
 */
-typedef struct
+#pragma pack(push, 1)
+typedef struct BITFIELD_STRUCT
 {
     SerialCommandType Command;           // One of the enum's defined above
     char Name[MPLAYER_NAME_MAX];         // Player or Game Name
@@ -2687,10 +2744,11 @@ typedef struct
     int Seed;                            // random number seed
     SpecialClass Special;                // command-line options
     unsigned int GameSpeed;              // Game Speed
-    unsigned long ResponseTime;          // packet response time
+    unsigned int ResponseTime;           // packet response time
     char Message[COMPAT_MESSAGE_LENGTH]; // inter-player message
     unsigned char ID;                    // ID of sender of message
 } SerialPacketType;
+#pragma pack(pop)
 
 typedef enum ModemGameType : unsigned char
 {
@@ -2729,24 +2787,25 @@ typedef enum NetCommandType : unsigned char
 /****************************************************************************
 **	These is the structure sent over the network Global Channel.
 */
+#pragma pack(push, 1)
 typedef struct
 {
     NetCommandType Command;      // One of the enum's defined above
     char Name[MPLAYER_NAME_MAX]; // Player or Game Name
     union
     {
-        struct
+        struct BITFIELD_STRUCT
         {
             int Version;             // game's version number
             unsigned int IsOpen : 1; // 1 = game is open for joining
         } GameInfo;
         struct
         {
-            HousesType House;      // player's House
-            unsigned int Color;    // player's color
-            unsigned long NameCRC; // CRC of player's game's name
+            HousesType House;     // player's House
+            unsigned int Color;   // player's color
+            unsigned int NameCRC; // CRC of player's game's name
         } PlayerInfo;
-        struct
+        struct BITFIELD_STRUCT
         {
             unsigned char Scenario;      // Scenario #
             unsigned int Credits;        // player's credits
@@ -2764,7 +2823,7 @@ typedef struct
         {
             char Buf[COMPAT_MESSAGE_LENGTH]; // inter-user message
             unsigned char ID;                // ID of sender of message
-            unsigned long NameCRC;           // CRC of sender's Game Name
+            unsigned int NameCRC;            // CRC of sender's Game Name
         } Message;
         struct
         {
@@ -2772,7 +2831,7 @@ typedef struct
         } ResponseTime;
     };
 } GlobalPacketType;
-
+#pragma pack(pop)
 /****************************************************************************
 **	This structure is for keeping score in multiplayer games.
 */

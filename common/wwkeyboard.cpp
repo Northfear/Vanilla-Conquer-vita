@@ -56,7 +56,8 @@
 #include "miscasm.h"
 #include <string.h>
 #include <cmath>
-#ifdef SDL2_BUILD
+#include <cstdlib>
+#ifdef SDL_BUILD
 #include <SDL.h>
 #include "sdl_keymap.h"
 #endif
@@ -133,7 +134,7 @@ unsigned short WWKeyboardClass::Buff_Get(void)
 bool WWKeyboardClass::Is_Mouse_Key(unsigned short key)
 {
     key &= 0xFF;
-    return (key == VK_LBUTTON || key == VK_MBUTTON || key == VK_RBUTTON);
+    return (key == KN_LMOUSE || key == KN_MMOUSE || key == KN_RMOUSE);
 }
 
 /***********************************************************************************************
@@ -218,13 +219,13 @@ bool WWKeyboardClass::Put_Key_Message(unsigned short vk_key, bool release)
     ** would be incompatible with the dos version.
     */
     if (!Is_Mouse_Key(vk_key)) {
-        if (Down(VK_SHIFT) || Down(VK_CAPITAL) || Down(VK_NUMLOCK)) {
+        if (Down(KN_LSHIFT) || Down(KN_RSHIFT) || Down(KN_CAPSLOCK) || Down(KN_NUMLOCK)) {
             vk_key |= WWKEY_SHIFT_BIT;
         }
-        if (Down(VK_CONTROL)) {
+        if (Down(KN_LCTRL) || Down(KN_RCTRL)) {
             vk_key |= WWKEY_CTRL_BIT;
         }
-        if (Down(VK_MENU)) {
+        if (Down(KN_LALT) || Down(KN_RALT)) {
             vk_key |= WWKEY_ALT_BIT;
         }
     }
@@ -316,7 +317,7 @@ KeyASCIIType WWKeyboardClass::To_ASCII(unsigned short key)
     int result = 1;
     int scancode = 0;
 
-#if defined(SDL2_BUILD)
+#if defined(SDL_BUILD)
     key &= 0xFF; // drop all mods
 
     if (key > ARRAY_SIZE(sdl_keymap) / 2 - 1) {
@@ -534,32 +535,35 @@ void Process_Network();
 
 void WWKeyboardClass::Fill_Buffer_From_System(void)
 {
-#ifdef SDL2_BUILD
+#ifdef SDL_BUILD
+#ifdef NETWORKING
     Process_Network();
+#endif
     SDL_Event event;
 
     while (!Is_Buffer_Full() && SDL_PollEvent(&event)) {
         unsigned short key;
         switch (event.type) {
-        case SDL_MOUSEWHEEL:
-            if (event.wheel.y > 0) { // scroll up
-                Put_Key_Message(VK_MOUSEWHEEL_UP, false);
-            } else if (event.wheel.y < 0) { // scroll down
-                Put_Key_Message(VK_MOUSEWHEEL_DOWN, false);
-            }
-            break;
         case SDL_QUIT:
             exit(0);
             break;
         case SDL_KEYDOWN:
+#ifdef SDL2_BUILD
             Put_Key_Message(event.key.keysym.scancode, false);
+#else
+            Put_Key_Message(event.key.keysym.sym, false);
+#endif
             break;
         case SDL_KEYUP:
+#ifdef SDL2_BUILD
             if (event.key.keysym.scancode == SDL_SCANCODE_RETURN && Down(VK_MENU)) {
                 Toggle_Video_Fullscreen();
             } else {
                 Put_Key_Message(event.key.keysym.scancode, true);
             }
+#else
+            Put_Key_Message(event.key.keysym.sym, true);
+#endif
             break;
         case SDL_MOUSEMOTION:
             Move_Video_Mouse(static_cast<float>(event.motion.xrel), static_cast<float>(event.motion.yrel));
@@ -579,6 +583,14 @@ void WWKeyboardClass::Fill_Buffer_From_System(void)
             case SDL_BUTTON_MIDDLE:
                 key = VK_MBUTTON;
                 break;
+#ifdef SDL1_BUILD
+            case SDL_BUTTON_WHEELUP:
+                key = VK_MOUSEWHEEL_UP;
+                break;
+            case SDL_BUTTON_WHEELDOWN:
+                key = VK_MOUSEWHEEL_DOWN;
+                break;
+#endif
             }
 
             if (Settings.Mouse.RawInput || Is_Gamepad_Active()) {
@@ -592,6 +604,7 @@ void WWKeyboardClass::Fill_Buffer_From_System(void)
 
             Put_Mouse_Message(key, x, y, event.type == SDL_MOUSEBUTTONDOWN ? false : true);
         } break;
+#ifdef SDL2_BUILD
         case SDL_WINDOWEVENT:
             switch (event.window.event) {
             case SDL_WINDOWEVENT_EXPOSED:
@@ -604,6 +617,13 @@ void WWKeyboardClass::Fill_Buffer_From_System(void)
             case SDL_WINDOWEVENT_FOCUS_LOST:
                 Focus_Loss();
                 break;
+            }
+            break;
+        case SDL_MOUSEWHEEL:
+            if (event.wheel.y > 0) { // scroll up
+                Put_Key_Message(VK_MOUSEWHEEL_UP, false);
+            } else if (event.wheel.y < 0) { // scroll down
+                Put_Key_Message(VK_MOUSEWHEEL_DOWN, false);
             }
             break;
         case SDL_CONTROLLERDEVICEREMOVED:
@@ -634,11 +654,14 @@ void WWKeyboardClass::Fill_Buffer_From_System(void)
             Handle_Touch_Event(event.tfinger);
             break;
 #endif
+#endif
         }
     }
+#ifdef SDL2_BUILD
     if (Is_Gamepad_Active()) {
         Process_Controller_Axis_Motion();
     }
+#endif
 #elif defined(_WIN32)
     if (!Is_Buffer_Full()) {
         MSG msg;
@@ -1017,7 +1040,7 @@ void WWKeyboardClass::Clear(void)
  * HISTORY:                                                                                    *
  *   09/30/1996 JLB : Created.                                                                 *
  *=============================================================================================*/
-#if defined(_WIN32) && !defined(SDL2_BUILD)
+#if defined(_WIN32) && !defined(SDL_BUILD)
 bool WWKeyboardClass::Message_Handler(HWND window, UINT message, UINT wParam, LONG lParam)
 {
 // ST - 5/13/2019

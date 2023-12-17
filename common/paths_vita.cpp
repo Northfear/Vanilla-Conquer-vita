@@ -24,7 +24,7 @@
 
 #define PATH_MAX 256
 
-#include <psp2/io/dirent.h>
+#include <psp2/io/stat.h> 
 
 std::string vitaGamePath;
 

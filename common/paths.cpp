@@ -42,7 +42,7 @@ void PathsClass::Init(const char* suffix, const char* ini_name, const char* data
     Data_Path();
     User_Path();
     //crashes on Vita after DBG_INFO in DEBUG build for some reason
-#ifndef VITA
+#ifndef __vita__
     DBG_INFO("Searching the following paths for path config data:\n  argv: '%s'\n  binary: '%s'\n  default data: "
              "'%s'\n  default user: '%s'",
              argv_path.c_str(),

@@ -45,7 +45,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
-#ifdef VITA
+#ifdef __vita__
 #include "common/paths.h"
 #endif
 
@@ -111,7 +111,7 @@ bool Save_Game(int id, char* descr)
     /*
     **	Generate the filename to save
     */
-#ifdef VITA
+#ifdef __vita__
     std::string savePath;
     savePath = Paths.User_Path();
     savePath.append("/SAVEGAME.%03d");
@@ -323,7 +323,7 @@ bool Load_Game(int id)
     /*
     **	Generate the filename to load
     */
-#ifdef VITA
+#ifdef __vita__
     std::string savePath;
     savePath = Paths.User_Path();
     savePath.append("/SAVEGAME.%03d");
@@ -1006,7 +1006,7 @@ bool Get_Savefile_Info(int id, char* buf, unsigned* scenp, HousesType* housep)
     /*
     **	Generate the filename to load
     */
-#ifdef VITA
+#ifdef __vita__
     std::string savePath;
     savePath = Paths.User_Path();
     savePath.append("/SAVEGAME.%03d");

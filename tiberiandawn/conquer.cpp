@@ -3490,7 +3490,7 @@ static bool Change_Local_Dir(int cd)
 {
     static bool _initialised = false;
     static unsigned _detected = 0;
-#ifdef VITA
+#ifdef __vita__
     static const char* _vol_labels[CD_COUNT] = {
         "ux0:data/VanillaTD/gdi", "ux0:data/VanillaTD/nod", "ux0:data/VanillaTD/covertops", "ux0:data/VanillaTD"};
     char vol_buff[64];

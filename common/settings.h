@@ -37,7 +37,7 @@ public:
         std::string PixelFormat;
     } Video;
 
-#ifdef VITA
+#ifdef __vita__
     struct
     {
         bool ScaleGameSurface;

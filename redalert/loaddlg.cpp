@@ -48,7 +48,7 @@
 #include "common/file.h"
 #include "common/framelimit.h"
 
-#ifdef VITA
+#ifdef __vita__
 #include "common/paths.h"
 #endif
 
@@ -668,7 +668,7 @@ void LoadOptionsClass::Fill_List(ListClass* list)
     /*
     ** Find all savegame files
     */
-#ifdef VITA
+#ifdef __vita__
     std::string savePath;
     savePath = Paths.User_Path();
     savePath.append("/SAVEGAME.*");

@@ -2150,7 +2150,7 @@ static void Init_Expansion_Files(void)
     for (int p = 0; p < 100; p++) {
 
         strcpy(search_path, path);
-#ifdef VITA
+#ifdef __vita__
         if (search_path[strlen(search_path) - 1] != '/') {
             strcat(search_path, "/");
         }

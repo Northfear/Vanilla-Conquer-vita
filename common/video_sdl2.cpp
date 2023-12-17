@@ -132,7 +132,7 @@ static void Update_HWCursor_Settings()
     /*
     ** Update screen boxing settings.
     */
-#ifdef VITA
+#ifdef __vita__
     if (hwcursor.GameW != VITA_FULLSCREEN_WIDTH || hwcursor.GameH != VITA_FULLSCREEN_HEIGHT) {
         render_dst.x = 0;
         render_dst.y = 0;
@@ -294,7 +294,7 @@ bool Set_Video_Mode(int w, int h, int bits_per_pixel)
             DBG_INFO(" %s%s", info.name, (i == renderer_index ? " (selected)" : ""));
         }
     }
-#ifdef VITA
+#ifdef __vita__
     renderer = SDL_CreateRenderer(window, renderer_index, SDL_RENDERER_TARGETTEXTURE | SDL_RENDERER_PRESENTVSYNC);
 #else
     renderer = SDL_CreateRenderer(window, renderer_index, SDL_RENDERER_TARGETTEXTURE);
@@ -478,7 +478,7 @@ void Get_Video_Mouse(int& x, int& y)
     }
 }
 
-#ifdef VITA
+#ifdef __vita__
 void Get_Game_Resolution(int& w, int& h)
 {
     w = hwcursor.GameW;

@@ -649,7 +649,7 @@ int MouseInstalled;
 //
 // Variables for helping track how much time goes bye in routines
 //
-#ifndef VITA
+#ifndef __vita__
 //multiple definition of `LogLevel' with openal
 int LogLevel = 0;
 #endif

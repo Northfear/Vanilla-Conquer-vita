@@ -9,7 +9,7 @@
 #include <io.h>
 #endif
 
-#ifdef VITA
+#ifdef __vita__
 #include <psp2/kernel/clib.h>
 #endif
 
@@ -70,7 +70,7 @@ void Debug_String_Log(unsigned level, const char* file, int line, const char* fm
         fflush(DebugState.File);
     }
 
-#ifdef VITA
+#ifdef __vita__
     /* Don't print file and line numbers to stderr to avoid clogging it up with too much info */
     va_list args;
     sceClibPrintf("%-5s: ", levels[level]);

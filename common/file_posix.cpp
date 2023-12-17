@@ -8,7 +8,7 @@
 #include <limits.h>
 #include <fnmatch.h>
 
-#ifdef VITA
+#ifdef __vita__
 #include <algorithm>
 #include <string>
 #include <vector>

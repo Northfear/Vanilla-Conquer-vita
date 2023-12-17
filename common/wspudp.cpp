@@ -52,7 +52,7 @@ extern WWKeyboardClass* Keyboard;
 #include <stdio.h>
 #include <assert.h>
 
-#if !defined(_WIN32) && !defined(VITA)
+#if !defined(_WIN32) && !defined(__vita__)
 #include <ifaddrs.h>
 #endif
 

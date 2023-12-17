@@ -751,7 +751,7 @@ public:
     void Open_Controller();
     void Close_Controller();
     bool Is_Analog_Scroll_Active();
-#ifdef VITA
+#ifdef __vita__
     bool Is_Analog_Only_Scroll();
 #endif
     unsigned char Get_Scroll_Direction();
@@ -819,7 +819,7 @@ private:
 
     enum
     {
-#ifdef VITA
+#ifdef __vita__
         CONTROLLER_L_DEADZONE_MOUSE = 4000,
         CONTROLLER_L_DEADZONE_SCROLL = 6000,
 #else
@@ -839,7 +839,7 @@ private:
     bool AnalogScrollActive = false;
     ScrollDirType ScrollDirection = SDIR_NONE;
 
-#ifdef VITA
+#ifdef __vita__
     bool AnalogStickMouse = true;
     void Handle_Touch_Event(const SDL_TouchFingerEvent& event);
     SDL_FingerID FirstFingerId = 0;

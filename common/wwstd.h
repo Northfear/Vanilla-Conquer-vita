@@ -258,7 +258,7 @@ inline static void _splitpath(const char* path, char* drive, char* dir, char* fn
     }
 }
 
-#ifndef VITA
+#ifndef __vita__
 inline static char* strupr(char* str)
 {
     for (int i = 0; i < strlen(str); i++)

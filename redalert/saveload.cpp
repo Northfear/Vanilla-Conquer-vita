@@ -55,7 +55,7 @@
 #include "carry.h"
 #include "common/tcpip.h"
 
-#ifdef VITA
+#ifdef __vita__
 #include "common/paths.h"
 #endif
 
@@ -338,7 +338,7 @@ bool Save_Game(int id, char const* descr, bool)
         strcpy(name, NET_SAVE_FILE_NAME);
         // save_net = 1;
     } else {
-#ifdef VITA
+#ifdef __vita__
         std::string savePath;
         savePath = Paths.User_Path();
         savePath.append("/SAVEGAME.%03d");
@@ -511,7 +511,7 @@ bool Load_Game(int id)
         strcpy(name, NET_SAVE_FILE_NAME);
         // load_net = 1;
     } else {
-#ifdef VITA
+#ifdef __vita__
         std::string savePath;
         savePath = Paths.User_Path();
         savePath.append("/SAVEGAME.%03d");
@@ -1456,7 +1456,7 @@ bool Get_Savefile_Info(int id, char* buf, unsigned* scenp, HousesType* housep)
     /*
     **	Generate the filename to load
     */
-#ifdef VITA
+#ifdef __vita__
     std::string savePath;
     savePath = Paths.User_Path();
     savePath.append("/SAVEGAME.%03d");

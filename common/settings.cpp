@@ -11,7 +11,7 @@ SettingsClass::SettingsClass()
     */
     Mouse.RawInput = true;
     Mouse.Sensitivity = 100;
-#ifdef VITA
+#ifdef __vita__
     Mouse.ControllerEnabled = true;
 #else
     Mouse.ControllerEnabled = false;
@@ -36,7 +36,7 @@ SettingsClass::SettingsClass()
     Video.Driver = "default";
     Video.PixelFormat = "default";
 
-#ifdef VITA
+#ifdef __vita__
     Vita.ScaleGameSurface = true;
     Vita.RearTouchEnabled = true;
     Vita.RearTouchSpeed = 5;
@@ -86,7 +86,7 @@ void SettingsClass::Load(INIClass& ini)
         Video.HardwareCursor = false;
     }
 
-#ifdef VITA
+#ifdef __vita__
     Vita.ScaleGameSurface = ini.Get_Bool("Vita", "ScaleGameSurface", Vita.ScaleGameSurface);
     Vita.RearTouchEnabled = ini.Get_Bool("Vita", "RearTouchEnabled", Vita.RearTouchEnabled);
     Vita.RearTouchSpeed = ini.Get_Int("Vita", "RearTouchSpeed", Vita.RearTouchSpeed);
@@ -125,7 +125,7 @@ void SettingsClass::Save(INIClass& ini)
     */
     ini.Put_Int("Video", "InterpolationMode", Video.InterpolationMode);
 
-#ifdef VITA
+#ifdef __vita__
     ini.Put_Bool("Vita", "ScaleGameSurface", Vita.ScaleGameSurface);
     ini.Put_Bool("Vita", "RearTouchEnabled", Vita.RearTouchEnabled);
     ini.Put_Int("Vita", "RearTouchSpeed", Vita.RearTouchSpeed);

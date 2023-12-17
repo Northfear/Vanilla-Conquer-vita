@@ -627,7 +627,7 @@ void WWKeyboardClass::Fill_Buffer_From_System(void)
         case SDL_CONTROLLERBUTTONUP:
             Handle_Controller_Button_Event(event.cbutton);
             break;
-#ifdef VITA
+#ifdef __vita__
         case SDL_FINGERDOWN:
         case SDL_FINGERUP:
         case SDL_FINGERMOTION:
@@ -666,7 +666,7 @@ void WWKeyboardClass::Open_Controller()
             GameController = SDL_GameControllerOpen(i);
         }
     }
-#if SDL_VERSION_ATLEAST(2, 0, 10) && defined(VITA)
+#if SDL_VERSION_ATLEAST(2, 0, 10) && defined(__vita__)
     SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
 #endif
 }
@@ -684,9 +684,10 @@ void WWKeyboardClass::Process_Controller_Axis_Motion()
     const uint32_t currentTime = SDL_GetTicks();
     const float deltaTime = currentTime - LastControllerTime;
     LastControllerTime = currentTime;
-#ifdef VITA
-    if (!AnalogStickMouse)
+#ifdef __vita__
+    if (!AnalogStickMouse) {
         return;
+    }
 #endif
     if (ControllerLeftXAxis != 0 || ControllerLeftYAxis != 0) {
         const int16_t xSign = (ControllerLeftXAxis > 0) - (ControllerLeftXAxis < 0);
@@ -707,7 +708,7 @@ void WWKeyboardClass::Handle_Controller_Axis_Event(const SDL_ControllerAxisEvent
     ScrollDirType directionX = SDIR_NONE;
     ScrollDirType directionY = SDIR_NONE;
 
-#ifdef VITA
+#ifdef __vita__
     int CONTROLLER_L_DEADZONE;
     if (!AnalogStickMouse)
         CONTROLLER_L_DEADZONE = CONTROLLER_L_DEADZONE_SCROLL;
@@ -742,7 +743,7 @@ void WWKeyboardClass::Handle_Controller_Axis_Event(const SDL_ControllerAxisEvent
             ControllerSpeedBoost = 1;
     }
 
-#ifdef VITA
+#ifdef __vita__
     if (!AnalogStickMouse) {
         if (ControllerLeftXAxis != 0) {
             AnalogScrollActive = true;
@@ -851,7 +852,7 @@ void WWKeyboardClass::Handle_Controller_Button_Event(const SDL_ControllerButtonE
         Put_Mouse_Message(key, x, y, button.state == SDL_RELEASED);
     }
 
-#ifdef VITA
+#ifdef __vita__
     if (button.state == SDL_PRESSED && (button.button == SDL_CONTROLLER_BUTTON_LEFTSHOULDER || button.button == SDL_CONTROLLER_BUTTON_RIGHTSHOULDER || 
         button.button == SDL_CONTROLLER_BUTTON_START))
         {
@@ -873,7 +874,7 @@ unsigned char WWKeyboardClass::Get_Scroll_Direction()
     return ScrollDirection;
 }
 
-#ifdef VITA
+#ifdef __vita__
 bool WWKeyboardClass::Is_Analog_Only_Scroll()
 {
     return !AnalogStickMouse;

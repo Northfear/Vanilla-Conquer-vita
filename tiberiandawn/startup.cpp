@@ -49,20 +49,16 @@ void Print_Error_Exit(char* string);
 #define vc_chdir(x) _wchdir(UTF8To16(x))
 extern void Create_Main_Window(HANDLE instance, int width, int height);
 HINSTANCE ProgramInstance;
-#elif VITA
-//int _newlib_heap_size_user = 230 * 1024 * 1024;
-int _newlib_heap_size_user = 340 * 1024 * 1024;
-#include <psp2/kernel/processmgr.h>
-#include <psp2/power.h>
-
-#define vc_chdir(x) chdir_vita(x)
-
-void chdir_vita(const char* path)
-{
-}
 #else
 #include <unistd.h>
 #define vc_chdir(x) chdir(x)
+#endif
+
+#ifdef __vita__
+#include <psp2/kernel/processmgr.h>
+#include <psp2/power.h>
+
+int _newlib_heap_size_user = 256 * 1024 * 1024;
 #endif
 
 extern int ReadyToQuit;
@@ -213,7 +209,7 @@ int DLL_Startup(const char* command_line_in)
 
 int main(int argc, char** argv)
 {
-#ifdef VITA
+#ifdef __vita__
     scePowerSetArmClockFrequency(444);
     //scePowerSetGpuClockFrequency(222);
     scePowerSetBusClockFrequency(222);
@@ -243,7 +239,7 @@ int main(int argc, char** argv)
     /*
     **	Remember the current working directory and drive.
     */
-#ifdef VITA
+#ifdef __vita__
     Paths.Init("vanillatd", "CONQUER.INI", "CONQUER.MIX", "ux0:data/VanillaTD");
 #else
     Paths.Init("vanillatd", "CONQUER.INI", "CONQUER.MIX", args.ArgV[0]);

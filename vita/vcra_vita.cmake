@@ -20,5 +20,3 @@ vita_create_vpk(${EXECUTABLE_NAME}.vpk ${VITA_TITLEID} ${EXECUTABLE_NAME}.self
     FILE ${CMAKE_SOURCE_DIR}/vita/sce_sys/livearea/contents/startup_ra.png sce_sys/livearea/contents/startup.png
     FILE ${CMAKE_SOURCE_DIR}/vita/sce_sys/livearea/contents/template.xml sce_sys/livearea/contents/template.xml
 )
-
-add_dependencies(${EXECUTABLE_NAME}.self VanillaRA)

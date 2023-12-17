@@ -70,7 +70,7 @@ void Reset_Video_Mode();
 unsigned Get_Free_Video_Memory();
 void Wait_Blit();
 
-#ifdef VITA
+#ifdef __vita__
 #include <SDL.h>
 
 const int32_t VITA_FULLSCREEN_WIDTH = 960;

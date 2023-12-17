@@ -108,10 +108,11 @@ void ScrollClass::AI(KeyNumType& input, int x, int y)
             int scrollDistance = (7 - Options.ScrollRate) * 20;
             Scroll_Map((DirType)scrollDirection, scrollDistance, true);
         }
-#ifdef VITA
+#ifdef __vita__
         // scroll only with analog sticks
-        if (Keyboard->Is_Analog_Only_Scroll())
+        if (Keyboard->Is_Analog_Only_Scroll()) {
             noscroll = true;
+        }
 #endif
 #endif
 

@@ -45,9 +45,6 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
-#ifdef __vita__
-#include "common/paths.h"
-#endif
 
 extern bool DLLSave(FileClass& file);
 extern bool DLLLoad(FileClass& file);
@@ -111,14 +108,7 @@ bool Save_Game(int id, char* descr)
     /*
     **	Generate the filename to save
     */
-#ifdef __vita__
-    std::string savePath;
-    savePath = Paths.User_Path();
-    savePath.append("/SAVEGAME.%03d");
-    sprintf(name, savePath.c_str(), id);
-#else
     sprintf(name, "SAVEGAME.%03d", id);
-#endif
 
     return Save_Game(name, descr);
 }
@@ -323,14 +313,7 @@ bool Load_Game(int id)
     /*
     **	Generate the filename to load
     */
-#ifdef __vita__
-    std::string savePath;
-    savePath = Paths.User_Path();
-    savePath.append("/SAVEGAME.%03d");
-    sprintf(name, savePath.c_str(), id);
-#else
     sprintf(name, "SAVEGAME.%03d", id);
-#endif
 
     return Load_Game(name);
 }

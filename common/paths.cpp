@@ -22,6 +22,10 @@
 #include <unistd.h>
 #endif
 
+#ifdef __vita__
+#include <psp2/kernel/clib.h>
+#endif
+
 PathsClass Paths;
 
 void PathsClass::Init(const char* suffix, const char* ini_name, const char* data_name, const char* cmd_arg)
@@ -41,8 +45,13 @@ void PathsClass::Init(const char* suffix, const char* ini_name, const char* data
     Program_Path();
     Data_Path();
     User_Path();
-    //crashes on Vita after DBG_INFO in DEBUG build for some reason
-#ifndef __vita__
+#ifdef __vita__
+    //DBG_INFO crashes on Vita in DEBUG build for some reason
+    sceClibPrintf("argv: '%s'\n", argv_path.c_str());
+    sceClibPrintf("binary: '%s'\n", ProgramPath.c_str());
+    sceClibPrintf("default data: '%s'\n", DataPath.c_str());
+    sceClibPrintf("default user: '%s'\n", UserPath.c_str());
+#else
     DBG_INFO("Searching the following paths for path config data:\n  argv: '%s'\n  binary: '%s'\n  default data: "
              "'%s'\n  default user: '%s'",
              argv_path.c_str(),

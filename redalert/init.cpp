@@ -2109,15 +2109,9 @@ static void Init_Expansion_Files(void)
     for (int p = 0; p < 100; p++) {
 
         strcpy(search_path, path);
-#ifdef __vita__
-        if (search_path[strlen(search_path) - 1] != '/') {
-            strcat(search_path, "/");
-        }
-#else
         if (search_path[strlen(search_path) - 1] != '\\') {
             strcat(search_path, "\\");
         }
-#endif
 
         strcpy(scan_path, search_path);
         strcat(scan_path, "SC*.MIX");

@@ -24,7 +24,7 @@
 
 #define PATH_MAX 256
 
-#include <psp2/io/stat.h> 
+#include <psp2/io/stat.h>
 
 std::string vitaGamePath;
 
@@ -90,7 +90,11 @@ bool PathsClass::Create_Directory(const char* dirname)
 
 bool PathsClass::Is_Absolute(const char* path)
 {
-    return path != nullptr && path[0] == 'u' && path[1] == 'x' && path[2] == '0';
+    if (strlen(path) < 4) {
+        return false;
+    }
+
+    return path != nullptr && path[0] == 'u' && path[1] == 'x' && path[2] == '0' && path[3] == ':';
 }
 
 std::string PathsClass::Concatenate_Paths(const char* path1, const char* path2)

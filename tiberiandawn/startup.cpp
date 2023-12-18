@@ -212,8 +212,6 @@ int main(int argc, char** argv)
     //scePowerSetGpuClockFrequency(222);
     scePowerSetBusClockFrequency(222);
     scePowerSetGpuXbarClockFrequency(166);
-
-    chdir("ux0:data/VanillaTD");
 #endif
 
     UtfArgs args(argc, argv);

@@ -54,10 +54,6 @@
 #include "vortex.h"
 #include "carry.h"
 
-#ifdef __vita__
-#include "common/paths.h"
-#endif
-
 #ifdef REMASTER_BUILD
 extern bool DLLSave(Pipe& file);
 extern bool DLLLoad(Straw& file);
@@ -337,14 +333,7 @@ bool Save_Game(int id, char const* descr, bool)
         strcpy(name, NET_SAVE_FILE_NAME);
         // save_net = 1;
     } else {
-#ifdef __vita__
-        std::string savePath;
-        savePath = Paths.User_Path();
-        savePath.append("/SAVEGAME.%03d");
-        sprintf(name, savePath.c_str(), id);
-#else
         sprintf(name, "SAVEGAME.%03d", id);
-#endif
     }
 
     return Save_Game(name, descr);
@@ -510,14 +499,7 @@ bool Load_Game(int id)
         strcpy(name, NET_SAVE_FILE_NAME);
         // load_net = 1;
     } else {
-#ifdef __vita__
-        std::string savePath;
-        savePath = Paths.User_Path();
-        savePath.append("/SAVEGAME.%03d");
-        sprintf(name, savePath.c_str(), id);
-#else
         sprintf(name, "SAVEGAME.%03d", id);
-#endif
     }
     return Load_Game(name);
 }

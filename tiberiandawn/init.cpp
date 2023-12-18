@@ -306,7 +306,7 @@ bool Init_Game(int, char*[])
         sprintf(buffer, "Command & Conquer kann Ihren Maustreiber nicht finden..");
 #else
 #ifdef FRENCH
-        sprintf(buffer, "Command & Conquer ne peut pas dï¿½tecter votre gestionnaire de souris.");
+        sprintf(buffer, "Command & Conquer ne peut pas d‚tecter votre gestionnaire de souris.");
 #else
         sprintf(buffer, "Command & Conquer is unable to detect your mouse driver.");
 #endif
@@ -1652,20 +1652,20 @@ bool Parse_Command_Line(int argc, char* argv[])
                  "              (Syntax: DESTNETxx.xx.xx.xx)\r\n"
                  "  -SOCKET   = Kennung des Netzwerk-Sockets (0 - 16383)\n"
                  "  -STEALTH  = Namen im Mehrspieler-Modus verstecken (\"Boss-Modus\")\r\n"
-                 "  -MESSAGES = Mitteilungen von auï¿½erhalb des Spiels zulassen\r\n"
+                 "  -MESSAGES = Mitteilungen von auáerhalb des Spiels zulassen\r\n"
                  //					"  -ELITE    = Fortgeschrittene KI und Gefechtstechniken.\r\n"
                  "\r\n");
 #else
 #ifdef FRENCH
             puts("Command & Conquer (c) 1995, Westwood Studios\r\n"
-                 "Paramï¿½tres:\r\n"
-                 //						"  -CD<chemin d'accï¿½s> = Recherche des fichiers dans le\r\n"
-                 //						"                        rï¿½pertoire indiquï¿½.\r\n"
-                 "  -DESTNET  = Spï¿½cifier le numï¿½ro de rï¿½seau du systï¿½me de destination\r\n"
+                 "ParamŠtres:\r\n"
+                 //						"  -CD<chemin d'accŠs> = Recherche des fichiers dans le\r\n"
+                 //						"                        r‚pertoire indiqu‚.\r\n"
+                 "  -DESTNET  = Sp‚cifier le num‚ro de r‚seau du systŠme de destination\r\n"
                  "              (Syntaxe: DESTNETxx.xx.xx.xx)\r\n"
-                 "  -SOCKET   = ID poste rï¿½seau (0 ï¿½ 16383)\r\n"
+                 "  -SOCKET   = ID poste r‚seau (0 … 16383)\r\n"
                  "  -STEALTH  = Cacher les noms en mode multijoueurs (\"Mode Boss\")\r\n"
-                 "  -MESSAGES = Autorise les messages extï¿½rieurs ï¿½ ce jeu.\r\n"
+                 "  -MESSAGES = Autorise les messages ext‚rieurs … ce jeu.\r\n"
                  "\r\n");
 #else
             puts("Command & Conquer (c) 1995, 1996 Westwood Studios\r\n"
@@ -2062,9 +2062,9 @@ void Parse_INI_File(void)
     /*
     ** These arrays store the coded version of the names Geologic, Period, & Jurassic.
     ** Decode them by subtracting 83.  For you curious types, the names look like:
-    ** ï¿½ï¿½Â¿Âºï¿½ï¿½
-    ** ï¿½ï¿½Å¼Â·
-    ** ?ï¿½Å´ï¿½Æ¼ï¿½
+    ** š¸Â¿Âº¼¶
+    ** £¸Å¼Â·
+    ** ?ÈÅ´ÆÆ¼¶
     ** If these INI entries aren't found, the IsJurassic flag does nothing.
     */
     static char coded_section[] = {154, 184, 194, 191, 194, 186, 188, 182, 0};

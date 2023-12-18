@@ -39,7 +39,7 @@ SettingsClass::SettingsClass()
 
 #ifdef __vita__
     Vita.ScaleGameSurface = true;
-    Vita.RearTouchEnabled = true;
+    Vita.RearTouchEnabled = false;
     Vita.RearTouchSpeed = 5;
 #endif
 }

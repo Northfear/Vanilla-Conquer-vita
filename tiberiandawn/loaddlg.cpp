@@ -45,10 +45,6 @@
 #include "common/framelimit.h"
 #include "common/paths.h"
 
-#ifdef __vita__
-#include "common/paths.h"
-#endif
-
 /***********************************************************************************************
  * LoadOptionsClass::LoadOptionsClass -- class constructor                                     *
  *                                                                                             *

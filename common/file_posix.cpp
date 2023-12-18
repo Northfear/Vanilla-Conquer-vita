@@ -9,6 +9,7 @@
 #include <fnmatch.h>
 
 #ifdef __vita__
+#include <psp2/io/stat.h>
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -117,6 +118,11 @@ bool Find_File_Data_Posix::FindNextWithFilter()
         if (DirEntry == nullptr) {
             return false;
         }
+#ifdef __vita__
+        if (SCE_S_ISDIR(DirEntry->d_stat.st_mode)) {
+            continue;
+        }
+#endif
         if (fnmatch(FileFilter, DirEntry->d_name, FNM_PATHNAME | FNM_CASEFOLD) == 0) {
             strcpy(FullName, DirName);
             strcat(FullName, DirEntry->d_name);

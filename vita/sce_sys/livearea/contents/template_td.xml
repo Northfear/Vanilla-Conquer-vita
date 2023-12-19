@@ -8,4 +8,13 @@
 	<gate>
 		<startup-image>startup.png</startup-image>
 	</gate>
+
+	<frame id="frame4">
+		<liveitem>
+			<target>psla:funpark</target>
+			<text align="center" text-align="center" word-wrap="off" ellipsis="on">
+				<str size="24" color="#ffffff" shadow="on">FUNPARK MODE</str>
+			</text>
+		</liveitem>
+	</frame>
 </livearea>

@@ -167,7 +167,6 @@ if(OPENAL)
 endif()
 
 if(VITA)
-    add_definitions(-DVITA)
     set(VITA_FLAGS "-O2 -mcpu=cortex-a9 -mfpu=neon -fno-lto -Wl,--whole-archive -lpthread -Wl,--no-whole-archive")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${VITA_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${VITA_FLAGS}")

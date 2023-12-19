@@ -39,17 +39,18 @@ https://github.com/Cpasjuste/psp2shell
 
 - Left analog stick - Cursor movement / Map scrolling (switch between both modes with a 3-fingress press on the rear touchpad)
 - Right analog stick - Map scrolling
-- CROSS - Left mouse button
-- CIRCLE - Right mouse button (Cancel building, deselect unit..)
-- SQUARE - G (Guard Area)
-- TRIANGLE - F (Formation. RA only)
+- × - Left mouse button
+- ○ - Right mouse button (Cancel building, deselect unit..)
+- □ - G (Guard Area)
+- △ - F (Formation. RA only)
 - D-Pad Up/Right/Down/Left - 1/2/3/4 button
 - R1 - Alt (force move)
 - L1 - Ctrl (force attack)
 - SELECT - Esc (opens menu, skips videos)
 - START - Enter (to submit score after the mission)
+- □ + △ - Shift button emulation (can be used to start a secret RA ant level from the main menu)
 
-Use R1 + D-Pad to create teams (1-4) and D-Pad to select them (same as Ctrl + 1-4 on keyboard). You can use DPad numbers while entering savegame names.
+Use L1 + D-Pad to create teams (1-4) and D-Pad to select them (same as Ctrl + 1-4 on keyboard). You can use DPad numbers while entering savegame names.
 
 Left analog stick can be used for both cursor movement (good for building or precise movement) or map scrolling (useful during combat when you're giving command with a touchpad). Cursor movement mode is default. To switch between both modes use R1 + L1 + START key combination.
 

@@ -826,10 +826,17 @@ void WWKeyboardClass::Handle_Controller_Button_Event(const SDL_ControllerButtonE
     case SDL_CONTROLLER_BUTTON_X:
         keyboardPress = true;
         scancode = SDL_SCANCODE_G;
+        // Use X + Y to emulate shift (used for ant level access)
+        if (SDL_GameControllerGetButton(GameController, SDL_CONTROLLER_BUTTON_Y)) {
+            scancode = SDL_SCANCODE_LSHIFT;
+        }
         break;
     case SDL_CONTROLLER_BUTTON_Y:
         keyboardPress = true;
         scancode = SDL_SCANCODE_F;
+        if (SDL_GameControllerGetButton(GameController, SDL_CONTROLLER_BUTTON_X)) {
+            scancode = SDL_SCANCODE_LSHIFT;
+        }
         break;
     case SDL_CONTROLLER_BUTTON_BACK:
         keyboardPress = true;

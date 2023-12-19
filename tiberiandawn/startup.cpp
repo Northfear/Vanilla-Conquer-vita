@@ -53,6 +53,7 @@ HINSTANCE ProgramInstance;
 #endif
 
 #ifdef __vita__
+#include <psp2/appmgr.h>
 #include <psp2/kernel/processmgr.h>
 #include <psp2/power.h>
 
@@ -212,6 +213,28 @@ int main(int argc, char** argv)
     //scePowerSetGpuClockFrequency(222);
     scePowerSetBusClockFrequency(222);
     scePowerSetGpuXbarClockFrequency(166);
+
+    // funpark startup
+    SceAppUtilInitParam appUtilParam;
+    SceAppUtilBootParam appUtilBootParam;
+    memset(&appUtilParam, 0, sizeof(SceAppUtilInitParam));
+    memset(&appUtilBootParam, 0, sizeof(SceAppUtilBootParam));
+    sceAppUtilInit(&appUtilParam, &appUtilBootParam);
+    SceAppUtilAppEventParam eventParam;
+    memset(&eventParam, 0, sizeof(SceAppUtilAppEventParam));
+    sceAppUtilReceiveAppEvent(&eventParam);
+    char *vitaArgv[2];
+
+    if (eventParam.type == 0x05) {
+        char appUtilLiveParam[2048];
+        sceAppUtilAppEventParseLiveArea(&eventParam, appUtilLiveParam);
+        if (strcmp("funpark", appUtilLiveParam) == 0) {
+            vitaArgv[0] = (char*)"";
+            vitaArgv[1] = (char*)"funpark";
+            argc = 2;
+            argv = vitaArgv;
+        }
+    }
 #endif
 
     UtfArgs args(argc, argv);

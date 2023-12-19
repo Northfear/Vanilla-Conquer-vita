@@ -770,6 +770,29 @@ void SessionClass::Read_Scenario_Descriptions(void)
     /*
     ** Fetch any scenario packet lists and apply them first.
     */
+#ifdef __vita__
+    // reverted to old code on Vita, because it takes a few minutes and Vita searches #$%^ knows where for those files
+    ffd = nullptr;
+    found = Find_First("*.MPR", 0, &ffd);
+    while (found) {
+        CCFileClass file(ffd->GetName());
+        INIClass ini;
+        ini.Load(file);
+
+        int count = ini.Entry_Count("Missions");
+        for (int index = 0; index < count; index++) {
+            char const* fname = ini.Get_Entry("Missions", index);
+            char buffer[128];
+            ini.Get_String("Missions", fname, "", buffer, sizeof(buffer));
+            Scenarios.Add(new MultiMission(fname, buffer, NULL, true, Is_Mission_Counterstrike((char*)fname)));
+        }
+
+        found = Find_Next(ffd);
+    }
+    if (ffd) {
+        Find_Close(ffd);
+    }
+#else
     int i = 0;
     const char* searchPath = CDFileClass::Get_Search_Path(i);
     while (searchPath != nullptr) {
@@ -797,6 +820,7 @@ void SessionClass::Read_Scenario_Descriptions(void)
         i++;
         searchPath = CDFileClass::Get_Search_Path(i);
     }
+#endif
 
     /*
     ** Fetch the Counterstrike multiplayer scenario packet data.
@@ -843,6 +867,29 @@ void SessionClass::Read_Scenario_Descriptions(void)
     ** Scan the current directory for any loose .MPR files and build the appropriate entries
     ** into the scenario list list
     */
+#ifdef __vita__
+    ffd = nullptr;
+    found = Find_First("*.MPR", 0, &ffd);
+    while (found) {
+        char name_buffer[128];
+        char digest_buffer[32];
+
+        CCFileClass file(ffd->GetName());
+        INIClass ini;
+        ini.Load(file);
+
+        ini.Get_String("Basic", "Name", "No Name", name_buffer, sizeof(name_buffer));
+        ini.Get_String("Digest", "1", "No Digest", digest_buffer, sizeof(digest_buffer));
+        Scenarios.Add(new MultiMission(
+            ffd->GetName(), name_buffer, digest_buffer, ini.Get_Bool("Basic", "Official", false), false));
+
+        found = Find_Next(ffd);
+    }
+    if (ffd) {
+        Find_Close(ffd);
+    }
+
+#else
     i = 0;
     searchPath = CDFileClass::Get_Search_Path(i);
     while (searchPath != nullptr) {
@@ -870,6 +917,7 @@ void SessionClass::Read_Scenario_Descriptions(void)
         i++;
         searchPath = CDFileClass::Get_Search_Path(i);
     }
+#endif
 }
 
 /***************************************************************************

@@ -119,6 +119,7 @@ bool Find_File_Data_Posix::FindNextWithFilter()
             return false;
         }
 #ifdef __vita__
+        // this makes file search on init slower, but RA fails otherwise because files sneak in here for some reason
         if (SCE_S_ISDIR(DirEntry->d_stat.st_mode)) {
             continue;
         }

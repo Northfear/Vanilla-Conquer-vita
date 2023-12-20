@@ -58,6 +58,7 @@ HINSTANCE ProgramInstance;
 #include <psp2/power.h>
 
 int _newlib_heap_size_user = 256 * 1024 * 1024;
+const char VitaDataPath[] = "ux0:data/VanillaTD";
 #endif
 
 extern int ReadyToQuit;
@@ -261,7 +262,7 @@ int main(int argc, char** argv)
     **	Remember the current working directory and drive.
     */
 #ifdef __vita__
-    Paths.Init("vanillatd", "CONQUER.INI", "CONQUER.MIX", "ux0:data/VanillaTD");
+    Paths.Init("vanillatd", "CONQUER.INI", "CONQUER.MIX", VitaDataPath);
 #else
     Paths.Init("vanillatd", "CONQUER.INI", "CONQUER.MIX", args.ArgV[0]);
 #endif

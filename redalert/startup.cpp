@@ -65,6 +65,7 @@ HINSTANCE ProgramInstance;
 #include <psp2/power.h>
 
 int _newlib_heap_size_user = 256 * 1024 * 1024;
+const char VitaDataPath[] = "ux0:data/VanillaRA";
 #endif
 
 extern bool RA95AlreadyRunning;
@@ -305,7 +306,7 @@ int main(int argc, char* argv[])
     **	Remember the current working directory and drive.
     */
 #ifdef __vita__
-    Paths.Init("vanillara", CONFIG_FILE_NAME, "REDALERT.MIX", "ux0:data/VanillaRA");
+    Paths.Init("vanillara", CONFIG_FILE_NAME, "REDALERT.MIX", VitaDataPath);
 #else
     Paths.Init("vanillara", CONFIG_FILE_NAME, "REDALERT.MIX", args.ArgV[0]);
 #endif
